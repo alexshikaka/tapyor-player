@@ -276,6 +276,8 @@
   .imp-gt { cursor: pointer; } .imp-gt:hover span { color: #B3A3FF; }
   .imp-r { display: flex; align-items: center; gap: 12px; padding: 7px 8px; border-radius: 10px; font-size: 13px; }
   .imp-r.close { background: rgba(255,184,107,.05); }
+  .imp-r.flash { animation: impFlash 1.6s ease-out; }
+  @keyframes impFlash { 0%, 30% { background: rgba(74,222,154,.28); } 100% { background: transparent; } }
   .imp-r .o { flex: 1; min-width: 0; color: #8A8E9C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 400 12px 'JetBrains Mono', monospace; }
   .imp-r .m { flex: 1.3; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; display: flex; align-items: center; gap: 6px; }
   .imp-r .b { display: flex; gap: 6px; flex: 0 0 auto; }
@@ -1783,7 +1785,7 @@
   }
 
   // ===== Плейлист из текста =====
-  var imp = null, impShowExact = false;
+  var imp = null, impShowExact = true;
   function impHost(){ return $('myPl'); }
   function openImport(){
     mySel = null;
@@ -1820,7 +1822,7 @@
     if (!lines.length) return;
     var run = (imp && imp.run || 0) + 1;
     imp = { title: title, text: text, ym: toYm, run: run, done: 0, items: lines.map(function (l){ return { line: l, status: 'wait' }; }) };
-    impShowExact = false;
+    impShowExact = true;
     renderImportResults();
     var next = 0, lastDraw = 0;
     async function worker(){
@@ -1844,12 +1846,12 @@
     b.style.width = Math.round(imp.done / imp.items.length * 100) + '%';
     t.textContent = imp.done + ' из ' + imp.items.length;
   }
-  function impIncluded(){ return imp.items.filter(function (i){ return !i.removed && i.track && (i.status === 'exact' || i.status === 'close'); }); }
+  function impIncluded(){ return imp.items.filter(function (i){ return !i.removed && i.track && i.status === 'exact'; }); }
   function renderImportResults(){
     var h = impHost(); if (!imp) return;
     var open = {}; imp.items.forEach(function (it, k){ if (it._open) open[k] = true; });
     var items = imp.items.map(function (it, k){ it._k = k; return it; }).filter(function (i){ return !i.removed; });
-    var close = items.filter(function (i){ return i.status === 'close'; }), none = items.filter(function (i){ return i.status === 'none'; }), exact = items.filter(function (i){ return i.status === 'exact'; });
+    var close = items.filter(function (i){ return i.status === 'close'; }), none = items.filter(function (i){ return i.status === 'none'; }), exact = items.filter(function (i){ return i.status === 'exact'; }).sort(function (a, b){ return (b.pickedAt || 0) - (a.pickedAt || 0); });
     var inc = impIncluded(), nYm = inc.filter(function (i){ return srcOf(i.track) === 'ym'; }).length, nYt = inc.length - nYm;
     var finished = imp.done >= imp.items.length;
     function row(it, kind){
@@ -1868,7 +1870,7 @@
           }).join('') : '<div class="imp-none">Вариантов нет — поищи по-другому:</div>') +
           '<div class="imp-q"><input class="imp-f" data-qin="' + it._k + '" value="' + esc(it.query || it.line) + '" aria-label="Запрос"><button class="imp-sm hl" data-q="' + it._k + '">Найти</button><button class="imp-sm" data-rm="' + it._k + '">Убрать песню</button></div></div>';
       }
-      return '<div class="imp-r ' + kind + '"><span class="o" title="' + esc(it.line) + '">' + esc(it.line) + '</span><span class="m">' + m + '</span><span class="b">' + btns + '</span></div>' + ed;
+      return '<div class="imp-r ' + kind + (it._flash ? ' flash' : '') + '" data-row="' + it._k + '"><span class="o" title="' + esc(it.line) + '">' + esc(it.line) + '</span><span class="m">' + m + '</span><span class="b">' + btns + '</span></div>' + ed;
     }
     var html = '<div class="imp">' +
       '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="back" id="impBack">← Изменить текст</button><div class="imp-h" style="flex:1;min-width:200px">' + esc(imp.title) + '</div></div>' +
@@ -1884,7 +1886,7 @@
     if (!finished) html += '<div class="muted">Ищу… это займёт около ' + Math.max(1, Math.round((imp.items.length - imp.done) / 3 * 1.2 / 60)) + ' мин.</div>';
     html += '</div>' +
       '<div class="imp-save"><button class="pbtn y" id="impSave"' + (finished && inc.length ? '' : ' disabled') + '>Сохранить · ' + inc.length + ' ' + plural(inc.length) + '</button>' +
-      '<span>' + (imp.ym && ymLoggedIn ? 'В Тапёр и в Яндекс Музыку (' + nYm + ' ' + plural(nYm) + ')' : 'В Тапёр') + '</span><span id="impMsg"></span></div>' +
+      '<span>Сохранятся только «Точно»' + (imp.ym && ymLoggedIn ? ' — в Тапёр и в Яндекс Музыку (' + nYm + ' ' + plural(nYm) + ')' : ' — в Тапёр') + (close.length ? '. Похожие подтверди кнопкой «Это та песня»' : '') + '</span><span id="impMsg"></span></div>' +
       '</div>';
     var listEl = h.querySelector('.imp-list'), keep = listEl ? listEl.scrollTop : 0;
     h.innerHTML = html;
@@ -1899,7 +1901,7 @@
     var d = b.dataset, it;
     if (d.ed != null) { it = imp.items[+d.ed]; it._open = !it._open; renderImportResults(); return; }
     if (d.rm != null) { it = imp.items[+d.rm]; it.removed = true; it._open = false; renderImportResults(); return; }
-    if (d.ok != null) { it = imp.items[+d.ok]; if (it.track) { it.status = 'exact'; it.picked = true; it._open = false; renderImportResults(); } return; }
+    if (d.ok != null) { it = imp.items[+d.ok]; if (it.track) confirmImp(it); return; }
     if (d.pv != null) {
       var pp = String(d.pv).split(':'); it = imp.items[+pp[0]];
       var tr = pp.length > 1 ? (it.alts || [])[+pp[1]] : it.track;
@@ -1910,8 +1912,8 @@
       var p = d.pick.split(':'); it = imp.items[+p[0]];
       var a = it.alts[+p[1]];
       if (it.track) it.alts[+p[1]] = it.track; else it.alts.splice(+p[1], 1);
-      it.track = a; it.status = 'exact'; it.picked = true; it._open = false;
-      renderImportResults(); return;
+      it.track = a;
+      confirmImp(it); return;
     }
     if (d.q != null) {
       it = imp.items[+d.q];
@@ -1929,6 +1931,14 @@
   impHost().addEventListener('keydown', function(e){
     if (e.key === 'Enter' && e.target.dataset && e.target.dataset.qin != null) { var b = impHost().querySelector('[data-q="' + e.target.dataset.qin + '"]'); if (b) b.click(); }
   });
+  // «Это та песня»: строка уезжает в начало «Точно» и на секунду подсвечивается
+  function confirmImp(it){
+    it.status = 'exact'; it.picked = true; it._open = false; it.pickedAt = Date.now(); it._flash = true;
+    impShowExact = true;
+    renderImportResults();
+    setTimeout(function(){ it._flash = false; var r = impHost().querySelector('[data-row="' + it._k + '"]'); if (r) r.classList.remove('flash'); }, 1600);
+  }
+
   // Прослушивание варианта: играет, но в очередь и в ленту дня не попадает
   var previewT = null;
   var PV_PLAY = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>';
