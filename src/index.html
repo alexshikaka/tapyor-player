@@ -3,163 +3,208 @@
 <head>
 <meta charset="utf-8">
 <title>Плеер для стрима</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: #0E0F13; color: #ECEDF2;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-  }
-  header {
-    display: flex; align-items: center; gap: 16px;
-    padding: 14px 20px; border-bottom: 1px solid #22242C; flex: 0 0 auto;
-  }
-  .logo { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; }
-  .title { font-weight: 700; font-size: 15px; }
+  body { margin: 0; background: #0E0F13; color: #ECEDF2;
+    font-family: 'Onest', 'Segoe UI', system-ui, sans-serif;
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  input::placeholder { color: #7C8090; }
+
+  /* Шапка */
+  header { display: flex; align-items: center; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #22242C; flex: 0 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+  .logo { width: 32px; height: 32px; border-radius: 9px; object-fit: cover; }
+  .brand .name { font-weight: 700; font-size: 16px; }
   nav { display: flex; gap: 4px; background: #181A21; border-radius: 10px; padding: 3px; }
-  nav button { height: 30px; padding: 0 13px; border: 0; border-radius: 8px;
-    background: transparent; color: #C9CBD4; font-size: 13px; cursor: pointer; }
+  nav button { height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: #C9CBD4; font-size: 13px; font-weight: 500; cursor: pointer; }
   nav button.active { background: #2A2D38; color: #ECEDF2; font-weight: 600; }
-  .badge { font-size: 12px; color: #9B87FF; border: 1px solid #9B87FF; border-radius: 6px; padding: 2px 8px; margin-left: auto; }
+  .searchwrap { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .searchbar { display: flex; align-items: center; gap: 10px; background: #181A21; border: 1px solid #2C2F3A; border-radius: 12px; padding: 0 14px; height: 46px; }
+  .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #ECEDF2; font-size: 15px; font-weight: 500; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .chip.active { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
+  .chip.soon { opacity: .5; cursor: default; }
+  .dot { width: 8px; height: 8px; border-radius: 4px; }
+  .badge { font-size: 12px; color: #9B87FF; border: 1px solid #9B87FF; border-radius: 6px; padding: 2px 8px; flex: 0 0 auto; }
 
+  /* Основная часть */
   main { flex: 1; display: flex; min-height: 0; }
-  .col-search { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 16px 20px; gap: 12px; }
-  .col-queue { flex: 0 0 340px; border-left: 1px solid #22242C; background: #12131A;
-    display: flex; flex-direction: column; padding: 16px; gap: 10px; min-height: 0; }
-
-  .searchbar { display: flex; align-items: center; gap: 10px; background: #181A21;
-    border: 1px solid #2C2F3A; border-radius: 12px; padding: 0 14px; height: 46px; flex: 0 0 auto; }
-  .searchbar input { flex: 1; background: transparent; border: 0; outline: none; color: #ECEDF2; font-size: 15px; }
-  .searchbar button { height: 34px; padding: 0 16px; border: 0; border-radius: 9px; background: #9B87FF; color: #0E0F13; font-weight: 600; font-size: 13px; cursor: pointer; }
-
+  .results-col { flex: 1 1 auto; min-width: 0; padding: 18px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 4px; }
+  .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
+  .col-head .hint { font-size: 13px; color: #8A8E9C; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; }
+  .row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; }
   .row:hover { background: #171922; }
-  .thumb { width: 64px; height: 40px; border-radius: 6px; object-fit: cover; background: #222; flex: 0 0 auto; }
-  .row .meta { flex: 1; min-width: 0; }
-  .row .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .row .s { font-size: 12px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .time { font-size: 12px; color: #9EA2B0; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
-  .icon-btn { width: 36px; height: 36px; border-radius: 18px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; cursor: pointer; flex: 0 0 auto; font-size: 13px; }
-  .add-btn { height: 36px; padding: 0 12px; border-radius: 9px; border: 0; background: #9B87FF; color: #0E0F13; font-weight: 600; font-size: 13px; cursor: pointer; flex: 0 0 auto; }
+  .cover { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
+  .row .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .row .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .srcpill { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #C9CBD4; background: #1E2029; border-radius: 6px; padding: 4px 8px; }
+  .time { flex: 0 0 48px; text-align: right; font-size: 13px; color: #9EA2B0; }
+  .listen { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 19px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .listen:hover { background: #20222C; color: #ECEDF2; }
+  .add { flex: 0 0 auto; height: 38px; padding: 0 14px; border-radius: 10px; border: 0; background: #9B87FF; color: #0E0F13; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
-  .col-queue h2 { margin: 0; font-size: 14px; font-weight: 600; color: #C9CBD4; }
-  .queue-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .qrow { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 9px; }
-  .qrow.playing { background: rgba(155,135,255,0.14); border: 1px solid #9B87FF; }
-  .qrow .n { font-size: 12px; color: #7C8090; width: 16px; text-align: center; flex: 0 0 auto; }
-  .qrow .qt { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .qrow .x { width: 26px; height: 26px; border: 0; background: transparent; color: #7C8090; cursor: pointer; border-radius: 6px; flex: 0 0 auto; }
+  /* Правая колонка: очередь */
+  .queue-col { flex: 0 0 360px; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .queue-col .qhead { display: flex; justify-content: space-between; align-items: baseline; flex: 0 0 auto; }
+  .queue-col .qhead h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
+  .queue-col .qhead span { font-size: 13px; color: #8A8E9C; }
+
+  .nowcard { flex: 0 0 auto; border-radius: 14px; background: #1A1C25; border: 1px solid #2C2F3A; overflow: hidden; }
+  .video { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #3A2F6B, #10121A 70%); }
+  #player, #player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .vmeta { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .nplabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9B87FF; }
+  .vmeta .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vmeta .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .qlist { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .qrow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; }
+  .qrow.playing { background: rgba(155,135,255,0.12); }
+  .qrow .n { font-size: 13px; color: #7C8090; width: 16px; text-align: center; flex: 0 0 auto; }
+  .qrow .qm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .qrow .qt { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .qrow .qs { font-size: 12px; color: #9EA2B0; display: flex; align-items: center; gap: 6px; }
+  .qrow .x { width: 32px; height: 32px; border: 0; background: transparent; color: #7C8090; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
   .qrow .x:hover { background: #2A2D38; color: #ECEDF2; }
-  .muted { color: #8A8E9C; font-size: 13px; text-align: center; margin: auto 0; }
+  .clearq { flex: 0 0 auto; height: 42px; border-radius: 10px; border: 1px dashed #3A3D4A; background: transparent; color: #9EA2B0; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .muted { color: #8A8E9C; font-size: 13px; text-align: center; padding: 16px 0; }
 
-  footer { flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
-    padding: 12px 18px; border-top: 1px solid #22242C; background: #101119; }
-  #player { width: 150px; height: 84px; border-radius: 8px; overflow: hidden; background: #000; flex: 0 0 auto; }
-  #player iframe { width: 100%; height: 100%; border: 0; }
-  .pmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-  .prow { display: flex; align-items: center; gap: 16px; }
-  .np { flex: 1 1 auto; min-width: 0; }
-  .np .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .np .s { font-size: 12px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .controls { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  /* Нижняя панель-плеер */
+  footer { flex: 0 0 auto; display: flex; align-items: center; gap: 28px; padding: 14px 24px; border-top: 1px solid #22242C; background: #12131A; }
+  .f-now { display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-width: 0; }
+  .f-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
+  .f-now .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-now .s { font-size: 12px; color: #9EA2B0; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-center { flex: 2 1 420px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+  .controls { display: flex; align-items: center; gap: 14px; }
   .cbtn { display: flex; align-items: center; justify-content: center; border: 0; cursor: pointer; border-radius: 50%; background: transparent; color: #C9CBD4; padding: 0; }
   .cbtn.side { width: 40px; height: 40px; }
   .cbtn.side:hover { background: #20222C; color: #ECEDF2; }
   .cbtn.play { width: 48px; height: 48px; background: #ECEDF2; color: #0E0F13; }
   .cbtn.play:hover { background: #fff; }
-  .cbtn svg { display: block; }
-  .vol { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; color: #9EA2B0; }
-  .vol input { width: 90px; accent-color: #9B87FF; cursor: pointer; }
-  .timeline { display: flex; align-items: center; gap: 10px; }
-  .tm { font-size: 11px; color: #9EA2B0; font-variant-numeric: tabular-nums; width: 34px; flex: 0 0 auto; }
+  .progress { width: 100%; max-width: 560px; display: flex; align-items: center; gap: 10px; }
+  .tm { font-size: 12px; color: #9EA2B0; width: 34px; flex: 0 0 auto; }
   .tm.r { text-align: right; }
   .seek { flex: 1; height: 8px; border-radius: 4px; background: #2C2F3A; position: relative; cursor: pointer; }
   .seek-fill { position: absolute; left: 0; top: 0; height: 8px; border-radius: 4px; background: #9B87FF; width: 0%; }
   .seek-knob { position: absolute; top: 50%; left: 0%; width: 16px; height: 16px; border-radius: 8px; background: #fff; transform: translate(-50%, -50%); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  .f-right { flex: 1 1 200px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; color: #9EA2B0; }
+  .f-right input { width: 110px; accent-color: #9B87FF; cursor: pointer; }
 </style>
 </head>
 <body>
   <header>
-    <img class="logo" src="assets/icon.png" alt="">
-
-    <div class="title">Плеер для стрима</div>
-    <nav>
-      <button class="active">Поиск</button>
-      <button>Браузер</button>
-      <button>Настройки</button>
-    </nav>
+    <div class="brand">
+      <img class="logo" src="assets/icon.png" alt="">
+      <div class="name">Заказы</div>
+      <nav>
+        <button class="active">Поиск</button>
+        <button>Браузер</button>
+        <button>Настройки</button>
+      </nav>
+    </div>
+    <div class="searchwrap">
+      <div class="searchbar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9EA2B0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input id="search" type="text" placeholder="Название, исполнитель или ссылка">
+        <span class="mono" style="font-size:12px;color:#7C8090;border:1px solid #2C2F3A;border-radius:6px;padding:3px 7px">Enter</span>
+      </div>
+      <div class="chips">
+        <button class="chip active" title="Пока только YouTube"><span class="dot" style="background:#FF5A52"></span>YouTube</button>
+        <button class="chip soon" disabled><span class="dot" style="background:#FFD43B"></span>Яндекс · скоро</button>
+        <button class="chip soon" disabled><span class="dot" style="background:#3BA8F0"></span>Telegram · скоро</button>
+        <button class="chip soon" disabled><span class="dot" style="background:#FF8A3D"></span>SoundCloud · скоро</button>
+      </div>
+    </div>
     <span class="badge" id="ver">версия…</span>
   </header>
 
   <main>
-    <section class="col-search">
-      <div class="searchbar">
-        <input id="q" type="text" placeholder="Найти песню на YouTube…" autofocus>
-        <button id="go">Искать</button>
+    <section class="results-col" aria-label="Результаты поиска">
+      <div class="col-head">
+        <h2>Результаты</h2>
+        <span class="hint" id="hint">Введи название и нажми Enter</span>
       </div>
       <div class="results" id="results">
-        <div class="muted">Введи название трека и нажми «Искать».</div>
+        <div class="muted">Здесь появятся найденные треки.</div>
       </div>
     </section>
 
-    <aside class="col-queue">
-      <div style="display:flex;justify-content:space-between;align-items:baseline">
+    <aside class="queue-col" aria-label="Очередь">
+      <div class="qhead">
         <h2>Очередь</h2>
-        <span id="qcount" style="font-size:12px;color:#8A8E9C">0 треков</span>
+        <span id="qcount">0 треков</span>
       </div>
-      <div class="queue-list" id="queue">
+
+      <div class="nowcard">
+        <div class="video"><div id="player"></div></div>
+        <div class="vmeta">
+          <div class="nplabel">Сейчас играет</div>
+          <div class="t" id="card-title">Ничего не играет</div>
+          <div class="s" id="card-sub">Найди трек и запусти</div>
+        </div>
+      </div>
+
+      <div class="qlist" id="queue">
         <div class="muted">Пусто. Добавляй треки из поиска.</div>
       </div>
+
+      <button class="clearq" id="clearq">Очистить очередь</button>
     </aside>
   </main>
 
   <footer>
-    <div id="player"></div>
-    <div class="pmain">
-      <div class="prow">
-        <div class="np">
-          <div class="t" id="np-title">Ничего не играет</div>
-          <div class="s" id="np-sub">Найди трек и нажми play</div>
-        </div>
-        <div class="controls">
-          <button class="cbtn side" id="prev" title="Предыдущий" aria-label="Предыдущий"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6v12l-9-6z"></path></svg></button>
-          <button class="cbtn play" id="playpause" title="Пауза / играть" aria-label="Пауза / играть"></button>
-          <button class="cbtn side" id="next" title="Следующий" aria-label="Следующий"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6v12l9-6z"></path></svg></button>
-        </div>
-        <div class="vol">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 010 7"></path></svg>
-          <input id="vol" type="range" min="0" max="100" value="100" aria-label="Громкость">
-        </div>
+    <div class="f-now">
+      <img class="f-cover" id="f-cover" alt="" style="display:none">
+      <div style="min-width:0">
+        <div class="t" id="f-title">Ничего не играет</div>
+        <div class="s" id="f-sub">Найди трек и нажми play</div>
       </div>
-      <div class="timeline">
-        <span class="tm" id="tcur">0:00</span>
+    </div>
+    <div class="f-center">
+      <div class="controls">
+        <button class="cbtn side" id="prev" title="Предыдущий" aria-label="Предыдущий"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6v12l-9-6z"></path></svg></button>
+        <button class="cbtn play" id="playpause" title="Пауза / играть" aria-label="Пауза / играть"></button>
+        <button class="cbtn side" id="next" title="Следующий" aria-label="Следующий"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6v12l9-6z"></path></svg></button>
+      </div>
+      <div class="progress">
+        <span class="tm mono" id="tcur">0:00</span>
         <div class="seek" id="seek" title="Перемотка"><div class="seek-fill" id="seekFill"></div><div class="seek-knob" id="seekKnob"></div></div>
-        <span class="tm r" id="tdur">0:00</span>
+        <span class="tm mono r" id="tdur">0:00</span>
       </div>
+    </div>
+    <div class="f-right">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 010 7"></path></svg>
+      <input id="vol" type="range" min="0" max="100" value="100" aria-label="Громкость">
     </div>
   </footer>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  // --- Версия в углу ---
   if (window.app && window.app.getVersion) {
-    window.app.getVersion().then(function (v) {
-      document.getElementById('ver').textContent = 'версия ' + v;
-    });
+    window.app.getVersion().then(function (v) { document.getElementById('ver').textContent = 'версия ' + v; });
   }
 
-  // --- Состояние ---
-  var queue = [];       // {id,title,author,duration}
-  var current = -1;     // индекс играющего в очереди
-  var player = null;
-  var playerReady = false;
+  var queue = [];     // {id,title,author,duration,thumb}
+  var current = -1;
+  var player = null, playerReady = false;
 
-  // --- YouTube IFrame API ---
+  var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
+  var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
+  function setPlayIcon(sym){ document.getElementById('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; }
+  setPlayIcon('▶');
+
   window.onYouTubeIframeAPIReady = function () {
     player = new YT.Player('player', {
-      height: '112', width: '200',
+      width: '100%', height: '100%',
       playerVars: { autoplay: 1, controls: 1, rel: 0, origin: location.origin },
       events: {
         onReady: function () { playerReady = true; },
@@ -169,64 +214,63 @@
           if (e.data === YT.PlayerState.PAUSED) setPlayIcon('▶');
         },
         onError: function () {
-          // 101/150 — владелец запретил встраивание, 100 — удалено и т.п.
-          document.getElementById('np-sub').textContent = 'Это видео нельзя встроить — перехожу к следующему';
+          setSub('Это видео нельзя встроить — перехожу к следующему');
           setTimeout(next, 1200);
         }
       }
     });
   };
 
-  var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
-  var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
-  function setPlayIcon(sym){ document.getElementById('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; }
-  setPlayIcon('▶');
-
-  // --- Поиск ---
-  var q = document.getElementById('q');
-  var results = document.getElementById('results');
-  document.getElementById('go').onclick = doSearch;
-  q.addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
+  var search = document.getElementById('search'), results = document.getElementById('results');
+  search.addEventListener('keydown', function (e){ if (e.key === 'Enter') doSearch(); });
 
   async function doSearch() {
-    var query = q.value.trim();
-    if (!query) return;
+    var q = search.value.trim(); if (!q) return;
+    document.getElementById('hint').textContent = 'Ищу…';
     results.innerHTML = '<div class="muted">Ищу…</div>';
-    var res = await window.app.ytSearch(query);
-    if (res && res.error) { results.innerHTML = '<div class="muted">Ошибка поиска: '+esc(res.error)+'</div>'; return; }
-    if (!res || !res.length) { results.innerHTML = '<div class="muted">Ничего не нашлось.</div>'; return; }
+    var res = await window.app.ytSearch(q);
+    if (res && res.error) { results.innerHTML = '<div class="muted">Ошибка поиска: ' + esc(res.error) + '</div>'; document.getElementById('hint').textContent=''; return; }
+    if (!res || !res.length) { results.innerHTML = '<div class="muted">Ничего не нашлось.</div>'; document.getElementById('hint').textContent=''; return; }
+    document.getElementById('hint').textContent = 'Сначала лучшие совпадения';
     results.innerHTML = '';
     res.forEach(function (v) {
-      var row = document.createElement('div');
-      row.className = 'row';
+      var row = document.createElement('div'); row.className = 'row';
       row.innerHTML =
-        '<img class="thumb" src="'+esc(v.thumb)+'" alt="">'+
-        '<div class="meta"><div class="t">'+esc(v.title)+'</div><div class="s">'+esc(v.author)+'</div></div>'+
-        '<span class="time">'+esc(v.duration)+'</span>';
-      var play = document.createElement('button'); play.className='icon-btn'; play.textContent='▶'; play.title='Играть сейчас';
-      play.onclick = function(){ playNow(v); };
-      var add = document.createElement('button'); add.className='add-btn'; add.textContent='+ в очередь';
+        '<img class="cover" src="' + esc(v.thumb) + '" alt="">' +
+        '<div class="meta"><div class="t">' + esc(v.title) + '</div><div class="s">' + esc(v.author) + '</div></div>' +
+        '<span class="srcpill"><span class="dot" style="background:#FF5A52"></span>YouTube</span>' +
+        '<span class="time mono">' + esc(v.duration) + '</span>';
+      var listen = document.createElement('button'); listen.className = 'listen'; listen.title = 'Играть сейчас';
+      listen.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"></path></svg>';
+      listen.onclick = function(){ playNow(v); };
+      var add = document.createElement('button'); add.className = 'add';
+      add.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E0F13" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
       add.onclick = function(){ addToQueue(v); };
-      row.appendChild(play); row.appendChild(add);
+      row.appendChild(listen); row.appendChild(add);
       results.appendChild(row);
     });
   }
 
-  // --- Очередь ---
-  function addToQueue(v) { queue.push(v); renderQueue(); if (current === -1) playIndex(0); }
-  function playNow(v) { queue.splice(current+1, 0, v); playIndex(current+1); }
+  function addToQueue(v){ queue.push(v); renderQueue(); if (current === -1) playIndex(0); }
+  function playNow(v){ queue.splice(current + 1, 0, v); playIndex(current + 1); }
+
+  function setSub(txt){ document.getElementById('card-sub').textContent = txt; document.getElementById('f-sub').textContent = txt; }
 
   function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
-    current = i;
-    var v = queue[i];
-    document.getElementById('np-title').textContent = v.title;
-    document.getElementById('np-sub').textContent = v.author;
+    current = i; var v = queue[i];
+    document.getElementById('card-title').textContent = v.title;
+    document.getElementById('card-sub').textContent = v.author;
+    document.getElementById('f-title').textContent = v.title;
+    var fsub = document.getElementById('f-sub');
+    fsub.innerHTML = '<span class="dot" style="background:#FF5A52"></span>YouTube · ' + esc(v.author);
+    var fc = document.getElementById('f-cover');
+    if (v.thumb) { fc.src = v.thumb; fc.style.display = ''; } else { fc.style.display = 'none'; }
     if (playerReady && player) player.loadVideoById(v.id);
     renderQueue();
   }
-  function next() { if (current+1 < queue.length) playIndex(current+1); }
-  function prev() { if (current-1 >= 0) playIndex(current-1); }
+  function next(){ if (current + 1 < queue.length) playIndex(current + 1); }
+  function prev(){ if (current - 1 >= 0) playIndex(current - 1); }
   document.getElementById('next').onclick = next;
   document.getElementById('prev').onclick = prev;
   document.getElementById('playpause').onclick = function(){
@@ -234,14 +278,14 @@
     var st = player.getPlayerState();
     if (st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo();
   };
+  document.getElementById('clearq').onclick = function(){ queue = []; current = -1; if (player && playerReady) player.stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
 
   function removeAt(i) {
     queue.splice(i, 1);
     if (i < current) current--;
-    else if (i === current) { if (current >= queue.length) current = queue.length-1; if (current>=0) playIndex(current); else { current=-1; stop(); } }
+    else if (i === current) { if (current >= queue.length) current = queue.length - 1; if (current >= 0) playIndex(current); else { current = -1; if (player && playerReady) player.stopVideo(); } }
     renderQueue();
   }
-  function stop(){ document.getElementById('np-title').textContent='Ничего не играет'; document.getElementById('np-sub').textContent='Найди трек и нажми ▶'; if(player&&playerReady) player.stopVideo(); }
 
   function renderQueue() {
     var box = document.getElementById('queue');
@@ -249,10 +293,13 @@
     if (!queue.length) { box.innerHTML = '<div class="muted">Пусто. Добавляй треки из поиска.</div>'; return; }
     box.innerHTML = '';
     queue.forEach(function (v, i) {
-      var r = document.createElement('div');
-      r.className = 'qrow' + (i===current ? ' playing' : '');
-      r.innerHTML = '<span class="n">'+(i===current?'▶':(i+1))+'</span><div class="qt">'+esc(v.title)+'</div>';
-      var x = document.createElement('button'); x.className='x'; x.textContent='✕'; x.title='Убрать';
+      var r = document.createElement('div'); r.className = 'qrow' + (i === current ? ' playing' : '');
+      r.innerHTML =
+        '<span class="n">' + (i === current ? '▶' : (i + 1)) + '</span>' +
+        '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
+        '<div class="qs"><span class="dot" style="background:#FF5A52"></span>YouTube · ' + esc(v.author) + '</div></div>';
+      var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать';
+      x.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
       x.onclick = function(){ removeAt(i); };
       r.appendChild(x);
       r.querySelector('.qt').onclick = function(){ playIndex(i); };
@@ -260,41 +307,28 @@
     });
   }
 
-  function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
-  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-
-  // --- Полоса прогресса с бегунком ---
-  var seekEl = document.getElementById('seek'),
-      fillEl = document.getElementById('seekFill'),
-      knobEl = document.getElementById('seekKnob'),
-      dragging = false;
-
+  // Полоса прогресса
+  var seekEl = document.getElementById('seek'), fillEl = document.getElementById('seekFill'), knobEl = document.getElementById('seekKnob'), dragging = false;
   function fmt(s){ s = Math.max(0, Math.floor(s||0)); var m = Math.floor(s/60), ss = s%60; return m + ':' + (ss<10?'0':'') + ss; }
   function setBar(frac){ frac = Math.max(0, Math.min(1, frac)); var p = (frac*100) + '%'; fillEl.style.width = p; knobEl.style.left = p; }
-  function fracAt(clientX){ var r = seekEl.getBoundingClientRect(); return (clientX - r.left) / r.width; }
-  function doSeek(clientX){
+  function fracAt(x){ var r = seekEl.getBoundingClientRect(); return (x - r.left) / r.width; }
+  function doSeek(x){ if (!playerReady || !player || !player.getDuration) return; var d = player.getDuration()||0; if (d<=0) return; player.seekTo(Math.max(0,Math.min(1,fracAt(x)))*d, true); }
+  seekEl.addEventListener('mousedown', function(e){ dragging = true; setBar(fracAt(e.clientX)); });
+  document.addEventListener('mousemove', function(e){ if (dragging) setBar(fracAt(e.clientX)); });
+  document.addEventListener('mouseup', function(e){ if (dragging) { dragging = false; doSeek(e.clientX); } });
+  setInterval(function(){
     if (!playerReady || !player || !player.getDuration) return;
-    var dur = player.getDuration() || 0; if (dur <= 0) return;
-    player.seekTo(Math.max(0, Math.min(1, fracAt(clientX))) * dur, true);
-  }
-
-  seekEl.addEventListener('mousedown', function (e){ dragging = true; setBar(fracAt(e.clientX)); });
-  document.addEventListener('mousemove', function (e){ if (dragging) setBar(fracAt(e.clientX)); });
-  document.addEventListener('mouseup', function (e){ if (dragging) { dragging = false; doSeek(e.clientX); } });
-
-  setInterval(function () {
-    if (!playerReady || !player || !player.getDuration) return;
-    var dur = player.getDuration() || 0, cur = player.getCurrentTime() || 0;
-    if (dur <= 0) return;
-    document.getElementById('tcur').textContent = fmt(cur);
-    document.getElementById('tdur').textContent = fmt(dur);
-    if (!dragging) setBar(cur / dur);
+    var d = player.getDuration()||0, c = player.getCurrentTime()||0; if (d<=0) return;
+    document.getElementById('tcur').textContent = fmt(c);
+    document.getElementById('tdur').textContent = fmt(d);
+    if (!dragging) setBar(c/d);
   }, 300);
 
   var volEl = document.getElementById('vol');
-  volEl.addEventListener('input', function () {
-    if (playerReady && player && player.setVolume) player.setVolume(parseInt(volEl.value, 10));
-  });
+  volEl.addEventListener('input', function(){ if (playerReady && player && player.setVolume) player.setVolume(parseInt(volEl.value,10)); });
+
+  function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>
 </body>
 </html>
