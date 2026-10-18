@@ -59,7 +59,7 @@
 
   .nowcard { flex: 0 0 auto; border-radius: 14px; background: #1A1C25; border: 1px solid #2C2F3A; overflow: hidden; }
   .video { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #3A2F6B, #10121A 70%); }
-  #player, #player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; object-fit: contain; }
   .vmeta { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
   .nplabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9B87FF; }
   .vmeta .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -145,7 +145,7 @@
       </div>
 
       <div class="nowcard">
-        <div class="video"><div id="player"></div></div>
+        <div class="video"><video id="player" playsinline></video></div>
         <div class="vmeta">
           <div class="nplabel">Сейчас играет</div>
           <div class="t" id="card-title">Ничего не играет</div>
@@ -187,7 +187,6 @@
     </div>
   </footer>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
   if (window.app && window.app.getVersion) {
     window.app.getVersion().then(function (v) { document.getElementById('ver').textContent = 'версия ' + v; });
@@ -195,31 +194,23 @@
 
   var queue = [];     // {id,title,author,duration,thumb}
   var current = -1;
-  var player = null, playerReady = false;
+  var video = document.getElementById('player');
 
   var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
   var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
   function setPlayIcon(sym){ document.getElementById('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; }
   setPlayIcon('▶');
 
-  window.onYouTubeIframeAPIReady = function () {
-    player = new YT.Player('player', {
-      width: '100%', height: '100%',
-      playerVars: { autoplay: 1, controls: 1, rel: 0, origin: location.origin },
-      events: {
-        onReady: function () { playerReady = true; },
-        onStateChange: function (e) {
-          if (e.data === YT.PlayerState.ENDED) next();
-          if (e.data === YT.PlayerState.PLAYING) setPlayIcon('⏸');
-          if (e.data === YT.PlayerState.PAUSED) setPlayIcon('▶');
-        },
-        onError: function () {
-          setSub('Это видео нельзя встроить — перехожу к следующему');
-          setTimeout(next, 1200);
-        }
-      }
-    });
-  };
+  video.addEventListener('ended', next);
+  video.addEventListener('play', function(){ setPlayIcon('⏸'); });
+  video.addEventListener('pause', function(){ setPlayIcon('▶'); });
+  video.addEventListener('timeupdate', function(){
+    var d = video.duration || 0, c = video.currentTime || 0;
+    document.getElementById('tcur').textContent = fmt(c);
+    document.getElementById('tdur').textContent = fmt(d);
+    if (!dragging && d > 0) setBar(c / d);
+  });
+  video.addEventListener('error', function(){ setSub('Не удалось воспроизвести — перехожу к следующему'); setTimeout(next, 1400); });
 
   var search = document.getElementById('search'), results = document.getElementById('results');
   search.addEventListener('keydown', function (e){ if (e.key === 'Enter') doSearch(); });
@@ -256,34 +247,40 @@
 
   function setSub(txt){ document.getElementById('card-sub').textContent = txt; document.getElementById('f-sub').textContent = txt; }
 
-  function playIndex(i) {
+  async function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
     current = i; var v = queue[i];
     document.getElementById('card-title').textContent = v.title;
-    document.getElementById('card-sub').textContent = v.author;
     document.getElementById('f-title').textContent = v.title;
     var fsub = document.getElementById('f-sub');
     fsub.innerHTML = '<span class="dot" style="background:#FF5A52"></span>YouTube · ' + esc(v.author);
     var fc = document.getElementById('f-cover');
     if (v.thumb) { fc.src = v.thumb; fc.style.display = ''; } else { fc.style.display = 'none'; }
-    if (playerReady && player) player.loadVideoById(v.id);
     renderQueue();
+    setSub('Загружаю…');
+    var r = await window.app.ytStream(v.id);
+    if (i !== current) return; // переключили, пока грузилось
+    if (!r || r.error) { setSub('Не удалось получить поток — пропускаю'); setTimeout(next, 1400); return; }
+    video.src = r.url;
+    video.volume = (parseInt(document.getElementById('vol').value, 10) || 100) / 100;
+    video.play().catch(function(){});
+    document.getElementById('card-sub').textContent = v.author;
   }
   function next(){ if (current + 1 < queue.length) playIndex(current + 1); }
   function prev(){ if (current - 1 >= 0) playIndex(current - 1); }
   document.getElementById('next').onclick = next;
   document.getElementById('prev').onclick = prev;
   document.getElementById('playpause').onclick = function(){
-    if (!playerReady || !player) return;
-    var st = player.getPlayerState();
-    if (st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo();
+    if (!video.src) return;
+    if (video.paused) video.play().catch(function(){}); else video.pause();
   };
-  document.getElementById('clearq').onclick = function(){ queue = []; current = -1; if (player && playerReady) player.stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
+  function stopVideo(){ video.pause(); video.removeAttribute('src'); video.load(); }
+  document.getElementById('clearq').onclick = function(){ queue = []; current = -1; stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
 
   function removeAt(i) {
     queue.splice(i, 1);
     if (i < current) current--;
-    else if (i === current) { if (current >= queue.length) current = queue.length - 1; if (current >= 0) playIndex(current); else { current = -1; if (player && playerReady) player.stopVideo(); } }
+    else if (i === current) { if (current >= queue.length) current = queue.length - 1; if (current >= 0) playIndex(current); else { current = -1; stopVideo(); } }
     renderQueue();
   }
 
@@ -312,20 +309,13 @@
   function fmt(s){ s = Math.max(0, Math.floor(s||0)); var m = Math.floor(s/60), ss = s%60; return m + ':' + (ss<10?'0':'') + ss; }
   function setBar(frac){ frac = Math.max(0, Math.min(1, frac)); var p = (frac*100) + '%'; fillEl.style.width = p; knobEl.style.left = p; }
   function fracAt(x){ var r = seekEl.getBoundingClientRect(); return (x - r.left) / r.width; }
-  function doSeek(x){ if (!playerReady || !player || !player.getDuration) return; var d = player.getDuration()||0; if (d<=0) return; player.seekTo(Math.max(0,Math.min(1,fracAt(x)))*d, true); }
+  function doSeek(x){ var d = video.duration || 0; if (d<=0) return; video.currentTime = Math.max(0,Math.min(1,fracAt(x)))*d; }
   seekEl.addEventListener('mousedown', function(e){ dragging = true; setBar(fracAt(e.clientX)); });
   document.addEventListener('mousemove', function(e){ if (dragging) setBar(fracAt(e.clientX)); });
   document.addEventListener('mouseup', function(e){ if (dragging) { dragging = false; doSeek(e.clientX); } });
-  setInterval(function(){
-    if (!playerReady || !player || !player.getDuration) return;
-    var d = player.getDuration()||0, c = player.getCurrentTime()||0; if (d<=0) return;
-    document.getElementById('tcur').textContent = fmt(c);
-    document.getElementById('tdur').textContent = fmt(d);
-    if (!dragging) setBar(c/d);
-  }, 300);
 
   var volEl = document.getElementById('vol');
-  volEl.addEventListener('input', function(){ if (playerReady && player && player.setVolume) player.setVolume(parseInt(volEl.value,10)); });
+  volEl.addEventListener('input', function(){ video.volume = (parseInt(volEl.value,10)||0)/100; });
 
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }

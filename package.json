@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "electron-updater": "6.3.9",
-    "yt-search": "^2.10.4"
+    "yt-search": "^2.10.4",
+    "@distube/ytdl-core": "^4.16.4"
   },
   "build": {
     "appId": "app.shikaka.streamplayer",

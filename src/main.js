@@ -4,6 +4,7 @@ const { autoUpdater } = require('electron-updater');
 const yts = require('yt-search');
 const http = require('http');
 const fs = require('fs');
+const ytdl = require('@distube/ytdl-core');
 
 let mainWindow = null;
 let tray = null;
@@ -46,6 +47,9 @@ function createWindow() {
   });
 
   mainWindow.loadURL(appUrl || ('file://' + path.join(__dirname, 'index.html')));
+
+  // Не открывать новые окна (ссылки и т.п.) — всё остаётся в программе
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   // Закрытие окна сворачивает в трей, а не выходит из программы
   mainWindow.on('close', (e) => {
@@ -148,6 +152,24 @@ app.whenReady().then(async () => {
       }));
     } catch (e) {
       return { error: (e && e.message) ? e.message : String(e) };
+    }
+  });
+
+  // Получить прямой поток видео/аудио по id ролика (для встроенного плеера)
+  ipcMain.handle('yt-stream', async (event, id) => {
+    try {
+      const info = await ytdl.getInfo('https://www.youtube.com/watch?v=' + id);
+      let muxed = info.formats.filter((f) => f.hasAudio && f.hasVideo);
+      muxed.sort((a, b) => (b.height || 0) - (a.height || 0));
+      let f = muxed[0];
+      if (!f) {
+        const audio = info.formats.filter((x) => x.hasAudio && !x.hasVideo).sort((x, y) => (y.audioBitrate || 0) - (x.audioBitrate || 0));
+        f = audio[0];
+      }
+      if (!f) return { error: 'нет подходящего потока' };
+      return { url: f.url, hasVideo: !!f.hasVideo };
+    } catch (err) {
+      return { error: (err && err.message) ? err.message : String(err) };
     }
   });
 
