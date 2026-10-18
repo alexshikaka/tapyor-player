@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
+const yts = require('yt-search');
 
 let mainWindow = null;
 let tray = null;
@@ -92,6 +93,23 @@ function checkForUpdates(manual) {
 
 app.whenReady().then(() => {
   ipcMain.handle('get-version', () => app.getVersion());
+
+  // Поиск по YouTube (без ключа и входа)
+  ipcMain.handle('yt-search', async (event, query) => {
+    try {
+      const r = await yts(query);
+      return (r.videos || []).slice(0, 20).map((v) => ({
+        id: v.videoId,
+        title: v.title,
+        author: (v.author && v.author.name) || '',
+        duration: (v.duration && v.duration.timestamp) || '',
+        seconds: (v.duration && v.duration.seconds) || 0,
+        thumb: v.thumbnail
+      }));
+    } catch (e) {
+      return { error: (e && e.message) ? e.message : String(e) };
+    }
+  });
 
   createWindow();
   createTray();

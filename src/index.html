@@ -7,64 +7,227 @@
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: #0E0F13;
-    color: #ECEDF2;
+    margin: 0; background: #0E0F13; color: #ECEDF2;
     font-family: 'Segoe UI', system-ui, sans-serif;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
   }
   header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    border-bottom: 1px solid #22242C;
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; border-bottom: 1px solid #22242C; flex: 0 0 auto;
   }
-  .logo {
-    width: 32px; height: 32px; border-radius: 9px;
-    background: #9B87FF;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; color: #0E0F13;
-  }
-  .title { font-weight: 700; font-size: 16px; }
+  .logo { width: 30px; height: 30px; border-radius: 8px; background: #9B87FF;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; color: #0E0F13; }
+  .title { font-weight: 700; font-size: 15px; }
   nav { display: flex; gap: 4px; background: #181A21; border-radius: 10px; padding: 3px; }
-  nav button {
-    height: 32px; padding: 0 14px; border: 0; border-radius: 8px;
-    background: transparent; color: #C9CBD4; font-size: 13px; cursor: pointer;
-  }
+  nav button { height: 30px; padding: 0 13px; border: 0; border-radius: 8px;
+    background: transparent; color: #C9CBD4; font-size: 13px; cursor: pointer; }
   nav button.active { background: #2A2D38; color: #ECEDF2; font-weight: 600; }
-  main {
-    flex: 1;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 10px; text-align: center;
-  }
-  .muted { color: #8A8E9C; font-size: 14px; max-width: 420px; }
-  .badge { font-size: 12px; color: #9B87FF; border: 1px solid #9B87FF; border-radius: 6px; padding: 2px 8px; }
+  .badge { font-size: 12px; color: #9B87FF; border: 1px solid #9B87FF; border-radius: 6px; padding: 2px 8px; margin-left: auto; }
+
+  main { flex: 1; display: flex; min-height: 0; }
+  .col-search { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 16px 20px; gap: 12px; }
+  .col-queue { flex: 0 0 340px; border-left: 1px solid #22242C; background: #12131A;
+    display: flex; flex-direction: column; padding: 16px; gap: 10px; min-height: 0; }
+
+  .searchbar { display: flex; align-items: center; gap: 10px; background: #181A21;
+    border: 1px solid #2C2F3A; border-radius: 12px; padding: 0 14px; height: 46px; flex: 0 0 auto; }
+  .searchbar input { flex: 1; background: transparent; border: 0; outline: none; color: #ECEDF2; font-size: 15px; }
+  .searchbar button { height: 34px; padding: 0 16px; border: 0; border-radius: 9px; background: #9B87FF; color: #0E0F13; font-weight: 600; font-size: 13px; cursor: pointer; }
+
+  .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; }
+  .row:hover { background: #171922; }
+  .thumb { width: 64px; height: 40px; border-radius: 6px; object-fit: cover; background: #222; flex: 0 0 auto; }
+  .row .meta { flex: 1; min-width: 0; }
+  .row .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .s { font-size: 12px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .time { font-size: 12px; color: #9EA2B0; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 18px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; cursor: pointer; flex: 0 0 auto; font-size: 13px; }
+  .add-btn { height: 36px; padding: 0 12px; border-radius: 9px; border: 0; background: #9B87FF; color: #0E0F13; font-weight: 600; font-size: 13px; cursor: pointer; flex: 0 0 auto; }
+
+  .col-queue h2 { margin: 0; font-size: 14px; font-weight: 600; color: #C9CBD4; }
+  .queue-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .qrow { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 9px; }
+  .qrow.playing { background: rgba(155,135,255,0.14); border: 1px solid #9B87FF; }
+  .qrow .n { font-size: 12px; color: #7C8090; width: 16px; text-align: center; flex: 0 0 auto; }
+  .qrow .qt { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qrow .x { width: 26px; height: 26px; border: 0; background: transparent; color: #7C8090; cursor: pointer; border-radius: 6px; flex: 0 0 auto; }
+  .qrow .x:hover { background: #2A2D38; color: #ECEDF2; }
+  .muted { color: #8A8E9C; font-size: 13px; text-align: center; margin: auto 0; }
+
+  footer { flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px; border-top: 1px solid #22242C; background: #12131A; }
+  #player { width: 200px; height: 112px; border-radius: 8px; overflow: hidden; background: #000; flex: 0 0 auto; }
+  #player iframe { width: 100%; height: 100%; border: 0; }
+  .np { flex: 1; min-width: 0; }
+  .np .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .np .s { font-size: 12px; color: #9EA2B0; }
+  .controls { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+  .controls button { width: 44px; height: 44px; border-radius: 22px; border: 0; cursor: pointer; font-size: 16px; }
+  .controls .main { background: #ECEDF2; color: #0E0F13; }
+  .controls .side { background: transparent; color: #C9CBD4; }
 </style>
 </head>
 <body>
   <header>
-    <div class="logo">♪</div>
+    <div class="logo">S</div>
     <div class="title">Плеер для стрима</div>
     <nav>
       <button class="active">Поиск</button>
       <button>Браузер</button>
       <button>Настройки</button>
     </nav>
-    <span class="badge" id="ver" style="margin-left:auto">версия…</span>
+    <span class="badge" id="ver">версия…</span>
   </header>
-  <script>
-    if (window.app && window.app.getVersion) {
-      window.app.getVersion().then(function (v) {
-        document.getElementById('ver').textContent = 'версия ' + v + ' · каркас';
-      });
-    }
-  </script>
+
   <main>
-    <div style="font-size:18px; font-weight:600">Каркас приложения работает ✓</div>
-    <div class="muted">Окно открывается, значок живёт в трее, вкладки на месте. Дальше наполним экраны: поиск по сервисам, очередь, плеер, страница заказов.</div>
+    <section class="col-search">
+      <div class="searchbar">
+        <input id="q" type="text" placeholder="Найти песню на YouTube…" autofocus>
+        <button id="go">Искать</button>
+      </div>
+      <div class="results" id="results">
+        <div class="muted">Введи название трека и нажми «Искать».</div>
+      </div>
+    </section>
+
+    <aside class="col-queue">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <h2>Очередь</h2>
+        <span id="qcount" style="font-size:12px;color:#8A8E9C">0 треков</span>
+      </div>
+      <div class="queue-list" id="queue">
+        <div class="muted">Пусто. Добавляй треки из поиска.</div>
+      </div>
+    </aside>
   </main>
+
+  <footer>
+    <div id="player"></div>
+    <div class="np">
+      <div class="t" id="np-title">Ничего не играет</div>
+      <div class="s" id="np-sub">Найди трек и нажми ▶</div>
+    </div>
+    <div class="controls">
+      <button class="side" id="prev" title="Предыдущий">⏮</button>
+      <button class="main" id="playpause" title="Пауза/играть">⏸</button>
+      <button class="side" id="next" title="Следующий">⏭</button>
+    </div>
+  </footer>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  // --- Версия в углу ---
+  if (window.app && window.app.getVersion) {
+    window.app.getVersion().then(function (v) {
+      document.getElementById('ver').textContent = 'версия ' + v;
+    });
+  }
+
+  // --- Состояние ---
+  var queue = [];       // {id,title,author,duration}
+  var current = -1;     // индекс играющего в очереди
+  var player = null;
+  var playerReady = false;
+
+  // --- YouTube IFrame API ---
+  window.onYouTubeIframeAPIReady = function () {
+    player = new YT.Player('player', {
+      height: '112', width: '200',
+      playerVars: { autoplay: 0, controls: 1, rel: 0 },
+      events: {
+        onReady: function () { playerReady = true; },
+        onStateChange: function (e) {
+          if (e.data === YT.PlayerState.ENDED) next();
+          if (e.data === YT.PlayerState.PLAYING) setPlayIcon('⏸');
+          if (e.data === YT.PlayerState.PAUSED) setPlayIcon('▶');
+        }
+      }
+    });
+  };
+
+  function setPlayIcon(sym){ document.getElementById('playpause').textContent = sym; }
+
+  // --- Поиск ---
+  var q = document.getElementById('q');
+  var results = document.getElementById('results');
+  document.getElementById('go').onclick = doSearch;
+  q.addEventListener('keydown', function(e){ if(e.key==='Enter') doSearch(); });
+
+  async function doSearch() {
+    var query = q.value.trim();
+    if (!query) return;
+    results.innerHTML = '<div class="muted">Ищу…</div>';
+    var res = await window.app.ytSearch(query);
+    if (res && res.error) { results.innerHTML = '<div class="muted">Ошибка поиска: '+esc(res.error)+'</div>'; return; }
+    if (!res || !res.length) { results.innerHTML = '<div class="muted">Ничего не нашлось.</div>'; return; }
+    results.innerHTML = '';
+    res.forEach(function (v) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML =
+        '<img class="thumb" src="'+esc(v.thumb)+'" alt="">'+
+        '<div class="meta"><div class="t">'+esc(v.title)+'</div><div class="s">'+esc(v.author)+'</div></div>'+
+        '<span class="time">'+esc(v.duration)+'</span>';
+      var play = document.createElement('button'); play.className='icon-btn'; play.textContent='▶'; play.title='Играть сейчас';
+      play.onclick = function(){ playNow(v); };
+      var add = document.createElement('button'); add.className='add-btn'; add.textContent='+ в очередь';
+      add.onclick = function(){ addToQueue(v); };
+      row.appendChild(play); row.appendChild(add);
+      results.appendChild(row);
+    });
+  }
+
+  // --- Очередь ---
+  function addToQueue(v) { queue.push(v); renderQueue(); if (current === -1) playIndex(0); }
+  function playNow(v) { queue.splice(current+1, 0, v); playIndex(current+1); }
+
+  function playIndex(i) {
+    if (i < 0 || i >= queue.length) return;
+    current = i;
+    var v = queue[i];
+    document.getElementById('np-title').textContent = v.title;
+    document.getElementById('np-sub').textContent = v.author;
+    if (playerReady && player) player.loadVideoById(v.id);
+    renderQueue();
+  }
+  function next() { if (current+1 < queue.length) playIndex(current+1); }
+  function prev() { if (current-1 >= 0) playIndex(current-1); }
+  document.getElementById('next').onclick = next;
+  document.getElementById('prev').onclick = prev;
+  document.getElementById('playpause').onclick = function(){
+    if (!playerReady || !player) return;
+    var st = player.getPlayerState();
+    if (st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo();
+  };
+
+  function removeAt(i) {
+    queue.splice(i, 1);
+    if (i < current) current--;
+    else if (i === current) { if (current >= queue.length) current = queue.length-1; if (current>=0) playIndex(current); else { current=-1; stop(); } }
+    renderQueue();
+  }
+  function stop(){ document.getElementById('np-title').textContent='Ничего не играет'; document.getElementById('np-sub').textContent='Найди трек и нажми ▶'; if(player&&playerReady) player.stopVideo(); }
+
+  function renderQueue() {
+    var box = document.getElementById('queue');
+    document.getElementById('qcount').textContent = queue.length + ' ' + plural(queue.length);
+    if (!queue.length) { box.innerHTML = '<div class="muted">Пусто. Добавляй треки из поиска.</div>'; return; }
+    box.innerHTML = '';
+    queue.forEach(function (v, i) {
+      var r = document.createElement('div');
+      r.className = 'qrow' + (i===current ? ' playing' : '');
+      r.innerHTML = '<span class="n">'+(i===current?'▶':(i+1))+'</span><div class="qt">'+esc(v.title)+'</div>';
+      var x = document.createElement('button'); x.className='x'; x.textContent='✕'; x.title='Убрать';
+      x.onclick = function(){ removeAt(i); };
+      r.appendChild(x);
+      r.querySelector('.qt').onclick = function(){ playIndex(i); };
+      box.appendChild(r);
+    });
+  }
+
+  function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
 </body>
 </html>
