@@ -13,6 +13,7 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#0E0F13',
     title: 'Плеер для стрима',
+    icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -33,8 +34,7 @@ function createWindow() {
 }
 
 function createTray() {
-  // Пустая иконка-заглушка (позже заменим на свою)
-  const icon = nativeImage.createEmpty();
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
   tray = new Tray(icon);
   tray.setToolTip('Плеер для стрима');
 
