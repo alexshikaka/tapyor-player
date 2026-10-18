@@ -242,6 +242,16 @@ app.whenReady().then(async () => {
     return { error: (viaDlp && viaDlp.error) ? viaDlp.error : 'не удалось получить поток' };
   });
 
+  // Настройки (запоминаются между запусками)
+  const settingsPath = () => path.join(app.getPath('userData'), 'settings.json');
+  const readSettings = () => { try { return JSON.parse(fs.readFileSync(settingsPath(), 'utf8')); } catch (e) { return {}; } };
+  ipcMain.handle('get-setting', (e, key) => readSettings()[key]);
+  ipcMain.handle('set-setting', (e, key, value) => {
+    const s = readSettings(); s[key] = value;
+    try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
+    return true;
+  });
+
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
   log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
 

@@ -56,7 +56,10 @@
   .add { flex: 0 0 auto; height: 38px; padding: 0 14px; border-radius: 10px; border: 0; background: #9B87FF; color: #0E0F13; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
   /* Правая колонка: очередь */
-  .queue-col { flex: 0 0 360px; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .splitter { flex: 0 0 6px; margin: 0 -3px; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; }
+  .splitter:hover, .splitter.drag { background: rgba(155,135,255,.35); }
+  body.resizing { cursor: col-resize; user-select: none; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow: hidden; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
   .queue-col .qhead { display: flex; justify-content: space-between; align-items: baseline; flex: 0 0 auto; }
   .queue-col .qhead h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
   .queue-col .qhead span { font-size: 13px; color: #8A8E9C; }
@@ -141,6 +144,8 @@
         <div class="muted">Здесь появятся найденные треки.</div>
       </div>
     </section>
+
+    <div class="splitter" id="splitter" title="Потяни, чтобы изменить ширину"></div>
 
     <aside class="queue-col" aria-label="Очередь">
       <div class="qhead">
@@ -364,6 +369,24 @@
 
   var volEl = document.getElementById('vol');
   volEl.addEventListener('input', function(){ var v = (parseInt(volEl.value,10)||0)/100; aud.volume = v; video.volume = v; });
+
+  // Перетаскиваемая граница между поиском и панелью «видео + очередь»
+  var qcol = document.querySelector('.queue-col'), splitter = document.getElementById('splitter'), splitDrag = false;
+  function setQW(w){
+    var max = Math.max(300, window.innerWidth - 420);
+    w = Math.max(280, Math.min(max, w));
+    qcol.style.width = w + 'px';
+    return w;
+  }
+  if (window.app && window.app.getSetting) window.app.getSetting('queueWidth').then(function(w){ if (w) setQW(w); });
+  splitter.addEventListener('mousedown', function(e){ splitDrag = true; splitter.classList.add('drag'); document.body.classList.add('resizing'); e.preventDefault(); });
+  document.addEventListener('mousemove', function(e){ if (splitDrag) setQW(window.innerWidth - e.clientX); });
+  document.addEventListener('mouseup', function(){
+    if (!splitDrag) return;
+    splitDrag = false; splitter.classList.remove('drag'); document.body.classList.remove('resizing');
+    if (window.app && window.app.setSetting) window.app.setSetting('queueWidth', parseInt(qcol.style.width, 10));
+  });
+  window.addEventListener('resize', function(){ if (qcol.style.width) setQW(parseInt(qcol.style.width, 10)); });
 
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
