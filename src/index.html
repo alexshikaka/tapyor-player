@@ -160,7 +160,14 @@
   .wtitle .s { font-size: 12px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .wgear { width: 30px; height: 30px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0; }
   .wgear:hover, .wgear.open { background: #2A2D38; color: #ECEDF2; }
-  .wsettings { display: flex; flex-direction: column; gap: 8px; }
+  .wavecard { position: relative; }
+  .wavecard .whead { cursor: default; }
+  .wsettings { display: flex; flex-direction: column; gap: 8px; position: absolute; left: -1px; right: -1px; top: calc(100% + 6px); z-index: 30;
+    background: #171922; border: 1px solid #2C2F3A; border-radius: 14px; padding: 12px; box-shadow: 0 18px 44px rgba(0,0,0,.6);
+    max-height: calc(100vh - 300px); overflow-y: auto; }
+  .wsettings::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; height: 8px; } /* мостик, чтобы мышка не «теряла» панель */
+  .wchip.wmore { border-color: #9B87FF; color: #B3A3FF; font-weight: 600; }
+  .wchip.wmore:hover { background: rgba(155,135,255,.14); color: #CFC4FF; }
   .wsettings[hidden] { display: none; }
   .wplay { height: 30px; padding: 0 12px; border-radius: 15px; border: 0; background: #ECEDF2; color: #0E0F13; font-size: 12px; font-weight: 600; cursor: pointer; flex: 0 0 auto; }
   .toggle { width: 42px; height: 26px; border-radius: 13px; border: 0; background: #3A3D4A; padding: 3px; display: flex; justify-content: flex-start; cursor: pointer; flex: 0 0 auto; transition: background .15s; }
@@ -478,7 +485,7 @@
     <aside class="queue-col" aria-label="Очередь">
       <div class="qhead">
         <h2>Очередь</h2>
-        <span id="qcount">0 треков</span>
+        <span id="qcount">0 в очереди</span>
       </div>
 
       <div class="wavecard" id="wavecard">
@@ -488,7 +495,7 @@
             <div class="t" id="waveTitle">Моя волна</div>
             <div class="s" id="waveSub">Включится, когда заказы доиграют</div>
           </div>
-          <button class="wgear" id="waveGear" title="Варианты волны, характер, настроение, язык" aria-label="Настроить волну" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+          <button class="wgear" id="waveGear" title="Закрепить настройки волны" aria-label="Настроить волну" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
           <button class="wplay" id="wavePlay" title="Включить фон сейчас">▶ Волна</button>
           <button class="toggle on" id="waveToggle" title="Автоматически включать фон, когда очередь пуста" aria-pressed="true"><span></span></button>
         </div>
@@ -1129,12 +1136,28 @@
     if (tok === bgToken && r && r.tracks && r.tracks.length) waveBuf = r.tracks;
   }
 
+  var wsPinned = false, wsTimer = null;
+  function showWaveSettings(open){
+    var ws = $('waveSettings'), g = $('waveGear');
+    clearTimeout(wsTimer);
+    ws.hidden = !open;
+    g.classList.toggle('open', open);
+    g.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open && ymLoggedIn && !variants.loaded) loadVariants();
+  }
+  // Наведение на строку волны — настройки выпадают; увёл мышку с карточки — прячутся (если не закреплены шестерёнкой)
+  document.querySelector('#wavecard .whead').addEventListener('mouseenter', function(){ showWaveSettings(true); });
+  $('wavecard').addEventListener('mouseenter', function(){ clearTimeout(wsTimer); });
+  $('wavecard').addEventListener('mouseleave', function(){
+    if (wsPinned) return;
+    clearTimeout(wsTimer);
+    wsTimer = setTimeout(function(){ showWaveSettings(false); }, 350);
+  });
   $('waveGear').onclick = function(){
-    var ws = $('waveSettings');
-    ws.hidden = !ws.hidden;
-    this.classList.toggle('open', !ws.hidden);
-    this.setAttribute('aria-expanded', ws.hidden ? 'false' : 'true');
-    if (!ws.hidden && ymLoggedIn && !variants.loaded) loadVariants();
+    wsPinned = !wsPinned;
+    this.title = wsPinned ? 'Настройки закреплены — нажми, чтобы прятать их снова' : 'Закрепить настройки волны';
+    showWaveSettings(wsPinned || !$('waveSettings').hidden);
+    if (!wsPinned) showWaveSettings(false);
   };
   function renderWaveUi(){
     var tg = $('waveToggle');
@@ -1228,13 +1251,13 @@
     var html = '';
     function chip(s){ return '<button class="wchip" data-st="' + esc(s.id) + '" data-name="' + esc(s.name) + '">' + esc(s.name) + '</button>'; }
     if (!genresOpen) {
-      html = top.slice(0, 10).map(chip).join('') + '<button class="wchip" data-more="1">Ещё…</button>';
+      html = top.slice(0, 10).map(chip).join('') + '<button class="wchip wmore" data-more="1">Ещё…</button>';
     } else {
       [['genre', 'Жанры'], ['epoch', 'Эпохи'], ['activity', 'Занятия'], ['mood', 'Настроение']].forEach(function (g){
         var list = stations.filter(function (s){ return s.type === g[0] && (g[0] !== 'genre' || !s.parent); });
         if (list.length) html += '<span class="wlabel">' + g[1] + '</span>' + list.map(chip).join('');
       });
-      html += '<button class="wchip" data-more="0">Свернуть</button>';
+      html += '<button class="wchip wmore" data-more="0">Свернуть</button>';
     }
     box.innerHTML = html;
     renderWaveUi();
