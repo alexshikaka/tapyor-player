@@ -285,9 +285,14 @@
   .imp-sm.hl { border-color: #9B87FF; color: #B3A3FF; }
   .imp-sm:disabled { opacity: .5; }
   .imp-ed { margin: 2px 0 8px 24px; padding: 8px; border-radius: 10px; background: #14151C; border: 1px solid #23252E; display: flex; flex-direction: column; gap: 2px; }
-  .imp-alt { display: flex; align-items: center; gap: 6px; padding: 7px 8px; border-radius: 8px; border: 0; background: transparent; color: #ECEDF2; font: 500 13px Onest, sans-serif; text-align: left; cursor: pointer; }
+  .imp-alt { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 8px; color: #ECEDF2; font: 500 13px Onest, sans-serif; }
   .imp-alt:hover { background: #20222C; }
-  .imp-alt span { color: #8A8E9C; font-size: 12px; margin-left: auto; }
+  .imp-alt .an { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .imp-alt .ad { color: #8A8E9C; font-size: 12px; }
+  .imp-sm.ok { border-color: rgba(74,222,154,.5); color: #4ADE9A; }
+  .imp-sm.ok:hover { background: rgba(74,222,154,.1); color: #6EEBB0; }
+  .imp-pv { width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  .imp-pv.on { border-color: #9B87FF; color: #B3A3FF; }
   .imp-none { font-size: 12px; color: #8A8E9C; padding: 4px 6px; }
   .imp-q { display: flex; gap: 6px; margin-top: 6px; }
   .imp-q .imp-f { height: 32px; font-size: 13px; }
@@ -826,6 +831,7 @@
       var m = master();
       if (m.currentTime > 0 && m.duration && m.currentTime < m.duration - 2) A.ymWaveFeedback('skip', ymKey(prevItem), m.currentTime);
     }
+    previewT = null;
     current = i; var v = queue[i];
     v.played = true;
     if (v.bg) bgOn = true;
@@ -902,6 +908,13 @@
     if (m.paused) m.play().catch(noop); else m.pause();
   };
   function onTrackEnded(){
+    if (previewT) { // прослушивание кончилось — тишина, очередь не трогаем; «Играть» продолжит очередь
+      previewT = null;
+      [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
+      video.removeAttribute('poster'); mode = 'single';
+      updPreviewBtns(); setNowPlaying(null); busy(false); setSub('Прослушивание закончилось');
+      return;
+    }
     var v = queue[current];
     if (v && v.bg && bgSel.kind === 'wave' && srcOf(v) === 'ym') A.ymWaveFeedback('trackFinished', ymKey(v), aud.duration || 0);
     advance(true);
@@ -909,7 +922,7 @@
   function stopVideo(){
     [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
     video.removeAttribute('poster');
-    mode = 'single'; loadingIdx = -1;
+    mode = 'single'; loadingIdx = -1; previewT = null;
     bgOn = false; bgPending = false;
     setNowPlaying(null); busy(false);
     playingId = null; markPlayingRows();
@@ -1841,13 +1854,18 @@
     var finished = imp.done >= imp.items.length;
     function row(it, kind){
       var t = it.track;
-      var m = t ? srcDot(t) + esc((t.author ? t.author + ' — ' : '') + t.title) + (it.picked ? ' <span class="imp-pk">выбрано</span>' : '') : '<span style="color:#7C8090">—</span>';
-      var btns = kind === 'exact' ? '<button class="imp-sm" data-ed="' + it._k + '">Изменить</button>'
-        : kind === 'close' ? '<button class="imp-sm" data-ed="' + it._k + '">Не то</button>' + (t ? '<button class="imp-sm" data-play="' + it._k + '" title="Включить сейчас">▶</button>' : '')
+      var m = t ? srcDot(t) + esc((t.author ? t.author + ' — ' : '') + t.title) + (it.picked ? ' <span class="imp-pk">подтверждено</span>' : '') : '<span style="color:#7C8090">—</span>';
+      var pv = t ? '<button class="imp-sm imp-pv" data-pv="' + it._k + '" title="Прослушать (в очередь не попадёт)" aria-label="Прослушать">' + pvIcon(t) + '</button>' : '';
+      var btns = kind === 'exact' ? pv + '<button class="imp-sm" data-ed="' + it._k + '">Изменить</button>'
+        : kind === 'close' ? pv + '<button class="imp-sm ok" data-ok="' + it._k + '">Это та песня</button><button class="imp-sm" data-ed="' + it._k + '">Не то</button>'
         : '<button class="imp-sm hl" data-ed="' + it._k + '">Искать вручную</button><button class="imp-sm" data-rm="' + it._k + '">Убрать</button>';
       var ed = '';
       if (open[it._k]) {
-        ed = '<div class="imp-ed">' + ((it.alts || []).length ? (it.alts || []).map(function (a, j){ return '<button class="imp-alt" data-pick="' + it._k + ':' + j + '">' + srcDot(a) + esc((a.author ? a.author + ' — ' : '') + a.title) + (a.duration ? ' <span>' + esc(a.duration) + '</span>' : '') + '</button>'; }).join('') : '<div class="imp-none">Вариантов нет — поищи по-другому:</div>') +
+        ed = '<div class="imp-ed">' + ((it.alts || []).length ? (it.alts || []).map(function (a, j){
+            return '<div class="imp-alt"><button class="imp-sm imp-pv" data-pv="' + it._k + ':' + j + '" title="Прослушать (в очередь не попадёт)" aria-label="Прослушать">' + pvIcon(a) + '</button>' +
+              '<span class="an">' + srcDot(a) + esc((a.author ? a.author + ' — ' : '') + a.title) + '</span>' + (a.duration ? '<span class="ad">' + esc(a.duration) + '</span>' : '') +
+              '<button class="imp-sm ok" data-pick="' + it._k + ':' + j + '">Это та песня</button></div>';
+          }).join('') : '<div class="imp-none">Вариантов нет — поищи по-другому:</div>') +
           '<div class="imp-q"><input class="imp-f" data-qin="' + it._k + '" value="' + esc(it.query || it.line) + '" aria-label="Запрос"><button class="imp-sm hl" data-q="' + it._k + '">Найти</button><button class="imp-sm" data-rm="' + it._k + '">Убрать песню</button></div></div>';
       }
       return '<div class="imp-r ' + kind + '"><span class="o" title="' + esc(it.line) + '">' + esc(it.line) + '</span><span class="m">' + m + '</span><span class="b">' + btns + '</span></div>' + ed;
@@ -1881,7 +1899,13 @@
     var d = b.dataset, it;
     if (d.ed != null) { it = imp.items[+d.ed]; it._open = !it._open; renderImportResults(); return; }
     if (d.rm != null) { it = imp.items[+d.rm]; it.removed = true; it._open = false; renderImportResults(); return; }
-    if (d.play != null) { it = imp.items[+d.play]; if (it.track) playNow(it.track); return; }
+    if (d.ok != null) { it = imp.items[+d.ok]; if (it.track) { it.status = 'exact'; it.picked = true; it._open = false; renderImportResults(); } return; }
+    if (d.pv != null) {
+      var pp = String(d.pv).split(':'); it = imp.items[+pp[0]];
+      var tr = pp.length > 1 ? (it.alts || [])[+pp[1]] : it.track;
+      if (tr) previewTrack(tr);
+      return;
+    }
     if (d.pick) {
       var p = d.pick.split(':'); it = imp.items[+p[0]];
       var a = it.alts[+p[1]];
@@ -1905,6 +1929,34 @@
   impHost().addEventListener('keydown', function(e){
     if (e.key === 'Enter' && e.target.dataset && e.target.dataset.qin != null) { var b = impHost().querySelector('[data-q="' + e.target.dataset.qin + '"]'); if (b) b.click(); }
   });
+  // Прослушивание варианта: играет, но в очередь и в ленту дня не попадает
+  var previewT = null;
+  var PV_PLAY = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>';
+  var PV_STOP = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 6h12v12H6z"></path></svg>';
+  function pvActive(t){ return !!(previewT && t && previewT.id === t.id && previewT.src === t.src && master().getAttribute('src') && !master().paused); }
+  function pvIcon(t){ return pvActive(t) ? PV_STOP : PV_PLAY; }
+  function updPreviewBtns(){
+    if (!imp) return;
+    var bs = impHost().querySelectorAll('[data-pv]');
+    for (var k = 0; k < bs.length; k++) {
+      var pp = String(bs[k].dataset.pv).split(':'), it = imp.items[+pp[0]];
+      var tr = it && (pp.length > 1 ? (it.alts || [])[+pp[1]] : it.track);
+      var on = pvActive(tr); bs[k].innerHTML = on ? PV_STOP : PV_PLAY; bs[k].classList.toggle('on', on);
+    }
+  }
+  async function previewTrack(t){
+    if (pvActive(t)) { master().pause(); updPreviewBtns(); return; }
+    previewT = t;
+    showTrack(t); setNowPlaying(t); setSub('Прослушивание…');
+    var r = await fetchStream(t);
+    if (previewT !== t) return;
+    if (!r || r.error) { setErr('⚠ ' + ((r && r.error) || 'поток не получен')); previewT = null; return; }
+    startMedia(t, r);
+    setSub((t.author || '') + ' · прослушивание из «Плейлиста из текста»');
+    updPreviewBtns();
+  }
+  [video, aud].forEach(function (el){ el.addEventListener('play', updPreviewBtns); el.addEventListener('pause', updPreviewBtns); });
+
   async function saveImport(){
     var inc = impIncluded(); if (!inc.length) return;
     var tracks = inc.map(function (i){ return slimTrack(i.track); });
