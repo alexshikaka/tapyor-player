@@ -161,7 +161,8 @@
   .wgear { width: 30px; height: 30px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0; }
   .wgear:hover, .wgear.open { background: #2A2D38; color: #ECEDF2; }
   .wavecard { position: relative; }
-  .wavecard .whead { cursor: default; }
+  .wavecard .whead { cursor: pointer; border-radius: 10px; }
+  .wavecard .whead:hover .wtitle .t { color: #FFD43B; }
   .wsettings { display: flex; flex-direction: column; gap: 8px; position: absolute; left: -1px; right: -1px; top: calc(100% + 6px); z-index: 30;
     background: #171922; border: 1px solid #2C2F3A; border-radius: 14px; padding: 12px; box-shadow: 0 18px 44px rgba(0,0,0,.6);
     max-height: calc(100vh - 300px); overflow-y: auto; }
@@ -495,7 +496,7 @@
             <div class="t" id="waveTitle">Моя волна</div>
             <div class="s" id="waveSub">Включится, когда заказы доиграют</div>
           </div>
-          <button class="wgear" id="waveGear" title="Закрепить настройки волны" aria-label="Настроить волну" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+          <button class="wgear" id="waveGear" title="Настройки волны" aria-label="Настроить волну" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
           <button class="wplay" id="wavePlay" title="Включить фон сейчас">▶ Волна</button>
           <button class="toggle on" id="waveToggle" title="Автоматически включать фон, когда очередь пуста" aria-pressed="true"><span></span></button>
         </div>
@@ -1135,29 +1136,23 @@
     if (tok === bgToken && r && r.tracks && r.tracks.length) waveBuf = r.tracks;
   }
 
-  var wsPinned = false, wsTimer = null;
   function showWaveSettings(open){
     var ws = $('waveSettings'), g = $('waveGear');
-    clearTimeout(wsTimer);
     ws.hidden = !open;
     g.classList.toggle('open', open);
     g.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open && ymLoggedIn && !variants.loaded) loadVariants();
   }
-  // Наведение на строку волны — настройки выпадают; увёл мышку с карточки — прячутся (если не закреплены шестерёнкой)
-  document.querySelector('#wavecard .whead').addEventListener('mouseenter', function(){ showWaveSettings(true); });
-  $('wavecard').addEventListener('mouseenter', function(){ clearTimeout(wsTimer); });
-  $('wavecard').addEventListener('mouseleave', function(){
-    if (wsPinned) return;
-    clearTimeout(wsTimer);
-    wsTimer = setTimeout(function(){ showWaveSettings(false); }, 350);
+  // Нажатие на строку волны (кроме кнопок ▶ и переключателя) раскрывает/сворачивает настройки
+  document.querySelector('#wavecard .whead').addEventListener('click', function(e){
+    if (e.target.closest('#wavePlay, #waveToggle')) return;
+    showWaveSettings($('waveSettings').hidden);
   });
-  $('waveGear').onclick = function(){
-    wsPinned = !wsPinned;
-    this.title = wsPinned ? 'Настройки закреплены — нажми, чтобы прятать их снова' : 'Закрепить настройки волны';
-    showWaveSettings(wsPinned || !$('waveSettings').hidden);
-    if (!wsPinned) showWaveSettings(false);
-  };
+  // Нажатие мимо карточки волны — настройки сворачиваются
+  document.addEventListener('mousedown', function(e){
+    if ($('waveSettings').hidden || e.target.closest('#wavecard')) return;
+    showWaveSettings(false);
+  });
   function renderWaveUi(){
     var tg = $('waveToggle');
     tg.classList.toggle('on', !!waveCfg.on); tg.setAttribute('aria-pressed', waveCfg.on ? 'true' : 'false');
