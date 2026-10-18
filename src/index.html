@@ -117,6 +117,19 @@
   .sg-item { padding: 9px 12px; border-radius: 8px; font-size: 14px; color: #ECEDF2; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sg-item:hover, .sg-item.active { background: #2A2D38; }
 
+  /* Окно входа по коду */
+  .modal { position: fixed; inset: 0; z-index: 100; background: rgba(5,6,9,.66); display: flex; align-items: center; justify-content: center; -webkit-app-region: no-drag; }
+  .modal[hidden] { display: none; }
+  .mbox { width: 440px; max-width: calc(100% - 32px); background: #171922; border: 1px solid #2C2F3A; border-radius: 16px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 12px; }
+  .mtitle { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .mtext { font-size: 14px; color: #C9CBD4; line-height: 1.45; }
+  .mcode { font-size: 34px; font-weight: 500; letter-spacing: .18em; text-align: center; background: #0E0F13; border: 1px solid #2C2F3A; border-radius: 12px; padding: 14px 0; color: #FFD43B; user-select: all; }
+  .mhint { font-size: 13px; color: #8A8E9C; line-height: 1.45; }
+  .mbtns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .mbtn { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid #2C2F3A; background: #20222C; color: #ECEDF2; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .mbtn:hover { background: #2A2D38; }
+  .mbtn.ghost { background: transparent; color: #9EA2B0; margin-left: auto; }
+
   /* Фильтр по источнику */
   .results.f-ym .row[data-src="yt"], .results.f-yt .row[data-src="ym"] { display: none; }
 </style>
@@ -143,8 +156,8 @@
         <button class="chip active" data-f="all">Везде</button>
         <button class="chip" data-f="ym"><span class="dot" style="background:#FFD43B"></span>Яндекс</button>
         <button class="chip" data-f="yt"><span class="dot" style="background:#FF5A52"></span>YouTube</button>
-        <button class="chip soon" disabled><span class="dot" style="background:#3BA8F0"></span>Telegram · скоро</button>
-        <button class="chip soon" disabled><span class="dot" style="background:#FF8A3D"></span>SoundCloud · скоро</button>
+        <button class="chip soon" disabled title="Скоро"><span class="dot" style="background:#3BA8F0"></span>Telegram</button>
+        <button class="chip soon" disabled title="Скоро"><span class="dot" style="background:#FF8A3D"></span>SoundCloud</button>
       </div>
     </div>
     <button class="acct" id="acct" title="Аккаунт Яндекс Музыки"><span class="dot" style="background:#FFD43B"></span>Войти в Яндекс</button>
@@ -186,6 +199,20 @@
       <button class="clearq" id="clearq">Очистить очередь</button>
     </aside>
   </main>
+
+  <div class="modal" id="loginModal" hidden>
+    <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="lmTitle">
+      <div class="mtitle" id="lmTitle"><span class="dot" style="background:#FFD43B"></span>Вход в Яндекс Музыку</div>
+      <div class="mtext" id="lmText">Готовлю вход…</div>
+      <div class="mcode mono" id="lmCode">• • • • • • •</div>
+      <div class="mhint" id="lmHint">Код уже скопирован — на странице Яндекса просто вставь его (Ctrl+V) и нажми «Разрешить». Приложение само заметит вход.</div>
+      <div class="mbtns">
+        <button class="mbtn" id="lmOpen">Открыть страницу ещё раз</button>
+        <button class="mbtn" id="lmInApp">Войти в окне приложения</button>
+        <button class="mbtn ghost" id="lmCancel">Отмена</button>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <div class="f-now">
@@ -548,15 +575,47 @@
       acctBtn.title = (s && s.error) ? s.error : 'Войти в Яндекс Музыку';
     }
   }
+  // Вход: по умолчанию через обычный браузер по коду; запасной — окно внутри приложения
+  var lm = document.getElementById('loginModal'), lmUrl = '', loginBusy = false;
+  function closeLoginModal(){ lm.hidden = true; }
+  async function inAppLogin(){
+    acctBtn.textContent = 'Открываю вход…';
+    var r = await window.app.ymLogin();
+    if (r && r.error && r.error !== 'вход отменён') alert('Вход в Яндекс: ' + r.error);
+    refreshAcct();
+  }
+  async function browserLogin(){
+    if (!window.app.ymLoginBrowserStart) return inAppLogin();
+    loginBusy = true;
+    document.getElementById('lmText').textContent = 'Готовлю вход…';
+    document.getElementById('lmCode').textContent = '• • • • • • •';
+    lm.hidden = false;
+    var s = await window.app.ymLoginBrowserStart();
+    if (!s || s.error) {
+      // Яндекс не дал войти через браузер — переключаемся на окно в приложении
+      closeLoginModal(); loginBusy = false;
+      return inAppLogin();
+    }
+    lmUrl = s.verification_url;
+    document.getElementById('lmText').textContent = 'В твоём браузере открылась страница Яндекса. Введи там этот код:';
+    document.getElementById('lmCode').textContent = s.user_code;
+    var r = await window.app.ymLoginBrowserWait();
+    loginBusy = false;
+    closeLoginModal();
+    if (r && r.error && r.error !== 'вход отменён') alert('Вход в Яндекс: ' + r.error);
+    refreshAcct();
+  }
+  document.getElementById('lmOpen').onclick = function(){ if (lmUrl) window.app.openExternal(lmUrl); };
+  document.getElementById('lmInApp').onclick = function(){ window.app.ymLoginBrowserCancel(); closeLoginModal(); inAppLogin(); };
+  document.getElementById('lmCancel').onclick = function(){ window.app.ymLoginBrowserCancel(); closeLoginModal(); refreshAcct(); };
+
   acctBtn.addEventListener('click', async function(){
     if (acctBtn.dataset.in) {
       if (confirm('Выйти из аккаунта Яндекс Музыки?')) { await window.app.ymLogout(); refreshAcct(); }
       return;
     }
-    acctBtn.textContent = 'Открываю вход…';
-    var r = await window.app.ymLogin();
-    if (r && r.error && r.error !== 'вход отменён') alert('Вход в Яндекс: ' + r.error);
-    refreshAcct();
+    if (loginBusy) { lm.hidden = false; return; }
+    browserLogin();
   });
   refreshAcct();
 

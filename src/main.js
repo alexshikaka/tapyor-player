@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard } = require('electron');
 const ym = require('./yandex');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
@@ -46,6 +46,36 @@ function yandexLogin() {
     win.on('closed', () => { if (!done) resolve({ error: 'вход отменён' }); });
     win.loadURL('https://oauth.yandex.ru/authorize?response_type=token&client_id=' + ym.CLIENT_ID);
   });
+}
+
+// Вход по коду через обычный браузер (официальный способ Яндекс OAuth)
+const YM_CLIENT_SECRET = '53bc75238f0c4d08a118e51fe9203300'; // публичный секрет того же клиента Яндекс Музыки
+let deviceLogin = null;
+async function ymDeviceStart() {
+  const body = new URLSearchParams({ client_id: ym.CLIENT_ID, device_name: 'Плеер для стрима' });
+  const res = await fetch('https://oauth.yandex.ru/device/code', { method: 'POST', body, signal: AbortSignal.timeout(10000) });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j.device_code) throw new Error(j.error_description || j.error || ('HTTP ' + res.status));
+  deviceLogin = { code: j.device_code, interval: Math.max(2, j.interval || 5), expiresAt: Date.now() + (j.expires_in || 600) * 1000, cancelled: false };
+  return { user_code: j.user_code, verification_url: j.verification_url || 'https://oauth.yandex.ru/device', expires_in: j.expires_in || 600 };
+}
+async function ymDeviceWait() {
+  const d = deviceLogin;
+  if (!d) return { error: 'вход не начат' };
+  while (!d.cancelled && Date.now() < d.expiresAt) {
+    await new Promise((r) => setTimeout(r, d.interval * 1000));
+    if (d.cancelled) break;
+    try {
+      const body = new URLSearchParams({ grant_type: 'device_code', code: d.code, client_id: ym.CLIENT_ID, client_secret: YM_CLIENT_SECRET });
+      const res = await fetch('https://oauth.yandex.ru/token', { method: 'POST', body, signal: AbortSignal.timeout(10000) });
+      const j = await res.json().catch(() => ({}));
+      if (j.access_token) return { token: j.access_token };
+      if (j.error === 'authorization_pending') continue;
+      if (j.error === 'slow_down') { d.interval += 2; continue; }
+      return { error: j.error_description || j.error || ('HTTP ' + res.status) };
+    } catch (e) { log('Яндекс: опрос входа — ' + e.message); }
+  }
+  return { error: d.cancelled ? 'вход отменён' : 'время ожидания истекло, попробуй ещё раз' };
 }
 
 // Подсказки YouTube (запасной вариант, если у Яндекса пусто)
@@ -377,6 +407,27 @@ app.whenReady().then(async () => {
     setYmToken(r.token);
     log('Яндекс: вход выполнен');
     return ymStatus();
+  });
+  ipcMain.handle('ym-login-browser-start', async () => {
+    try {
+      const d = await ymDeviceStart();
+      try { clipboard.writeText(d.user_code); } catch (e) {}
+      shell.openExternal(d.verification_url);
+      log('Яндекс: вход через браузер — код выдан');
+      return d;
+    } catch (e) { log('Яндекс: вход через браузер недоступен — ' + e.message); return { error: e.message }; }
+  });
+  ipcMain.handle('ym-login-browser-wait', async () => {
+    const r = await ymDeviceWait();
+    if (r.error) { log('Яндекс: вход через браузер — ' + r.error); return r; }
+    setYmToken(r.token);
+    log('Яндекс: вход через браузер выполнен');
+    return ymStatus();
+  });
+  ipcMain.handle('ym-login-browser-cancel', () => { if (deviceLogin) deviceLogin.cancelled = true; return true; });
+  ipcMain.handle('open-external', (e, url) => {
+    if (/^https:\/\/([a-z0-9-]+\.)*(yandex\.(ru|com|by|kz)|ya\.ru)\//i.test(String(url || ''))) shell.openExternal(url);
+    return true;
   });
   ipcMain.handle('ym-logout', () => { setYmToken(''); log('Яндекс: выход'); return true; });
   ipcMain.handle('ym-search', async (e, q) => {
