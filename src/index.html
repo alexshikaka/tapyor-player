@@ -331,7 +331,7 @@
   function setNowPlaying(v){
     var line = v ? ((v.author ? v.author + ' — ' : '') + v.title) : '';
     document.title = line ? line + ' · ' + APP_TITLE : APP_TITLE;
-    if (window.app && window.app.nowPlaying) window.app.nowPlaying(line);
+    if (window.app && window.app.nowPlaying) window.app.nowPlaying(v ? { artist: v.author || '', title: v.title || '' } : null);
   }
 
   [video, aud].forEach(function (el) {

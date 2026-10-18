@@ -15,6 +15,36 @@ function log(msg) {
   try { fs.appendFileSync(logPath(), new Date().toISOString() + '  ' + String(msg) + '\n'); } catch (e) {}
 }
 
+// --- Настройки и файл «сейчас играет» для OBS ---
+function settingsFile() { return path.join(app.getPath('userData'), 'settings.json'); }
+function readSettingsFile() { try { return JSON.parse(fs.readFileSync(settingsFile(), 'utf8')); } catch (e) { return {}; } }
+function npFilePath() {
+  const s = readSettingsFile();
+  return s.nowPlayingPath || path.join(app.getPath('documents'), 'Плеер для стрима', 'now_playing.txt');
+}
+function formatNowPlaying(info, fmt) {
+  if (!info || !info.title) return '';
+  return String(fmt || '{artist} — {title}')
+    .replace(/\{artist\}/g, info.artist || '')
+    .replace(/\{title\}/g, info.title || '')
+    .replace(/^[\s—–-]+|[\s—–-]+$/g, '') // если исполнителя нет — без висящего тире
+    .trim();
+}
+let lastNpText = null;
+function writeNowPlaying(info) {
+  const text = formatNowPlaying(info, readSettingsFile().nowPlayingFormat);
+  if (text === lastNpText) return;
+  const p = npFilePath();
+  try {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    const tmp = p + '.tmp';
+    fs.writeFileSync(tmp, text, 'utf8');
+    try { fs.renameSync(tmp, p); } // целиком за раз — OBS не прочитает полфайла
+    catch (e) { fs.writeFileSync(p, text, 'utf8'); try { fs.unlinkSync(tmp); } catch (e2) {} }
+    lastNpText = text;
+  } catch (e) { log('now_playing.txt: ошибка записи ' + e.message); }
+}
+
 // Путь к yt-dlp (кладётся в ресурсы приложения при сборке)
 function ytdlpPath() {
   if (app.isPackaged) return path.join(process.resourcesPath, 'yt-dlp.exe');
@@ -225,6 +255,16 @@ function createTray() {
     {
       label: 'Проверить обновления',
       click: () => checkForUpdates(true)
+    },
+    {
+      label: 'Открыть папку now_playing.txt (для OBS)',
+      click: () => {
+        try {
+          const p = npFilePath();
+          if (!fs.existsSync(p)) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, '', 'utf8'); }
+          shell.showItemInFolder(p);
+        } catch (e) { log('now_playing.txt: не открыть папку ' + e.message); }
+      }
     },
     {
       label: 'Показать лог (для отладки)',
@@ -475,9 +515,14 @@ app.whenReady().then(async () => {
   });
 
   // «Сейчас играет» — подсказка на значке в трее
-  ipcMain.on('now-playing', (e, line) => {
-    try { if (tray) tray.setToolTip(line ? '♪ ' + String(line).slice(0, 110) : 'Плеер для стрима'); } catch (err) {}
+  ipcMain.on('now-playing', (e, info) => {
+    const line = formatNowPlaying(info, '{artist} — {title}');
+    try { if (tray) tray.setToolTip(line ? '♪ ' + line.slice(0, 110) : 'Плеер для стрима'); } catch (err) {}
+    writeNowPlaying(info);
   });
+  ipcMain.handle('np-path', () => npFilePath());
+  writeNowPlaying(null); // при запуске ничего не играет
+  app.on('before-quit', () => writeNowPlaying(null));
 
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
   log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
