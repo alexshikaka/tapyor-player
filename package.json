@@ -30,7 +30,8 @@
       {
         "provider": "github",
         "owner": "shikaka068091",
-        "repo": "stream-player"
+        "repo": "stream-player",
+        "releaseType": "release"
       }
     ]
   }
