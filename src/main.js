@@ -91,6 +91,21 @@ function checkForUpdates(manual) {
   autoUpdater.checkForUpdates().catch(() => { /* тихо, если нет сети */ });
 }
 
+// Только один экземпляр приложения
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    // Запустили ещё раз — показываем уже открытое окно
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 app.whenReady().then(() => {
   ipcMain.handle('get-version', () => app.getVersion());
 
