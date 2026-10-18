@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard } = require('electron');
 const ym = require('./yandex');
+const match = require('./match');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -646,6 +647,33 @@ app.whenReady().then(async () => {
     if (!tok) return { error: 'войди в Яндекс' };
     try { await ym.setLike(tok, await ymUidGet(), trackKey, !!on); log('Яндекс: ' + (on ? 'лайк ' : 'снят лайк ') + trackKey); return { ok: true }; }
     catch (err) { log('Яндекс: лайк — ' + err.message); return { error: err.message }; }
+  });
+  // Плейлист из текста: найти одну строку (Яндекс, если не точно — ещё YouTube)
+  ipcMain.handle('match-line', async (e, line) => {
+    const q = match.clean(line);
+    if (!q.query) return { status: 'skip' };
+    let ymList = [], ytList = [];
+    try { ymList = (await ym.searchTracksPage(q.query, 0, getYmToken())).slice(0, 6); } catch (err) { log('из текста: Яндекс — ' + err.message); }
+    let r = match.decide(q, ymList, []);
+    if (r.status !== 'exact') {
+      try {
+        const y = await yts(q.query);
+        ytList = (y.videos || []).slice(0, 5).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail }));
+      } catch (err) { log('из текста: YouTube — ' + err.message); }
+      r = match.decide(q, ymList, ytList);
+    }
+    return Object.assign({ query: q.query }, r);
+  });
+  ipcMain.handle('ym-create-playlist', async (e, title, tracks) => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'нет входа в Яндекс' };
+    try {
+      const uid = await ymUidGet();
+      const p = await ym.createPlaylist(tok, uid, String(title || 'Плейлист из Тапёра').slice(0, 100));
+      const r = await ym.addToPlaylist(tok, uid, p.kind, p.revision, tracks || []);
+      log('Яндекс: создан плейлист «' + title + '», треков ' + r.count);
+      return { ok: true, kind: r.kind, uid: uid, count: r.count };
+    } catch (err) { log('Яндекс: создание плейлиста — ' + err.message); return { error: err.message }; }
   });
   ipcMain.handle('ym-artist', async (e, id) => {
     try { return await ym.artistTracks(getYmToken(), id); }

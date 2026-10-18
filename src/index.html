@@ -250,6 +250,50 @@
   .mnote { font-size: 13px; color: #8A8E9C; line-height: 1.45; padding: 4px 10px 8px; }
   .placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: #8A8E9C; font-size: 15px; padding: 40px; text-align: center; line-height: 1.5; }
 
+  /* Плейлист из текста */
+  .imp { display: flex; flex-direction: column; gap: 12px; min-height: 0; flex: 1; }
+  .imp-h { font-size: 22px; font-weight: 800; }
+  .imp-d { font-size: 13px; color: #9EA2B0; line-height: 1.5; }
+  .imp-l { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #8A8E9C; margin-top: 4px; }
+  .imp-f { height: 40px; border-radius: 10px; border: 1px solid #2C2F3A; background: #0E0F13; color: #ECEDF2; padding: 0 12px; font: 500 14px Onest, sans-serif; outline: none; box-sizing: border-box; width: 100%; }
+  .imp-f:focus, .imp-ta:focus { border-color: #9B87FF; }
+  .imp-ta { flex: 1; min-height: 220px; resize: none; border-radius: 12px; border: 1px solid #2C2F3A; background: #0E0F13; color: #C9CBD4; padding: 12px 14px; font: 400 13px/1.7 'JetBrains Mono', monospace; outline: none; }
+  .imp-chk { display: flex; align-items: center; gap: 10px; font-size: 14px; flex-wrap: wrap; }
+  .imp-chk input { width: 18px; height: 18px; accent-color: #9B87FF; }
+  .imp-chk span { color: #8A8E9C; font-size: 12px; }
+  .imp-btns { display: flex; gap: 10px; }
+  .pbtn:disabled { opacity: .45; cursor: default; }
+  .imp-prog { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #C9CBD4; }
+  .imp-bar { flex: 1; height: 8px; border-radius: 4px; background: #2C2F3A; overflow: hidden; }
+  .imp-bar i { display: block; height: 100%; background: #9B87FF; transition: width .2s; }
+  .imp-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .imp-chips span { font-size: 13px; padding: 5px 12px; border-radius: 16px; font-weight: 600; }
+  .c-ok { background: rgba(74,222,154,.12); color: #4ADE9A; } .c-cl { background: rgba(255,184,107,.12); color: #FFB86B; } .c-no { background: rgba(255,138,122,.12); color: #FF8A7A; } .c-src { background: #1E2029; color: #C9CBD4; font-weight: 500 !important; }
+  .imp-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding-right: 4px; }
+  .imp-g { display: flex; align-items: center; gap: 10px; font: 700 13px Onest, sans-serif; color: #ECEDF2; padding: 10px 4px 6px; background: transparent; border: 0; text-align: left; }
+  .imp-g i { width: 10px; height: 10px; border-radius: 5px; display: block; }
+  .imp-g span { color: #8A8E9C; font-weight: 500; }
+  .imp-gt { cursor: pointer; } .imp-gt:hover span { color: #B3A3FF; }
+  .imp-r { display: flex; align-items: center; gap: 12px; padding: 7px 8px; border-radius: 10px; font-size: 13px; }
+  .imp-r.close { background: rgba(255,184,107,.05); }
+  .imp-r .o { flex: 1; min-width: 0; color: #8A8E9C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 400 12px 'JetBrains Mono', monospace; }
+  .imp-r .m { flex: 1.3; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .imp-r .b { display: flex; gap: 6px; flex: 0 0 auto; }
+  .imp-pk { font-size: 11px; color: #4ADE9A; font-weight: 500; }
+  .imp-sm { height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font: 500 12px Onest, sans-serif; cursor: pointer; white-space: nowrap; }
+  .imp-sm:hover { background: #20222C; color: #ECEDF2; }
+  .imp-sm.hl { border-color: #9B87FF; color: #B3A3FF; }
+  .imp-sm:disabled { opacity: .5; }
+  .imp-ed { margin: 2px 0 8px 24px; padding: 8px; border-radius: 10px; background: #14151C; border: 1px solid #23252E; display: flex; flex-direction: column; gap: 2px; }
+  .imp-alt { display: flex; align-items: center; gap: 6px; padding: 7px 8px; border-radius: 8px; border: 0; background: transparent; color: #ECEDF2; font: 500 13px Onest, sans-serif; text-align: left; cursor: pointer; }
+  .imp-alt:hover { background: #20222C; }
+  .imp-alt span { color: #8A8E9C; font-size: 12px; margin-left: auto; }
+  .imp-none { font-size: 12px; color: #8A8E9C; padding: 4px 6px; }
+  .imp-q { display: flex; gap: 6px; margin-top: 6px; }
+  .imp-q .imp-f { height: 32px; font-size: 13px; }
+  .imp-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid #23252E; padding-top: 12px; font-size: 13px; color: #9EA2B0; }
+  #impMsg { color: #C9CBD4; }
+
   /* Лайк */
   .likeb { width: 34px; height: 34px; border-radius: 17px; border: 0; background: transparent; color: #9EA2B0; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0; }
   .likeb:hover { background: #20222C; color: #ECEDF2; }
@@ -686,8 +730,8 @@
   function master(){ return (mode === 'split' || mode === 'audio') ? aud : video; }
 
   function srcOf(v){ return v && v.src === 'ym' ? 'ym' : 'yt'; }
-  function srcName(v){ return srcOf(v) === 'ym' ? 'Яндекс' : 'YouTube'; }
-  function srcColor(v){ return srcOf(v) === 'ym' ? '#FFD43B' : '#FF5A52'; }
+  function srcName(v){ return v && v.src === 'tap' ? 'Тапёр' : (srcOf(v) === 'ym' ? 'Яндекс' : 'YouTube'); }
+  function srcColor(v){ return v && v.src === 'tap' ? '#9B87FF' : (srcOf(v) === 'ym' ? '#FFD43B' : '#FF5A52'); }
   function srcDot(v){ return '<span class="dot" style="background:' + srcColor(v) + '"></span>'; }
   function ymKey(t){ return t.id + (t.albumId ? ':' + t.albumId : ''); }
   function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
@@ -1609,7 +1653,12 @@
   if (A.getSetting) A.getSetting('savedLists').then(function (v){ savedLists = Array.isArray(v) ? v : []; if (curTab === 'my') renderMySide(); });
   function listId(m){ return m.src + ':' + (m.type === 'liked' ? 'liked' : (m.listId || m.uuid || (m.uid && m.kind ? m.uid + '/' + m.kind : '') || m.artistId || m.title)); }
   function isSaved(m){ var id = listId(m); return savedLists.some(function (x){ return listId(x) === id; }); }
-  function slim(m){ return { src: m.src, type: m.type, listId: m.listId, uid: m.uid, kind: m.kind, uuid: m.uuid, artistId: m.artistId, title: m.title, author: m.author, count: m.count || (m.tracks ? m.tracks.length : 0), thumb: m.thumb }; }
+  function slimTrack(v){ return { src: v.src, id: v.id, albumId: v.albumId, title: v.title, author: v.author, album: v.album, duration: v.duration, seconds: v.seconds, thumb: v.thumb, cover: v.cover }; }
+  function slim(m){
+    var o = { src: m.src, type: m.type, listId: m.listId, uid: m.uid, kind: m.kind, uuid: m.uuid, artistId: m.artistId, title: m.title, author: m.author, count: m.count || (m.tracks ? m.tracks.length : 0), thumb: m.thumb };
+    if (m.type === 'text') o.tracks = (m.tracks || []).map(slimTrack);
+    return o;
+  }
   function toggleSaved(m){
     var id = listId(m);
     if (isSaved(m)) savedLists = savedLists.filter(function (x){ return listId(x) !== id; });
@@ -1636,7 +1685,7 @@
     var L = {};
     [meta, list].forEach(function (o){ for (var k in o) if (o[k] !== undefined && o[k] !== '' && o[k] !== null) L[k] = o[k]; });
     L.tracks = list.tracks || [];
-    var kindName = L.type === 'album' ? 'альбом' : (L.type === 'artist' ? 'исполнитель' : (L.type === 'liked' ? 'любимое' : 'плейлист'));
+    var kindName = L.type === 'album' ? 'альбом' : (L.type === 'artist' ? 'исполнитель' : (L.type === 'liked' ? 'любимое' : (L.type === 'text' ? 'плейлист из текста' : 'плейлист')));
     var canSave = !(L.src === 'ym' && (L.type === 'liked' || L.own));
     host.innerHTML = back +
       '<div class="plhead">' + (L.thumb ? '<img class="pcov" src="' + esc(L.thumb) + '" alt="">' : '<div class="pcov"' + (L.type === 'liked' ? ' style="background:linear-gradient(135deg,#FF3D6E,#9B87FF)"' : '') + '></div>') +
@@ -1646,7 +1695,7 @@
           '<button class="pbtn y" data-a="bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button>' +
           '<button class="pbtn" data-a="shuffle">Перемешать</button>' +
           '<button class="pbtn g" data-a="queue">Всё в очередь</button>' +
-          (canSave ? '<button class="pbtn g" data-a="save">' + (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр') + '</button>' : '') +
+          (canSave ? '<button class="pbtn g" data-a="save">' + (L.type === 'text' ? (isSaved(L) ? 'Удалить плейлист' : 'Вернуть плейлист') : (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр')) + '</button>' : '') +
         '</div></div></div>' +
       '<div class="plnote">«Играть фоном» — плейлист играет вместо волны, пока нет заказов. Заказы всё равно идут первыми.</div>' +
       '<div class="plrows"></div>';
@@ -1660,7 +1709,7 @@
       if (b.dataset.a === 'bg') setBg({ kind: 'list', list: L, shuffle: false }, true);
       else if (b.dataset.a === 'shuffle') setBg({ kind: 'list', list: L, shuffle: true }, true);
       else if (b.dataset.a === 'queue') addMany(L.tracks, true);
-      else if (b.dataset.a === 'save') { toggleSaved(L); b.textContent = isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр'; }
+      else if (b.dataset.a === 'save') { toggleSaved(L); b.textContent = L.type === 'text' ? (isSaved(L) ? 'Удалить плейлист' : 'Вернуть плейлист') : (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр'); }
     };
   }
   function bindBack(host){ var b = host.querySelector('[data-back]'); if (b) b.onclick = closeSearchList; }
@@ -1688,7 +1737,8 @@
   }
   function renderMySide(loading){
     var side = $('mySide'); myItems = [];
-    var h = '<div class="mgrp">Яндекс Музыка' + (ymLoggedIn ? '<button data-refresh="1">Обновить</button>' : '') + '</div>';
+    var h = '<div style="padding:8px 4px 0"><button class="pbtn" data-import="1" style="width:100%;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Плейлист из текста</button></div>';
+    h += '<div class="mgrp">Яндекс Музыка' + (ymLoggedIn ? '<button data-refresh="1">Обновить</button>' : '') + '</div>';
     if (!ymLoggedIn) h += '<div class="mnote">Войди в Яндекс, чтобы видеть «Мне нравится» и свои плейлисты.</div><div style="padding:0 10px"><button class="pbtn" data-login="1">Войти в Яндекс</button></div>';
     else {
       h += myItem(LIKED, 'Твои лайки');
@@ -1701,13 +1751,14 @@
     h += '<div class="mgrp">YouTube</div><div class="mnote">Вход через Google — скоро. Пока плейлисты YouTube можно сохранять из поиска.</div>';
     h += '<div class="mgrp">Сохранённые в Тапёре</div>';
     if (!savedLists.length) h += '<div class="mnote">Открой плейлист в поиске и нажми «Сохранить в Тапёр».</div>';
-    savedLists.forEach(function (p){ h += myItem(p, srcDot(p) + srcName(p) + (countText(p) ? ' · ' + countText(p) : '')); });
+    savedLists.forEach(function (p){ h += myItem(p, srcDot(p) + (p.type === 'text' ? 'Из текста' : srcName(p)) + (countText(p) ? ' · ' + countText(p) : '')); });
     side.innerHTML = h;
   }
   $('mySide').addEventListener('click', function(e){
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.refresh) { loadMy(true); return; }
     if (b.dataset.login) { browserLogin(); return; }
+    if (b.dataset.import) { openImport(); return; }
     if (b.dataset.i != null) selectMy(myItems[parseInt(b.dataset.i, 10)]);
   });
   function selectMy(m){
@@ -1716,6 +1767,162 @@
     for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', !!m && listId(myItems[parseInt(bs[k].dataset.i, 10)]) === listId(m));
     if (!m) { $('myPl').innerHTML = '<div class="muted">Выбери плейлист слева.</div>'; return; }
     renderListView($('myPl'), m, false);
+  }
+
+  // ===== Плейлист из текста =====
+  var imp = null, impShowExact = false;
+  function impHost(){ return $('myPl'); }
+  function openImport(){
+    mySel = null;
+    var bs = document.querySelectorAll('#mySide .mit'); for (var k = 0; k < bs.length; k++) bs[k].classList.remove('on');
+    impHost()._tok = (impHost()._tok || 0) + 1; // отменить загрузку открытого плейлиста
+    renderImportInput();
+  }
+  function impLines(text){ return String(text || '').split(/\r?\n/).map(function (l){ return l.trim(); }).filter(function (l){ return l && /[\p{L}\p{N}]/u.test(l); }).slice(0, 500); }
+  function renderImportInput(){
+    var h = impHost(), prev = imp || {};
+    h.innerHTML =
+      '<div class="imp">' +
+        '<div class="imp-h">Плейлист из текста</div>' +
+        '<div class="imp-d">По одной песне в строке, лучше «Исполнитель — Название». Мусор вроде [www.сайт], номеров и #хэштегов уберу сам. До 500 строк.</div>' +
+        '<label class="imp-l" for="impName">Название плейлиста</label>' +
+        '<input id="impName" class="imp-f" maxlength="100">' +
+        '<label class="imp-l" for="impText">Список песен</label>' +
+        '<textarea id="impText" class="imp-ta" spellcheck="false" placeholder="Scars On Broadway - Till the End&#10;Надя Горбачёва - Подмосковные вечера&#10;…"></textarea>' +
+        '<label class="imp-chk"><input type="checkbox" id="impYm"' + (ymLoggedIn ? '' : ' disabled') + '> Также создать в Яндекс Музыке <span>' + (ymLoggedIn ? '(туда попадут треки, найденные в Яндексе)' : '(нужен вход в Яндекс)') + '</span></label>' +
+        '<div class="imp-btns"><button class="pbtn y" id="impGo">Собрать плейлист</button><button class="pbtn g" id="impCancel">Отмена</button></div>' +
+      '</div>';
+    $('impName').value = prev.title || 'Плейлист из текста';
+    $('impText').value = prev.text || '';
+    $('impYm').checked = ymLoggedIn && (prev.ym !== undefined ? prev.ym : true);
+    function upd(){ var n = impLines($('impText').value).length; $('impGo').textContent = n ? 'Собрать плейлист · ' + n + ' ' + lineWord(n) : 'Собрать плейлист'; $('impGo').disabled = !n; }
+    $('impGo').textContent = 'Собрать плейлист';
+    $('impText').addEventListener('input', upd); upd();
+    $('impCancel').onclick = function(){ imp = null; selectMy(ymLoggedIn ? LIKED : (savedLists[0] || null)); };
+    $('impGo').onclick = function(){ startImport($('impName').value.trim() || 'Плейлист из текста', $('impText').value, $('impYm').checked); };
+  }
+  function lineWord(n){ n = n % 100; if (n >= 11 && n <= 14) return 'строк'; n = n % 10; if (n === 1) return 'строка'; if (n >= 2 && n <= 4) return 'строки'; return 'строк'; }
+  async function startImport(title, text, toYm){
+    var lines = impLines(text);
+    if (!lines.length) return;
+    var run = (imp && imp.run || 0) + 1;
+    imp = { title: title, text: text, ym: toYm, run: run, done: 0, items: lines.map(function (l){ return { line: l, status: 'wait' }; }) };
+    impShowExact = false;
+    renderImportResults();
+    var next = 0, lastDraw = 0;
+    async function worker(){
+      while (imp && imp.run === run && next < imp.items.length) {
+        var it = imp.items[next++];
+        var r = null;
+        try { r = await A.matchLine(it.line); } catch (e) {}
+        if (!imp || imp.run !== run) return;
+        Object.assign(it, r || { status: 'none', alts: [] });
+        if (it.status === 'skip') it.removed = true;
+        imp.done++;
+        if (Date.now() - lastDraw > 400 || imp.done === imp.items.length) { lastDraw = Date.now(); renderImportResults(); }
+        else updImpProgress();
+      }
+    }
+    await Promise.all([worker(), worker(), worker()]);
+  }
+  function updImpProgress(){
+    var b = document.querySelector('.imp-bar i'), t = $('impCount');
+    if (!b || !imp) return;
+    b.style.width = Math.round(imp.done / imp.items.length * 100) + '%';
+    t.textContent = imp.done + ' из ' + imp.items.length;
+  }
+  function impIncluded(){ return imp.items.filter(function (i){ return !i.removed && i.track && (i.status === 'exact' || i.status === 'close'); }); }
+  function renderImportResults(){
+    var h = impHost(); if (!imp) return;
+    var open = {}; imp.items.forEach(function (it, k){ if (it._open) open[k] = true; });
+    var items = imp.items.map(function (it, k){ it._k = k; return it; }).filter(function (i){ return !i.removed; });
+    var close = items.filter(function (i){ return i.status === 'close'; }), none = items.filter(function (i){ return i.status === 'none'; }), exact = items.filter(function (i){ return i.status === 'exact'; });
+    var inc = impIncluded(), nYm = inc.filter(function (i){ return srcOf(i.track) === 'ym'; }).length, nYt = inc.length - nYm;
+    var finished = imp.done >= imp.items.length;
+    function row(it, kind){
+      var t = it.track;
+      var m = t ? srcDot(t) + esc((t.author ? t.author + ' — ' : '') + t.title) + (it.picked ? ' <span class="imp-pk">выбрано</span>' : '') : '<span style="color:#7C8090">—</span>';
+      var btns = kind === 'exact' ? '<button class="imp-sm" data-ed="' + it._k + '">Изменить</button>'
+        : kind === 'close' ? '<button class="imp-sm" data-ed="' + it._k + '">Не то</button>' + (t ? '<button class="imp-sm" data-play="' + it._k + '" title="Включить сейчас">▶</button>' : '')
+        : '<button class="imp-sm hl" data-ed="' + it._k + '">Искать вручную</button><button class="imp-sm" data-rm="' + it._k + '">Убрать</button>';
+      var ed = '';
+      if (open[it._k]) {
+        ed = '<div class="imp-ed">' + ((it.alts || []).length ? (it.alts || []).map(function (a, j){ return '<button class="imp-alt" data-pick="' + it._k + ':' + j + '">' + srcDot(a) + esc((a.author ? a.author + ' — ' : '') + a.title) + (a.duration ? ' <span>' + esc(a.duration) + '</span>' : '') + '</button>'; }).join('') : '<div class="imp-none">Вариантов нет — поищи по-другому:</div>') +
+          '<div class="imp-q"><input class="imp-f" data-qin="' + it._k + '" value="' + esc(it.query || it.line) + '" aria-label="Запрос"><button class="imp-sm hl" data-q="' + it._k + '">Найти</button><button class="imp-sm" data-rm="' + it._k + '">Убрать песню</button></div></div>';
+      }
+      return '<div class="imp-r ' + kind + '"><span class="o" title="' + esc(it.line) + '">' + esc(it.line) + '</span><span class="m">' + m + '</span><span class="b">' + btns + '</span></div>' + ed;
+    }
+    var html = '<div class="imp">' +
+      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="back" id="impBack">← Изменить текст</button><div class="imp-h" style="flex:1;min-width:200px">' + esc(imp.title) + '</div></div>' +
+      '<div class="imp-prog"><span class="imp-bar"><i style="width:' + Math.round(imp.done / imp.items.length * 100) + '%"></i></span><span id="impCount">' + imp.done + ' из ' + imp.items.length + '</span></div>' +
+      '<div class="imp-chips"><span class="c-ok">Точно: ' + exact.length + '</span><span class="c-cl">Похоже: ' + close.length + '</span><span class="c-no">Не нашлось: ' + none.length + '</span><span class="c-src">Яндекс ' + nYm + ' · YouTube ' + nYt + '</span></div>' +
+      '<div class="imp-list">';
+    if (close.length) html += '<div class="imp-g"><i style="background:#FFB86B"></i>Похоже — проверь <span>' + close.length + '</span></div>' + close.map(function (i){ return row(i, 'close'); }).join('');
+    if (none.length) html += '<div class="imp-g"><i style="background:#FF8A7A"></i>Не нашлось <span>' + none.length + '</span></div>' + none.map(function (i){ return row(i, 'none'); }).join('');
+    if (exact.length) {
+      html += '<button class="imp-g imp-gt" id="impExactT"><i style="background:#4ADE9A"></i>Точно <span>' + exact.length + ' — ' + (impShowExact ? 'свернуть' : 'показать') + '</span></button>';
+      if (impShowExact) html += exact.map(function (i){ return row(i, 'exact'); }).join('');
+    }
+    if (!finished) html += '<div class="muted">Ищу… это займёт около ' + Math.max(1, Math.round((imp.items.length - imp.done) / 3 * 1.2 / 60)) + ' мин.</div>';
+    html += '</div>' +
+      '<div class="imp-save"><button class="pbtn y" id="impSave"' + (finished && inc.length ? '' : ' disabled') + '>Сохранить · ' + inc.length + ' ' + plural(inc.length) + '</button>' +
+      '<span>' + (imp.ym && ymLoggedIn ? 'В Тапёр и в Яндекс Музыку (' + nYm + ' ' + plural(nYm) + ')' : 'В Тапёр') + '</span><span id="impMsg"></span></div>' +
+      '</div>';
+    var listEl = h.querySelector('.imp-list'), keep = listEl ? listEl.scrollTop : 0;
+    h.innerHTML = html;
+    var nl = h.querySelector('.imp-list'); if (nl) nl.scrollTop = keep;
+    $('impBack').onclick = function(){ if (imp) imp.run++; renderImportInput(); };
+    var et = $('impExactT'); if (et) et.onclick = function(){ impShowExact = !impShowExact; renderImportResults(); };
+    $('impSave').onclick = saveImport;
+  }
+  impHost().addEventListener('click', async function(e){
+    if (!imp) return;
+    var b = e.target.closest('button'); if (!b) return;
+    var d = b.dataset, it;
+    if (d.ed != null) { it = imp.items[+d.ed]; it._open = !it._open; renderImportResults(); return; }
+    if (d.rm != null) { it = imp.items[+d.rm]; it.removed = true; it._open = false; renderImportResults(); return; }
+    if (d.play != null) { it = imp.items[+d.play]; if (it.track) playNow(it.track); return; }
+    if (d.pick) {
+      var p = d.pick.split(':'); it = imp.items[+p[0]];
+      var a = it.alts[+p[1]];
+      if (it.track) it.alts[+p[1]] = it.track; else it.alts.splice(+p[1], 1);
+      it.track = a; it.status = 'exact'; it.picked = true; it._open = false;
+      renderImportResults(); return;
+    }
+    if (d.q != null) {
+      it = imp.items[+d.q];
+      var inp = impHost().querySelector('[data-qin="' + d.q + '"]');
+      var qv = inp ? inp.value.trim() : ''; if (!qv) return;
+      b.textContent = 'Ищу…'; b.disabled = true;
+      var r = await A.matchLine(qv);
+      if (!imp) return;
+      it.query = qv;
+      it.alts = ((r && r.track) ? [r.track] : []).concat((r && r.alts) || []);
+      it._open = true;
+      renderImportResults();
+    }
+  });
+  impHost().addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && e.target.dataset && e.target.dataset.qin != null) { var b = impHost().querySelector('[data-q="' + e.target.dataset.qin + '"]'); if (b) b.click(); }
+  });
+  async function saveImport(){
+    var inc = impIncluded(); if (!inc.length) return;
+    var tracks = inc.map(function (i){ return slimTrack(i.track); });
+    var meta = { src: 'tap', type: 'text', listId: 'txt' + Date.now(), title: imp.title, author: 'Из текста', count: tracks.length, thumb: (tracks.find(function (t){ return t.thumb; }) || {}).thumb || '', tracks: tracks };
+    savedLists.unshift(slim(meta));
+    if (A.setSetting) A.setSetting('savedLists', savedLists);
+    var msg = 'Сохранено в Тапёр: ' + tracks.length + ' ' + plural(tracks.length) + '.';
+    if (imp.ym && ymLoggedIn && A.ymCreatePlaylist) {
+      $('impSave').disabled = true; $('impMsg').textContent = 'Создаю плейлист в Яндекс Музыке…';
+      var ymTracks = tracks.filter(function (t){ return t.src === 'ym' && t.albumId; });
+      var r = await A.ymCreatePlaylist(imp.title, ymTracks);
+      msg += (r && r.ok) ? ' В Яндекс Музыке: ' + r.count + ' ' + plural(r.count) + '.' : ' В Яндекс Музыку не получилось: ' + ((r && r.error) || 'ошибка') + '.';
+      myLoaded = false; // обновим список плейлистов Яндекса
+    }
+    imp = null;
+    if (myLoaded) renderMySide(); else await loadMy(true);
+    selectMy(savedLists[0]);
+    setTimeout(function(){ var n = $('myPl').querySelector('.plnote'); if (n) { n.textContent = '✓ ' + msg; n.style.color = '#4ADE9A'; } }, 50);
   }
 
   // ===== Настройки =====

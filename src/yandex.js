@@ -316,6 +316,22 @@ async function likedIds(token, uid) {
 async function setLike(token, uid, trackKey, on) {
   return apiForm('/users/' + encodeURIComponent(uid) + '/likes/tracks/' + (on ? 'add-multiple' : 'remove'), token, { 'track-ids': String(trackKey) });
 }
+// Новый плейлист в аккаунте и добавление треков (порциями по 100)
+async function createPlaylist(token, uid, title) {
+  return apiForm('/users/' + encodeURIComponent(uid) + '/playlists/create', token, { title: title, visibility: 'private' });
+}
+async function addToPlaylist(token, uid, kind, revision, tracks) {
+  let rev = revision || 1, at = 0;
+  const list = tracks.filter((t) => t && t.id && t.albumId);
+  for (let i = 0; i < list.length; i += 100) {
+    const chunk = list.slice(i, i + 100).map((t) => ({ id: String(t.id), albumId: String(t.albumId) }));
+    const r = await apiForm('/users/' + encodeURIComponent(uid) + '/playlists/' + encodeURIComponent(kind) + '/change-relative', token,
+      { diff: JSON.stringify([{ op: 'insert', at: at, tracks: chunk }]), revision: String(rev) });
+    rev = (r && r.revision) || rev + 1;
+    at += chunk.length;
+  }
+  return { kind: String(kind), revision: rev, count: at };
+}
 async function trackById(token, id) {
   const list = await tracksByIds(token, [String(id)]);
   return list[0] || null;
@@ -348,4 +364,4 @@ async function streamUrl(trackId, token) {
   return { audioUrl: 'https://' + host + '/get-mp3/' + sign + '/' + ts + path, preview: preview, bitrate: pick.bitrateInKbps };
 }
 
-module.exports = { CLIENT_ID, setLogger, search, searchTracksPage, suggest, accountStatus, streamUrl, waveStart, waveTracks, waveFeedback, stationsList, stationsDashboard, wavePresets, likedTracks, userPlaylists, playlistTracks, albumTracks, artistTracks, trackById, likedIds, setLike };
+module.exports = { CLIENT_ID, setLogger, search, searchTracksPage, suggest, accountStatus, streamUrl, waveStart, waveTracks, waveFeedback, stationsList, stationsDashboard, wavePresets, likedTracks, userPlaylists, playlistTracks, albumTracks, artistTracks, trackById, likedIds, setLike, createPlaylist, addToPlaylist };

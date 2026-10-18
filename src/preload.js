@@ -36,6 +36,8 @@ contextBridge.exposeInMainWorld('app', {
   ymLike: (trackKey, on) => ipcRenderer.invoke('ym-like', trackKey, on),
   ytPlaylist: (listId) => ipcRenderer.invoke('yt-playlist', listId),
   resolveLink: (text) => ipcRenderer.invoke('resolve-link', text),
+  matchLine: (line) => ipcRenderer.invoke('match-line', line),
+  ymCreatePlaylist: (title, tracks) => ipcRenderer.invoke('ym-create-playlist', title, tracks),
   npChooseFolder: () => ipcRenderer.invoke('np-choose-folder'),
   npOpenFolder: () => ipcRenderer.invoke('np-open-folder'),
   logCopy: () => ipcRenderer.invoke('log-copy'),
