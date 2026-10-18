@@ -15,8 +15,7 @@
     display: flex; align-items: center; gap: 16px;
     padding: 14px 20px; border-bottom: 1px solid #22242C; flex: 0 0 auto;
   }
-  .logo { width: 30px; height: 30px; border-radius: 8px; background: #9B87FF;
-    display: flex; align-items: center; justify-content: center; font-weight: 700; color: #0E0F13; }
+  .logo { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; }
   .title { font-weight: 700; font-size: 15px; }
   nav { display: flex; gap: 4px; background: #181A21; border-radius: 10px; padding: 3px; }
   nav button { height: 30px; padding: 0 13px; border: 0; border-radius: 8px;
@@ -70,7 +69,8 @@
 </head>
 <body>
   <header>
-    <div class="logo">S</div>
+    <img class="logo" src="assets/icon.png" alt="">
+
     <div class="title">Плеер для стрима</div>
     <nav>
       <button class="active">Поиск</button>
