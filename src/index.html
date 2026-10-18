@@ -55,18 +55,25 @@
   .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
   .col-head .hint { font-size: 13px; color: #8A8E9C; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; cursor: pointer; position: relative; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 12px; cursor: pointer; position: relative; }
   .row:hover { background: rgba(255,255,255,.05); }
-  .cover-wrap { position: relative; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; background: #222; }
-  .cover { width: 44px; height: 44px; object-fit: cover; display: block; }
+  .cover-wrap { position: relative; width: 40px; height: 40px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; background: #222; }
+  .cover { width: 40px; height: 40px; object-fit: cover; display: block; }
   .cover-ov { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .12s; }
   .row:hover .cover-ov, .row.playing .cover-ov { opacity: 1; }
   .row .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .row .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { display: flex; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; }
+  .sub .sa { font-size: 13px; font-weight: 500; color: #C9CBD4; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .sub .sd { width: 7px; height: 7px; border-radius: 4px; flex: 0 0 auto; }
+  .sub .ss { font: 400 11px 'JetBrains Mono', ui-monospace, monospace; color: #7C8090; flex: 0 0 auto; }
+  .qs.sub .sa, #f-sub .sa { font-size: 12px; }
+  #f-sub { display: flex; align-items: center; gap: 7px; }
   .srcpill { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #C9CBD4; background: #1E2029; border-radius: 6px; padding: 4px 8px; }
   .time { flex: 0 0 48px; text-align: right; font-size: 13px; color: #9EA2B0; }
-  .add { flex: 0 0 auto; height: 38px; padding: 0 14px; border-radius: 10px; border: 0; background: #9B87FF; color: #0E0F13; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .add { flex: 0 0 auto; height: 28px; padding: 0 10px; border-radius: 8px; border: 0; background: rgba(155,135,255,.16); color: #C9BEFF; font: 600 12px Onest, sans-serif; display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
+  .add:hover { background: rgba(155,135,255,.3); color: #E4DDFF; }
 
   /* Правая колонка: очередь */
   .splitter { flex: 0 0 6px; margin: 0 -3px; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; }
@@ -758,6 +765,11 @@
   function srcColor(v){ return v && v.src === 'tap' ? '#9B87FF' : (srcOf(v) === 'ym' ? '#FFD43B' : '#FF5A52'); }
   function srcDot(v){ return '<span class="dot" style="background:' + srcColor(v) + '"></span>'; }
   function ymKey(t){ return t.id + (t.albumId ? ':' + t.albumId : ''); }
+  // «Исполнитель ● Источник» — исполнитель обычным шрифтом, источник моноширинным
+  function subLine(v, extra){
+    return '<div class="s sub">' + (v.author ? '<span class="sa">' + esc(v.author) + '</span>' : '') +
+      '<span class="dot sd" style="background:' + srcColor(v) + '"></span><span class="ss">' + esc(extra || srcName(v)) + '</span></div>';
+  }
   function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
 
   // Название трека: заголовок окна, файл для OBS, подсказка в трее
@@ -832,7 +844,7 @@
   function showTrack(v){
     $('card-title').textContent = v.title;
     $('f-title').textContent = v.title;
-    $('f-sub').innerHTML = srcDot(v) + (v.bg ? esc(bgLabel()) : srcName(v)) + ' · ' + esc(v.author);
+    $('f-sub').innerHTML = subLine(v, v.bg ? bgLabel() : srcName(v)).replace(/^<div class="s sub">|<\/div>$/g, '');
     var fc = $('f-cover');
     if (v.thumb) { fc.src = v.thumb; fc.style.display = ''; } else { fc.style.display = 'none'; }
   }
@@ -1018,7 +1030,7 @@
             '<svg class="eq" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="10" width="3.5" height="10" rx="1"></rect><rect x="10.25" y="4" width="3.5" height="16" rx="1"></rect><rect x="16.5" y="8" width="3.5" height="12" rx="1"></rect></svg>' +
           '</span></div>' +
         '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
-        '<div class="qs">' + srcDot(v) + (v.bg ? 'фон · ' : '') + srcName(v) + ' · ' + esc(v.author) + '</div></div>';
+        subLine(v, srcName(v) + (v.bg ? ' · фон' : '')).replace('class="s sub"', 'class="qs sub"') + '</div>';
       var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать'; x.setAttribute('aria-label', 'Убрать');
       x.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
       x.onclick = function(){ removeAt(i); };
@@ -1679,11 +1691,10 @@
     row.innerHTML =
       '<div class="cover-wrap"><img class="cover" src="' + esc(v.thumb) + '" alt="">' +
       '<span class="cover-ov"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"></path></svg></span></div>' +
-      '<div class="meta"><div class="t">' + esc(v.title) + '</div><div class="s">' + esc(v.author) + '</div></div>' +
-      '<span class="srcpill">' + srcDot(v) + srcName(v) + '</span>' +
+      '<div class="meta"><div class="t">' + esc(v.title) + '</div>' + subLine(v) + '</div>' +
       '<span class="time mono">' + esc(v.duration) + '</span>';
     var add = document.createElement('button'); add.className = 'add';
-    add.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E0F13" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
+    add.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
     add.onclick = function(e){ e.stopPropagation(); addToQueue(v); };
     row.appendChild(add);
     row.onclick = function(){ playNow(v); };
