@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
@@ -91,6 +91,8 @@ function checkForUpdates(manual) {
 }
 
 app.whenReady().then(() => {
+  ipcMain.handle('get-version', () => app.getVersion());
+
   createWindow();
   createTray();
 

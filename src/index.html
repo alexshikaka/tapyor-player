@@ -53,8 +53,15 @@
       <button>Браузер</button>
       <button>Настройки</button>
     </nav>
-    <span class="badge" style="margin-left:auto">версия 0.1.0 · каркас</span>
+    <span class="badge" id="ver" style="margin-left:auto">версия…</span>
   </header>
+  <script>
+    if (window.app && window.app.getVersion) {
+      window.app.getVersion().then(function (v) {
+        document.getElementById('ver').textContent = 'версия ' + v + ' · каркас';
+      });
+    }
+  </script>
   <main>
     <div style="font-size:18px; font-weight:600">Каркас приложения работает ✓</div>
     <div class="muted">Окно открывается, значок живёт в трее, вкладки на месте. Дальше наполним экраны: поиск по сервисам, очередь, плеер, страница заказов.</div>

@@ -1,7 +1,7 @@
 // Мост между окном и системной частью приложения.
-// Пока пусто — сюда позже добавим доступ к плееру, поиску и настройкам.
-const { contextBridge } = require('electron');
+// Пока минимально — отдаём настоящую версию приложения.
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('app', {
-  version: '0.1.0'
+  getVersion: () => ipcRenderer.invoke('get-version')
 });
