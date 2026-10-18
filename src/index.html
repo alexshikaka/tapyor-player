@@ -59,6 +59,10 @@
   .splitter { flex: 0 0 6px; margin: 0 -3px; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; }
   .splitter:hover, .splitter.drag { background: rgba(155,135,255,.35); }
   body.resizing { cursor: col-resize; user-select: none; }
+  .hsplitter { flex: 0 0 8px; margin: -7px 0; cursor: row-resize; border-radius: 4px; position: relative; z-index: 2; background: transparent; transition: background .12s; }
+  .hsplitter::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 3px; border-radius: 2px; background: #3A3D4A; transform: translate(-50%, -50%); }
+  .hsplitter:hover, .hsplitter.drag { background: rgba(155,135,255,.35); }
+  body.resizing-v { cursor: row-resize; user-select: none; }
   .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
   .queue-col .qhead { display: flex; justify-content: space-between; align-items: baseline; flex: 0 0 auto; }
   .queue-col .qhead h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
@@ -243,6 +247,8 @@
           <div class="s" id="card-sub">Найди трек и запусти</div>
         </div>
       </div>
+
+      <div class="hsplitter" id="hsplitter" title="Потяни, чтобы изменить высоту видео (двойной клик — по умолчанию)"></div>
 
       <div class="qlist" id="queue">
         <div class="muted">Пусто. Добавляй треки из поиска.</div>
@@ -623,6 +629,34 @@
     if (window.app && window.app.setSetting) window.app.setSetting('queueWidth', parseInt(qcol.style.width, 10));
   });
   window.addEventListener('resize', function(){ if (qcol.style.width) setQW(parseInt(qcol.style.width, 10)); });
+
+  // Горизонтальная граница между окном видео и очередью
+  var videoBox = document.querySelector('.nowcard .video'), hsplit = document.getElementById('hsplitter');
+  var vDrag = false, vStartY = 0, vStartH = 0;
+  function setVH(h){
+    var max = Math.max(120, qcol.clientHeight - 300); // очереди всегда оставляем место
+    h = Math.max(80, Math.min(max, h));
+    videoBox.style.aspectRatio = 'auto';
+    videoBox.style.height = h + 'px';
+    return h;
+  }
+  function resetVH(){ videoBox.style.aspectRatio = ''; videoBox.style.height = ''; }
+  if (window.app && window.app.getSetting) window.app.getSetting('videoHeight').then(function(h){ if (h) setVH(h); });
+  hsplit.addEventListener('mousedown', function(e){
+    vDrag = true; vStartY = e.clientY; vStartH = videoBox.getBoundingClientRect().height;
+    hsplit.classList.add('drag'); document.body.classList.add('resizing-v'); e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){ if (vDrag) setVH(vStartH + (e.clientY - vStartY)); });
+  document.addEventListener('mouseup', function(){
+    if (!vDrag) return;
+    vDrag = false; hsplit.classList.remove('drag'); document.body.classList.remove('resizing-v');
+    if (window.app && window.app.setSetting) window.app.setSetting('videoHeight', parseInt(videoBox.style.height, 10) || null);
+  });
+  hsplit.addEventListener('dblclick', function(){
+    resetVH();
+    if (window.app && window.app.setSetting) window.app.setSetting('videoHeight', null);
+  });
+  window.addEventListener('resize', function(){ if (videoBox.style.height) setVH(parseInt(videoBox.style.height, 10)); });
 
   // Фильтр по источнику: Везде / Яндекс / YouTube
   var curFilter = 'all';
