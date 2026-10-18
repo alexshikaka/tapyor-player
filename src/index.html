@@ -90,6 +90,17 @@
   .vmeta .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .qlist { flex: 1 1 0; min-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; position: relative; }
+  .qcov { position: relative; width: 38px; height: 38px; border-radius: 7px; overflow: hidden; background: #2A2D38; flex: 0 0 auto; cursor: pointer; }
+  .qcov img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .qov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); color: #fff; opacity: 0; transition: opacity .12s; }
+  .qov svg { display: none; }
+  .qrow:hover .qov { opacity: 1; }
+  .qrow:hover .qov .pl { display: block; }
+  .qrow.done .qov { opacity: 1; }
+  .qrow.done:not(:hover) .qov .ck { display: block; }
+  .qrow.playing .qov { opacity: 1; background: rgba(155,135,255,.6); }
+  .qrow.playing .qov .pl, .qrow.playing:hover .qov .pl { display: none; }
+  .qrow.playing .qov .eq { display: block; }
   .qrow.pend { cursor: grab; }
   .qrow.pend:active { cursor: grabbing; }
   .qrow.dragging { opacity: .35; }
@@ -974,7 +985,12 @@
       if (pend) { r.draggable = true; r.title = 'Перетащи, чтобы поменять порядок. Правая кнопка — меню'; }
       else r.title = 'Правая кнопка — меню';
       r.innerHTML =
-        '<span class="n">' + (isCur ? '▶' : (v.played ? '✓' : (i + 1))) + '</span>' +
+        '<div class="qcov" title="' + (isCur ? 'Играет' : 'Играть') + '">' + (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
+          '<span class="qov">' +
+            '<svg class="pl" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>' +
+            '<svg class="ck" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>' +
+            '<svg class="eq" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="10" width="3.5" height="10" rx="1"></rect><rect x="10.25" y="4" width="3.5" height="16" rx="1"></rect><rect x="16.5" y="8" width="3.5" height="12" rx="1"></rect></svg>' +
+          '</span></div>' +
         '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
         '<div class="qs">' + srcDot(v) + (v.bg ? 'фон · ' : '') + srcName(v) + ' · ' + esc(v.author) + '</div></div>';
       var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать'; x.setAttribute('aria-label', 'Убрать');
@@ -988,6 +1004,7 @@
       }
       r.appendChild(x);
       r.querySelector('.qt').onclick = function(){ playQueueItem(i); };
+      r.querySelector('.qcov').onclick = function(){ if (i !== current) playQueueItem(i); };
       r.oncontextmenu = function(e){ openQueueMenu(e, i); };
       box.appendChild(r);
     });
