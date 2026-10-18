@@ -443,6 +443,29 @@ app.whenReady().then(async () => {
     try { const r = await ym.streamUrl(id, tok); ymCache.set(id, { at: Date.now(), value: r }); return r; }
     catch (err) { log('Яндекс: поток — ошибка ' + err.message); return { error: 'Яндекс: ' + err.message }; }
   });
+  // «Моя волна»
+  ipcMain.handle('ym-wave-start', async (e, s) => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'для «Моей волны» войди в Яндекс' };
+    try {
+      try { await ym.waveSettings(tok, s); } catch (err) { log('Волна: настройки не применились — ' + err.message); }
+      await ym.waveFeedback(tok, 'radioStarted');
+      const tracks = await ym.waveTracks(tok, '');
+      log('Волна: старт (характер ' + (s && s.diversity) + ', настроение ' + (s && s.mood) + ')');
+      return { tracks };
+    } catch (err) { log('Волна: ошибка старта ' + err.message); return { error: 'Волна: ' + err.message }; }
+  });
+  ipcMain.handle('ym-wave-more', async (e, lastId) => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'нет входа в Яндекс' };
+    try { return { tracks: await ym.waveTracks(tok, lastId) }; }
+    catch (err) { log('Волна: ошибка подгрузки ' + err.message); return { error: 'Волна: ' + err.message }; }
+  });
+  ipcMain.on('ym-wave-feedback', (e, type, trackKey, played) => {
+    const tok = getYmToken();
+    if (tok) ym.waveFeedback(tok, type, trackKey, played);
+  });
+
   ipcMain.handle('suggest', async (e, part) => {
     try { const a = await ym.suggest(part, getYmToken()); if (a.length) return { source: 'ym', items: a }; }
     catch (err) { log('Яндекс: подсказки — ошибка ' + err.message); }

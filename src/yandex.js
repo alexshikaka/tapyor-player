@@ -89,6 +89,47 @@ async function accountStatus(token) {
   };
 }
 
+async function apiPost(pathAndQuery, token, json) {
+  const h = headers(token);
+  h['Content-Type'] = 'application/json';
+  const res = await fetch(API + pathAndQuery, { method: 'POST', headers: h, body: JSON.stringify(json || {}), signal: AbortSignal.timeout(12000) });
+  const txt = await res.text();
+  let j;
+  try { j = JSON.parse(txt); } catch (e) { throw new Error('HTTP ' + res.status + ': ' + txt.slice(0, 200)); }
+  if (!res.ok || j.error) { const err = new Error('HTTP ' + res.status + ': ' + JSON.stringify(j.error || j).slice(0, 200)); err.status = res.status; throw err; }
+  return j.result;
+}
+
+// --- «Моя волна» (радио-станция user:onyourwave) ---
+const WAVE = 'user:onyourwave';
+let waveBatch = '';
+
+// mood: all | active | fun | calm | sad;  diversity: default | favorite | discover | popular
+async function waveSettings(token, s) {
+  return apiPost('/rotor/station/' + WAVE + '/settings2', token, {
+    moodEnergy: (s && s.mood) || 'all',
+    diversity: (s && s.diversity) || 'default',
+    language: 'any'
+  });
+}
+
+async function waveTracks(token, lastId) {
+  const r = await api('/rotor/station/' + WAVE + '/tracks?settings2=true' + (lastId ? '&queue=' + encodeURIComponent(lastId) : ''), token);
+  if (r && r.batchId) waveBatch = r.batchId;
+  const list = ((r && r.sequence) || []).map((x) => x && x.track).filter(Boolean).map(mapTrack).filter((t) => t.available);
+  log('Волна: получено треков ' + list.length);
+  return list;
+}
+
+// Обратная связь, чтобы волна подстраивалась (ошибки не критичны)
+async function waveFeedback(token, type, trackKey, played) {
+  const body = { type: type, timestamp: new Date().toISOString(), from: 'mobile-radio-user-onyourwave' };
+  if (trackKey) body.trackId = trackKey;
+  if (played != null) body.totalPlayedSeconds = Math.max(0, Math.round(played));
+  try { await apiPost('/rotor/station/' + WAVE + '/feedback' + (waveBatch ? '?batch-id=' + encodeURIComponent(waveBatch) : ''), token, body); }
+  catch (e) { log('Волна: отзыв «' + type + '» не принят — ' + e.message); }
+}
+
 // Прямая ссылка на mp3 трека
 async function streamUrl(trackId, token) {
   const infos = await api('/tracks/' + encodeURIComponent(trackId) + '/download-info', token);
@@ -116,4 +157,4 @@ async function streamUrl(trackId, token) {
   return { audioUrl: 'https://' + host + '/get-mp3/' + sign + '/' + ts + path, preview: preview, bitrate: pick.bitrateInKbps };
 }
 
-module.exports = { CLIENT_ID, setLogger, search, suggest, accountStatus, streamUrl };
+module.exports = { CLIENT_ID, setLogger, search, suggest, accountStatus, streamUrl, waveSettings, waveTracks, waveFeedback };

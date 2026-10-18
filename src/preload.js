@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('app', {
   ymSearch: (q) => ipcRenderer.invoke('ym-search', q),
   ymStream: (id) => ipcRenderer.invoke('ym-stream', id),
   suggest: (part) => ipcRenderer.invoke('suggest', part),
+  ymWaveStart: (settings) => ipcRenderer.invoke('ym-wave-start', settings),
+  ymWaveMore: (lastId) => ipcRenderer.invoke('ym-wave-more', lastId),
+  ymWaveFeedback: (type, trackKey, played) => ipcRenderer.send('ym-wave-feedback', type, trackKey, played),
   getSetting: (key) => ipcRenderer.invoke('get-setting', key),
   setSetting: (key, value) => ipcRenderer.invoke('set-setting', key, value)
 });

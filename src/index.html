@@ -59,7 +59,7 @@
   .splitter { flex: 0 0 6px; margin: 0 -3px; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; }
   .splitter:hover, .splitter.drag { background: rgba(155,135,255,.35); }
   body.resizing { cursor: col-resize; user-select: none; }
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow: hidden; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
   .queue-col .qhead { display: flex; justify-content: space-between; align-items: baseline; flex: 0 0 auto; }
   .queue-col .qhead h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
   .queue-col .qhead span { font-size: 13px; color: #8A8E9C; }
@@ -72,7 +72,7 @@
   .vmeta .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vmeta .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .qlist { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .qlist { flex: 1 0 auto; min-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .qrow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; }
   .qrow.playing { background: rgba(155,135,255,0.12); }
   .qrow .n { font-size: 13px; color: #7C8090; width: 16px; text-align: center; flex: 0 0 auto; }
@@ -130,6 +130,28 @@
   .mbtn:hover { background: #2A2D38; }
   .mbtn.ghost { background: transparent; color: #9EA2B0; margin-left: auto; }
 
+  /* «Моя волна» */
+  .wavecard { flex: 0 0 auto; border-radius: 14px; background: #171922; border: 1px solid #2C2F3A; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .wavecard.on-air { border-color: #FFD43B; }
+  .whead { display: flex; align-items: center; gap: 10px; }
+  .wicon { width: 32px; height: 32px; border-radius: 16px; background: #FFD43B; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  .wtitle { flex: 1; min-width: 0; }
+  .wtitle .t { font-size: 14px; font-weight: 600; }
+  .wtitle .s { font-size: 12px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wgear { width: 30px; height: 30px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0; }
+  .wgear:hover, .wgear.open { background: #2A2D38; color: #ECEDF2; }
+  .wsettings { display: flex; flex-direction: column; gap: 8px; }
+  .wsettings[hidden] { display: none; }
+  .wplay { height: 30px; padding: 0 12px; border-radius: 15px; border: 0; background: #ECEDF2; color: #0E0F13; font-size: 12px; font-weight: 600; cursor: pointer; flex: 0 0 auto; }
+  .toggle { width: 42px; height: 26px; border-radius: 13px; border: 0; background: #3A3D4A; padding: 3px; display: flex; justify-content: flex-start; cursor: pointer; flex: 0 0 auto; transition: background .15s; }
+  .toggle span { width: 20px; height: 20px; border-radius: 10px; background: #ECEDF2; display: block; }
+  .toggle.on { background: #9B87FF; justify-content: flex-end; }
+  .toggle.on span { background: #0E0F13; }
+  .wrow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+  .wlabel { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #8A8E9C; width: 76px; flex: 0 0 auto; }
+  .wchip { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 12px; cursor: pointer; }
+  .wchip.active { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
+
   /* Фильтр по источнику */
   .results.f-ym .row[data-src="yt"], .results.f-yt .row[data-src="ym"] { display: none; }
 </style>
@@ -183,10 +205,40 @@
         <span id="qcount">0 треков</span>
       </div>
 
+      <div class="wavecard" id="wavecard">
+        <div class="whead">
+          <div class="wicon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E0F13" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path></svg></div>
+          <div class="wtitle">
+            <div class="t">Моя волна</div>
+            <div class="s" id="waveSub">Включится, когда заказы доиграют</div>
+          </div>
+          <button class="wgear" id="waveGear" title="Настроить характер и настроение" aria-label="Настроить волну" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></button>
+          <button class="wplay" id="wavePlay" title="Включить волну сейчас">▶ Волна</button>
+          <button class="toggle on" id="waveToggle" title="Автоматически включать волну, когда очередь пуста" aria-pressed="true"><span></span></button>
+        </div>
+        <div class="wsettings" id="waveSettings" hidden>
+        <div class="wrow" id="waveDiv">
+          <span class="wlabel">Характер</span>
+          <button class="wchip active" data-v="default">Любое</button>
+          <button class="wchip" data-v="favorite">Любимое</button>
+          <button class="wchip" data-v="discover">Незнакомое</button>
+          <button class="wchip" data-v="popular">Популярное</button>
+        </div>
+        <div class="wrow" id="waveMood">
+          <span class="wlabel">Настроение</span>
+          <button class="wchip active" data-v="all">Любое</button>
+          <button class="wchip" data-v="active">Бодрое</button>
+          <button class="wchip" data-v="fun">Весёлое</button>
+          <button class="wchip" data-v="calm">Спокойное</button>
+          <button class="wchip" data-v="sad">Грустное</button>
+        </div>
+        </div>
+      </div>
+
       <div class="nowcard">
         <div class="video"><video id="player" playsinline></video><audio id="aud"></audio></div>
         <div class="vmeta">
-          <div class="nplabel">Сейчас играет</div>
+          <div class="nplabel" id="nplabel">Сейчас играет</div>
           <div class="t" id="card-title">Ничего не играет</div>
           <div class="s" id="card-sub">Найди трек и запусти</div>
         </div>
@@ -277,10 +329,7 @@
   }
 
   [video, aud].forEach(function (el) {
-    el.addEventListener('ended', function(){
-      if (el !== master()) return;
-      if (current + 1 < queue.length) next(); else setNowPlaying(null); // очередь кончилась
-    });
+    el.addEventListener('ended', function(){ if (el === master()) onTrackEnded(); });
     el.addEventListener('play', function(){
       if (el !== master()) return;
       setPlayIcon('⏸');
@@ -306,7 +355,10 @@
       }
     });
     el.addEventListener('error', function(){
-      if (el === master() && el.getAttribute('src')) setSub('⚠ не удалось воспроизвести поток');
+      if (el === master() && el.getAttribute('src')) {
+        setSub('⚠ не удалось воспроизвести поток');
+        if (wavePlaying) setTimeout(playWaveNext, 1500);
+      }
     });
   });
 
@@ -430,7 +482,8 @@
     for (var i = 0; i < rows.length; i++) rows[i].classList.toggle('playing', rows[i].dataset.id === playingId);
   }
 
-  function addToQueue(v){ queue.push(v); renderQueue(); if (current === -1) playIndex(0); else prefetchNext(); }
+  // Пока играет волна, заказ ждёт конца текущего трека волны и играет следующим
+  function addToQueue(v){ queue.push(v); renderQueue(); if (current === -1 && !wavePlaying) playIndex(0); else prefetchNext(); }
   // Заранее достать поток следующего трека, чтобы переход был без паузы
   function prefetchNext(){
     var n = queue[current + 1];
@@ -445,6 +498,7 @@
   async function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
     current = i; var v = queue[i];
+    wavePlaying = false; waveCur = null; renderWaveUi();
     playingId = v.id; markPlayingRows();
     setNowPlaying(v);
     document.getElementById('card-title').textContent = v.title;
@@ -481,8 +535,15 @@
     prefetchNext();
     document.getElementById('card-sub').textContent = v.author + (r.preview ? ' · превью 30 с (нужен Плюс)' : '');
   }
-  function next(){ if (current + 1 < queue.length) playIndex(current + 1); }
-  function prev(){ if (current - 1 >= 0) playIndex(current - 1); }
+  function next(){
+    if (wavePlaying) { waveSkip(); return; }
+    if (current + 1 < queue.length) playIndex(current + 1);
+    else if (waveCfg.on && ymLoggedIn) startWave();
+  }
+  function prev(){
+    if (wavePlaying) { try { aud.currentTime = 0; } catch (e) {} return; }
+    if (current - 1 >= 0) playIndex(current - 1);
+  }
   document.getElementById('next').onclick = next;
   document.getElementById('prev').onclick = prev;
   document.getElementById('playpause').onclick = function(){
@@ -494,6 +555,7 @@
     [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
     video.removeAttribute('poster');
     mode = 'single';
+    wavePlaying = false; waveCur = null; renderWaveUi();
     setNowPlaying(null);
   }
   document.getElementById('clearq').onclick = function(){ queue = []; current = -1; playingId = null; markPlayingRows(); stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
@@ -511,9 +573,10 @@
     if (!queue.length) { box.innerHTML = '<div class="muted">Пусто. Добавляй треки из поиска.</div>'; return; }
     box.innerHTML = '';
     queue.forEach(function (v, i) {
-      var r = document.createElement('div'); r.className = 'qrow' + (i === current ? ' playing' : '');
+      var isCur = i === current && !wavePlaying;
+      var r = document.createElement('div'); r.className = 'qrow' + (isCur ? ' playing' : '');
       r.innerHTML =
-        '<span class="n">' + (i === current ? '▶' : (i + 1)) + '</span>' +
+        '<span class="n">' + (isCur ? '▶' : (i + 1)) + '</span>' +
         '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
         '<div class="qs">' + srcDot(v) + srcName(v) + ' · ' + esc(v.author) + '</div></div>';
       var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать';
@@ -579,6 +642,8 @@
   async function refreshAcct(){
     if (!window.app || !window.app.ymStatus) return;
     var s = await window.app.ymStatus();
+    ymLoggedIn = !!(s && s.loggedIn);
+    renderWaveUi();
     if (s && s.loggedIn) {
       acctBtn.innerHTML = YM_DOT + esc(s.name || s.login || 'Яндекс') + (s.offline ? '' : (s.hasPlus ? ' · Плюс' : ' · без Плюса'));
       acctBtn.dataset.in = '1';
@@ -622,6 +687,121 @@
   document.getElementById('lmOpen').onclick = function(){ if (lmUrl) window.app.openExternal(lmUrl); };
   document.getElementById('lmInApp').onclick = function(){ window.app.ymLoginBrowserCancel(); closeLoginModal(); inAppLogin(); };
   document.getElementById('lmCancel').onclick = function(){ window.app.ymLoginBrowserCancel(); closeLoginModal(); refreshAcct(); };
+
+  // ===== «Моя волна» Яндекса =====
+  var waveCfg = { on: true, mood: 'all', diversity: 'default' };
+  var wavePlaying = false, waveBuf = [], waveCur = null, waveStarting = false, ymLoggedIn = false;
+  var MOOD_NAMES = { all: 'любое настроение', active: 'бодрое', fun: 'весёлое', calm: 'спокойное', sad: 'грустное' };
+  var DIV_NAMES = { 'default': 'любой характер', favorite: 'любимое', discover: 'незнакомое', popular: 'популярное' };
+  document.getElementById('waveGear').onclick = function(){
+    var ws = document.getElementById('waveSettings');
+    ws.hidden = !ws.hidden;
+    this.classList.toggle('open', !ws.hidden);
+    this.setAttribute('aria-expanded', ws.hidden ? 'false' : 'true');
+  };
+  function waveKey(t){ return t.id + (t.albumId ? ':' + t.albumId : ''); }
+  function saveWaveCfg(){ if (window.app && window.app.setSetting) window.app.setSetting('wave', waveCfg); }
+  function renderWaveUi(){
+    var tg = document.getElementById('waveToggle');
+    tg.classList.toggle('on', !!waveCfg.on); tg.setAttribute('aria-pressed', waveCfg.on ? 'true' : 'false');
+    [['waveDiv', 'diversity'], ['waveMood', 'mood']].forEach(function (p){
+      var bs = document.querySelectorAll('#' + p[0] + ' .wchip');
+      for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('active', bs[k].dataset.v === waveCfg[p[1]]);
+    });
+    document.getElementById('wavecard').classList.toggle('on-air', wavePlaying);
+    var sub = document.getElementById('waveSub');
+    var cfgText = DIV_NAMES[waveCfg.diversity] + ', ' + MOOD_NAMES[waveCfg.mood];
+    if (!ymLoggedIn) sub.textContent = 'Нужен вход в Яндекс';
+    else if (wavePlaying) sub.textContent = 'В эфире · ' + cfgText;
+    else sub.textContent = (waveCfg.on ? 'После заказов · ' : 'Авто выкл. · ') + cfgText;
+    sub.title = sub.textContent;
+    document.getElementById('wavePlay').textContent = wavePlaying ? '■ Стоп' : '▶ Волна';
+    document.getElementById('nplabel').textContent = wavePlaying ? 'Моя волна' : 'Сейчас играет';
+  }
+  if (window.app && window.app.getSetting) window.app.getSetting('wave').then(function (c){ if (c) waveCfg = Object.assign(waveCfg, c); renderWaveUi(); });
+  document.getElementById('waveToggle').onclick = function(){ waveCfg.on = !waveCfg.on; saveWaveCfg(); renderWaveUi(); };
+  function bindWaveChips(id, key){
+    document.getElementById(id).addEventListener('click', function(e){
+      var b = e.target.closest('.wchip'); if (!b) return;
+      waveCfg[key] = b.dataset.v; saveWaveCfg(); renderWaveUi();
+      if (wavePlaying) refreshWave(); // новые настройки — следующий трек уже по ним
+    });
+  }
+  bindWaveChips('waveDiv', 'diversity'); bindWaveChips('waveMood', 'mood');
+  document.getElementById('wavePlay').onclick = function(){
+    if (!wavePlaying) { startWave(); return; }
+    stopVideo();
+    document.getElementById('card-title').textContent = 'Ничего не играет';
+    document.getElementById('card-sub').textContent = 'Найди трек и запусти';
+    document.getElementById('f-title').textContent = 'Ничего не играет';
+    document.getElementById('f-sub').textContent = 'Найди трек и нажми play';
+    document.getElementById('f-cover').style.display = 'none';
+    playingId = null; markPlayingRows();
+  };
+
+  async function startWave(){
+    if (waveStarting) return;
+    if (!ymLoggedIn) { setSub('⚠ Для «Моей волны» войди в Яндекс (кнопка вверху)'); return; }
+    waveStarting = true;
+    setSub('Включаю «Мою волну»…');
+    var r = await window.app.ymWaveStart({ mood: waveCfg.mood, diversity: waveCfg.diversity });
+    waveStarting = false;
+    if (!r || r.error) { setSub('⚠ ' + ((r && r.error) || 'волна не запустилась')); return; }
+    waveBuf = r.tracks || [];
+    wavePlaying = true; renderQueue(); renderWaveUi();
+    playWaveNext();
+  }
+  async function refreshWave(){
+    var r = await window.app.ymWaveStart({ mood: waveCfg.mood, diversity: waveCfg.diversity });
+    if (wavePlaying && r && r.tracks && r.tracks.length) waveBuf = r.tracks;
+  }
+  async function playWaveNext(){
+    if (!wavePlaying) return;
+    if (!waveBuf.length) {
+      var more = await window.app.ymWaveMore(waveCur ? waveKey(waveCur) : '');
+      if (!wavePlaying) return;
+      waveBuf = (more && more.tracks) || [];
+      if (!waveBuf.length) { setSub('⚠ ' + ((more && more.error) || 'волна не прислала треков')); stopVideo(); return; }
+    }
+    var t = waveBuf.shift();
+    waveCur = t;
+    document.getElementById('card-title').textContent = t.title;
+    document.getElementById('f-title').textContent = t.title;
+    document.getElementById('f-sub').innerHTML = srcDot(t) + 'Моя волна · ' + esc(t.author);
+    var fc = document.getElementById('f-cover');
+    if (t.thumb) { fc.src = t.thumb; fc.style.display = ''; } else fc.style.display = 'none';
+    playingId = t.id; markPlayingRows(); setNowPlaying(t); renderWaveUi();
+    setSub('Загружаю…');
+    var r = await window.app.ymStream(t.id);
+    if (!wavePlaying || waveCur !== t) return;
+    if (!r || r.error) { setSub('⚠ ' + ((r && r.error) || 'поток не получен') + ' — следующий'); setTimeout(playWaveNext, 1500); return; }
+    var vol = (parseInt(document.getElementById('vol').value, 10) || 100) / 100;
+    mode = 'audio';
+    video.pause(); video.removeAttribute('src'); video.load();
+    video.removeAttribute('poster');
+    if (t.cover || t.thumb) video.setAttribute('poster', t.cover || t.thumb);
+    aud.src = r.audioUrl; aud.volume = vol;
+    aud.play().catch(function(){});
+    document.getElementById('card-sub').textContent = t.author + (r.preview ? ' · превью 30 с (нужен Плюс)' : '');
+    window.app.ymWaveFeedback('trackStarted', waveKey(t));
+    if (waveBuf[0]) window.app.ymStream(waveBuf[0].id).catch(function(){}); // заранее следующий
+  }
+  function waveSkip(){
+    if (waveCur) window.app.ymWaveFeedback('skip', waveKey(waveCur), aud.currentTime || 0);
+    if (current + 1 < queue.length) playIndex(current + 1); // пришёл заказ — он важнее
+    else playWaveNext();
+  }
+  function onTrackEnded(){
+    if (wavePlaying) {
+      if (waveCur) window.app.ymWaveFeedback('trackFinished', waveKey(waveCur), aud.duration || 0);
+      if (current + 1 < queue.length) playIndex(current + 1); // заказ после трека волны
+      else playWaveNext();
+      return;
+    }
+    if (current + 1 < queue.length) next();
+    else if (waveCfg.on && ymLoggedIn) startWave(); // заказы доиграли — включаем волну
+    else setNowPlaying(null);
+  }
 
   acctBtn.addEventListener('click', async function(){
     if (acctBtn.dataset.in) {
