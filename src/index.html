@@ -1751,11 +1751,11 @@
         '<div class="pm">' + (L.tracks.length + ' ' + (L.src === 'yt' ? 'видео' : plural(L.tracks.length))) + (L.author && L.type !== 'liked' ? ' · ' + esc(L.author) : '') + '</div>' +
         '<div class="plbtns">' +
           '<button class="pbtn y" data-a="bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button>' +
-          '<button class="pbtn" data-a="shuffle">Перемешать</button>' +
+          '<button class="pbtn" data-a="shuffle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg>Фоном вперемешку</button>' +
           '<button class="pbtn g" data-a="queue">Всё в очередь</button>' +
           (canSave ? '<button class="pbtn g" data-a="save">' + (L.type === 'text' ? (isSaved(L) ? 'Удалить плейлист' : 'Вернуть плейлист') : (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр')) + '</button>' : '') +
         '</div></div></div>' +
-      '<div class="plnote">«Играть фоном» — плейлист играет вместо волны, пока нет заказов. Заказы всё равно идут первыми.</div>' +
+      '<div class="plnote">«Играть фоном» и «Фоном вперемешку» — плейлист играет вместо волны, пока нет заказов (вперемешку — в случайном порядке, по кругу). Заказы всё равно идут первыми.</div>' +
       '<div class="plrows"></div>';
     bindBack(host);
     var rowsBox = host.querySelector('.plrows');
