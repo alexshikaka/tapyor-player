@@ -254,7 +254,7 @@ function createTray() {
     },
     {
       label: 'Проверить обновления',
-      click: () => checkForUpdates(true)
+      click: () => checkForUpdates(true) // откроет плеер, статус — в шапке
     },
     {
       label: 'Открыть папку now_playing.txt (для OBS)',
@@ -281,50 +281,59 @@ function createTray() {
   tray.on('double-click', () => { if (mainWindow) mainWindow.show(); });
 }
 
-// --- Автообновление ---
+// --- Автообновление (всё показывается в шапке программы, без всплывающих окон) ---
 let manualCheck = false;
 let updaterReady = false;
+let updateState = { state: 'idle' };
+
+function sendUpdateState(st) {
+  updateState = st;
+  try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-state', st); } catch (e) {}
+}
+
+function showMainWindow() {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
 
 function initUpdater() {
   if (updaterReady) return;
   updaterReady = true;
-  autoUpdater.autoDownload = false; // решаем сами, качать или нет
+  autoUpdater.autoDownload = false;       // качаем только по кнопке «Обновить»
+  autoUpdater.autoInstallOnAppQuit = false;
 
+  autoUpdater.on('checking-for-update', () => sendUpdateState({ state: 'checking', manual: manualCheck }));
   autoUpdater.on('update-available', (info) => {
-    if (manualCheck) {
-      dialog.showMessageBox({
-        type: 'info',
-        message: 'Доступна новая версия ' + (info && info.version ? info.version : '') + '.',
-        detail: 'Скачать и установить сейчас?',
-        buttons: ['Скачать', 'Позже'], defaultId: 0, cancelId: 1
-      }).then((r) => { if (r.response === 0) autoUpdater.downloadUpdate(); else manualCheck = false; });
-    } else {
-      autoUpdater.downloadUpdate(); // при запуске качаем тихо
-    }
-  });
-
-  autoUpdater.on('update-not-available', () => {
-    if (manualCheck) { manualCheck = false; dialog.showMessageBox({ message: 'У тебя уже последняя версия.', buttons: ['OK'] }); }
-  });
-
-  autoUpdater.on('error', (err) => {
-    if (manualCheck) { manualCheck = false; dialog.showMessageBox({ message: 'Не удалось проверить обновления:\n' + (err && err.message ? err.message : err), buttons: ['OK'] }); }
-  });
-
-  autoUpdater.on('update-downloaded', (info) => {
+    log('обновление: доступна ' + (info && info.version));
+    sendUpdateState({ state: 'available', version: info && info.version, manual: manualCheck });
     manualCheck = false;
-    dialog.showMessageBox({
-      type: 'info',
-      message: 'Обновление ' + (info && info.version ? info.version : '') + ' загружено.',
-      detail: 'Перезапустить сейчас?',
-      buttons: ['Перезапустить', 'Позже'], defaultId: 0, cancelId: 1
-    }).then((res) => { if (res.response === 0) { app.isQuitting = true; autoUpdater.quitAndInstall(); } });
+  });
+  autoUpdater.on('update-not-available', () => {
+    sendUpdateState({ state: 'latest', manual: manualCheck });
+    manualCheck = false;
+  });
+  autoUpdater.on('error', (err) => {
+    log('обновление: ошибка ' + (err && err.message));
+    sendUpdateState({ state: 'error', message: (err && err.message) ? String(err.message).slice(0, 300) : String(err), manual: manualCheck });
+    manualCheck = false;
+  });
+  autoUpdater.on('download-progress', (p) => {
+    sendUpdateState({ state: 'downloading', percent: Math.round(p.percent || 0), transferred: p.transferred, total: p.total, bps: p.bytesPerSecond });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    log('обновление: скачано ' + (info && info.version) + ', тихая установка и перезапуск');
+    sendUpdateState({ state: 'installing', version: info && info.version });
+    // Тихая установка без «Далее-Далее» и автоматический перезапуск программы
+    setTimeout(() => { app.isQuitting = true; autoUpdater.quitAndInstall(true, true); }, 1500);
   });
 }
 
 function checkForUpdates(manual) {
   manualCheck = !!manual;
-  autoUpdater.checkForUpdates().catch(() => { /* тихо, если нет сети */ });
+  if (manual) showMainWindow();
+  autoUpdater.checkForUpdates().catch((e) => { /* без сети — состояние придёт через событие error */ });
 }
 
 // Только один экземпляр приложения
@@ -523,6 +532,15 @@ app.whenReady().then(async () => {
   ipcMain.handle('np-path', () => npFilePath());
   writeNowPlaying(null); // при запуске ничего не играет
   app.on('before-quit', () => writeNowPlaying(null));
+
+  // Обновления из шапки
+  ipcMain.handle('update-get-state', () => updateState);
+  ipcMain.handle('update-check', () => { checkForUpdates(true); return true; });
+  ipcMain.handle('update-download', () => {
+    sendUpdateState({ state: 'downloading', percent: 0 });
+    autoUpdater.downloadUpdate().catch((e) => sendUpdateState({ state: 'error', message: String(e && e.message || e).slice(0, 300) }));
+    return true;
+  });
 
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
   log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
