@@ -237,6 +237,15 @@
   .plc b, .mit b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .plc small, .mit small { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9EA2B0; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* Карточка исполнителя в поиске */
+  .art { display: flex; align-items: center; gap: 14px; padding: 6px; flex-wrap: wrap; }
+  .art-ph { width: 56px; height: 56px; border-radius: 28px; object-fit: cover; background: #2A2D38; flex: 0 0 auto; display: block; }
+  .art-m { flex: 1 1 160px; min-width: 0; }
+  .art-n { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .art-m .sub { margin-top: 3px; }
+  .art-b { display: flex; gap: 8px; flex-wrap: wrap; }
+  .art-b .pbtn { height: 34px; padding: 0 14px; font-size: 12px; }
+
   /* Открытый плейлист */
   .plview { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
   .back { align-self: flex-start; height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font: 500 12px Onest, sans-serif; cursor: pointer; flex: 0 0 auto; }
@@ -1573,13 +1582,15 @@
     var ymTracks = ym.tracks || [];
     var ytVideos = (yt.videos || []).map(function (v){ v.src = 'yt'; return v; });
     var pls = (ym.playlists || []).slice(0, 5).concat((yt.playlists || []).slice(0, 4));
-    var waves = ymLoggedIn ? computeWaves(q, ym.artists || []) : [];
+    var artist = matchArtist(q, ym.artists || []);
+    var waves = ymLoggedIn ? computeWaves(q, artist ? [] : (ym.artists || [])) : [];
     if (!ymTracks.length && !ytVideos.length && !pls.length) {
       results.innerHTML = '<div class="muted">' + (yt.error ? 'Ошибка поиска: ' + esc(yt.error) : 'Ничего не нашлось.') + '</div>';
       $('hint').textContent = ''; return;
     }
     $('hint').textContent = ymTracks.length ? 'Сначала Яндекс Музыка, ниже YouTube' : 'Результаты YouTube';
     results.innerHTML = '';
+    if (artist) results.appendChild(artistSection(artist));
     if (waves.length) results.appendChild(wavesSection(waves));
     if (pls.length) results.appendChild(plsSection('Плейлисты', pls));
     if (waves.length || pls.length) { var l = document.createElement('div'); l.className = 'xlbl'; l.style.padding = '0 8px 4px'; l.textContent = 'Треки'; results.appendChild(l); }
@@ -1619,6 +1630,46 @@
       if (an === ql || (ql.length >= 3 && an.indexOf(ql) >= 0) || (an.length >= 3 && ql.indexOf(an) >= 0)) out.push({ name: 'В стиле ' + a.name, station: 'artist:' + a.id, sub: 'артист', color: '' });
     }
     return out;
+  }
+  // Исполнитель, который совпал с запросом (по имени), — для карточки исполнителя
+  function matchArtist(q, artists){
+    var norm = function (x){ return String(x || '').toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); };
+    var ql = norm(q), a = artists[0];
+    if (!a || ql.length < 2) return null;
+    var an = norm(a.name);
+    return (an === ql || (ql.length >= 3 && an.indexOf(ql) === 0) || (an.length >= 3 && ql.indexOf(an) === 0)) ? a : null;
+  }
+  function artistSection(a){
+    var sec = document.createElement('div'); sec.className = 'xsec'; sec.dataset.src = 'ym';
+    var meta = { src: 'ym', type: 'artist', artistId: a.id, title: a.name, author: 'Популярные треки', thumb: a.thumb };
+    sec.innerHTML = '<div class="xlbl">Исполнитель</div>' +
+      '<div class="art">' + (a.thumb ? '<img class="art-ph" src="' + esc(a.thumb) + '" alt="">' : '<span class="art-ph"></span>') +
+        '<div class="art-m"><div class="art-n">' + esc(a.name) + '</div><div class="sub"><span class="sa">Исполнитель</span><span class="dot sd" style="background:#FFD43B"></span><span class="ss">Яндекс</span></div></div>' +
+        '<div class="art-b">' +
+          '<button class="pbtn y" data-art="bg"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button>' +
+          '<button class="pbtn" data-art="shuffle">Фоном вперемешку</button>' +
+          '<button class="pbtn g" data-art="open">Все треки</button>' +
+          (ymLoggedIn ? '<button class="pbtn g" data-art="wave">Волна в стиле</button>' : '') +
+        '</div></div>';
+    var cache = null;
+    async function tracks(btn){
+      if (cache) return cache;
+      var t = btn.textContent; btn.textContent = 'Загружаю…'; btn.disabled = true;
+      var r = await A.ymArtist(a.id);
+      btn.textContent = t; btn.disabled = false;
+      if (!r || r.error || !(r.tracks || []).length) { setErr('⚠ не удалось загрузить треки исполнителя'); return null; }
+      cache = Object.assign({}, meta, r, { title: a.name, thumb: a.thumb || r.thumb });
+      return cache;
+    }
+    sec.querySelector('.art-b').onclick = async function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      var k = b.dataset.art;
+      if (k === 'open') { openSearchList(meta); return; }
+      if (k === 'wave') { setBg({ kind: 'wave', station: 'artist:' + a.id, name: 'В стиле ' + a.name }, true); return; }
+      var L = await tracks(b); if (!L) return;
+      setBg({ kind: 'list', list: L, shuffle: k === 'shuffle' }, true);
+    };
+    return sec;
   }
   function wavesSection(waves){
     var sec = document.createElement('div'); sec.className = 'xsec'; sec.dataset.src = 'ym';
