@@ -222,7 +222,7 @@ app.whenReady().then(async () => {
   });
 
   // Получить прямой поток видео/аудио по id ролика (для встроенного плеера)
-  ipcMain.handle('yt-stream', async (event, id) => {
+  async function resolveStream(id) {
     const videoUrl = 'https://www.youtube.com/watch?v=' + id;
     // 1) основной способ — yt-dlp
     const viaDlp = await streamViaYtDlp(videoUrl);
@@ -240,7 +240,25 @@ app.whenReady().then(async () => {
       if (f) { log('ytdl-core: успех (запасной способ)'); return { url: f.url, hasVideo: !!f.hasVideo }; }
     } catch (err) { log('ytdl-core: ошибка ' + (err && err.message)); }
     return { error: (viaDlp && viaDlp.error) ? viaDlp.error : 'не удалось получить поток' };
-  });
+  }
+
+  // Кэш ссылок (живут ~4 часа) + общий запрос, если тот же трек уже грузится
+  const streamCache = new Map();
+  const inflight = new Map();
+  const CACHE_TTL = 4 * 60 * 60 * 1000;
+  async function getStream(id) {
+    const c = streamCache.get(id);
+    if (c && Date.now() - c.at < CACHE_TTL) { log('кэш: ' + id); return c.value; }
+    if (inflight.has(id)) return inflight.get(id);
+    const p = resolveStream(id);
+    inflight.set(id, p);
+    try {
+      const r = await p;
+      if (r && (r.url || r.audioUrl)) streamCache.set(id, { at: Date.now(), value: r });
+      return r;
+    } finally { inflight.delete(id); }
+  }
+  ipcMain.handle('yt-stream', (event, id) => getStream(id));
 
   // Настройки (запоминаются между запусками)
   const settingsPath = () => path.join(app.getPath('userData'), 'settings.json');
