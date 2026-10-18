@@ -1,4 +1,5 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme } = require('electron');
+nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const yts = require('yt-search');
@@ -83,6 +84,9 @@ function createWindow() {
     title: 'Плеер для стрима',
     icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
+    // Тёмная верхняя полоса в цвет оформления; системные кнопки остаются
+    titleBarStyle: 'hidden',
+    titleBarOverlay: { color: '#0E0F13', symbolColor: '#C9CBD4', height: 36 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

@@ -15,7 +15,8 @@
   input::placeholder { color: #7C8090; }
 
   /* Шапка */
-  header { display: flex; align-items: center; gap: 24px; padding: 16px 24px; border-bottom: 1px solid #22242C; flex: 0 0 auto; }
+  header { display: flex; align-items: center; gap: 24px; padding: 16px 150px 16px 24px; border-bottom: 1px solid #22242C; flex: 0 0 auto; -webkit-app-region: drag; }
+  header button, header input, header nav, header .searchbar, header .chip, header .badge, header img { -webkit-app-region: no-drag; }
   .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
   .logo { width: 32px; height: 32px; border-radius: 9px; object-fit: cover; }
   .brand .name { font-weight: 700; font-size: 16px; }
