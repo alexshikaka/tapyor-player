@@ -288,6 +288,10 @@
   .imp-r { display: flex; align-items: center; gap: 12px; padding: 7px 8px; border-radius: 10px; font-size: 13px; }
   .imp-r.close { background: rgba(255,184,107,.05); }
   .imp-r.flash { animation: impFlash 1.6s ease-out; }
+  .imp-r.removed { opacity: .5; }
+  .imp-sm.ok.done { border-color: transparent; background: rgba(74,222,154,.1); opacity: 1; }
+  .imp-sm.on { background: #2A2D38; color: #ECEDF2; }
+  .imp-r .b { min-width: 0; }
   @keyframes impFlash { 0%, 30% { background: rgba(74,222,154,.28); } 100% { background: transparent; } }
   .imp-r .o { flex: 1; min-width: 0; color: #8A8E9C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 400 12px 'JetBrains Mono', monospace; }
   .imp-r .m { flex: 1.3; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; display: flex; align-items: center; gap: 6px; }
@@ -1802,7 +1806,7 @@
   }
 
   // ===== Плейлист из текста =====
-  var imp = null, impShowExact = true;
+  var imp = null, impShowExact = true, impShowRemoved = false;
   function impHost(){ return $('myPl'); }
   function openImport(){
     mySel = null;
@@ -1867,17 +1871,23 @@
   function renderImportResults(){
     var h = impHost(); if (!imp) return;
     var open = {}; imp.items.forEach(function (it, k){ if (it._open) open[k] = true; });
-    var items = imp.items.map(function (it, k){ it._k = k; return it; }).filter(function (i){ return !i.removed; });
+    var all = imp.items.map(function (it, k){ it._k = k; return it; });
+    var items = all.filter(function (i){ return !i.removed; });
+    var removed = all.filter(function (i){ return i.removed && i.status !== 'skip'; });
     var close = items.filter(function (i){ return i.status === 'close'; }), none = items.filter(function (i){ return i.status === 'none'; }), exact = items.filter(function (i){ return i.status === 'exact'; }).sort(function (a, b){ return (b.pickedAt || 0) - (a.pickedAt || 0); });
     var inc = impIncluded(), nYm = inc.filter(function (i){ return srcOf(i.track) === 'ym'; }).length, nYt = inc.length - nYm;
     var finished = imp.done >= imp.items.length;
     function row(it, kind){
       var t = it.track;
       var m = t ? srcDot(t) + esc((t.author ? t.author + ' — ' : '') + t.title) + (it.picked ? ' <span class="imp-pk">подтверждено</span>' : '') : '<span style="color:#7C8090">—</span>';
-      var pv = t ? '<button class="imp-sm imp-pv" data-pv="' + it._k + '" title="Прослушать (в очередь не попадёт)" aria-label="Прослушать">' + pvIcon(t) + '</button>' : '';
-      var btns = kind === 'exact' ? pv + '<button class="imp-sm" data-ed="' + it._k + '">Изменить</button>'
-        : kind === 'close' ? pv + '<button class="imp-sm ok" data-ok="' + it._k + '">Это та песня</button><button class="imp-sm" data-ed="' + it._k + '">Не то</button>'
-        : '<button class="imp-sm hl" data-ed="' + it._k + '">Искать вручную</button><button class="imp-sm" data-rm="' + it._k + '">Убрать</button>';
+      // одинаковый набор кнопок у всех строк: ▶ · Это та песня · Найти · Убрать (лишнее — неактивно, столбцы не прыгают)
+      var k = it._k;
+      var btns = kind === 'removed'
+        ? '<button class="imp-sm hl" data-back="' + k + '">Вернуть</button>'
+        : '<button class="imp-sm imp-pv" data-pv="' + k + '" title="Прослушать (в очередь не попадёт)" aria-label="Прослушать"' + (t ? '' : ' disabled') + '>' + (t ? pvIcon(t) : PV_PLAY) + '</button>' +
+          (kind === 'exact' ? '<button class="imp-sm ok done" disabled>✓ Та песня</button>' : '<button class="imp-sm ok" data-ok="' + k + '"' + (t ? '' : ' disabled') + '>Это та песня</button>') +
+          '<button class="imp-sm' + (kind === 'none' ? ' hl' : '') + (open[k] ? ' on' : '') + '" data-ed="' + k + '" title="Другие варианты и поиск">Найти</button>' +
+          '<button class="imp-sm" data-rm="' + k + '">Убрать</button>';
       var ed = '';
       if (open[it._k]) {
         ed = '<div class="imp-ed">' + ((it.alts || []).length ? (it.alts || []).map(function (a, j){
@@ -1885,7 +1895,7 @@
               '<span class="an">' + srcDot(a) + esc((a.author ? a.author + ' — ' : '') + a.title) + '</span>' + (a.duration ? '<span class="ad">' + esc(a.duration) + '</span>' : '') +
               '<button class="imp-sm ok" data-pick="' + it._k + ':' + j + '">Это та песня</button></div>';
           }).join('') : '<div class="imp-none">Вариантов нет — поищи по-другому:</div>') +
-          '<div class="imp-q"><input class="imp-f" data-qin="' + it._k + '" value="' + esc(it.query || it.line) + '" aria-label="Запрос"><button class="imp-sm hl" data-q="' + it._k + '">Найти</button><button class="imp-sm" data-rm="' + it._k + '">Убрать песню</button></div></div>';
+          '<div class="imp-q"><input class="imp-f" data-qin="' + it._k + '" value="' + esc(it.query || it.line) + '" aria-label="Запрос"><button class="imp-sm hl" data-q="' + it._k + '">Найти</button></div></div>';
       }
       return '<div class="imp-r ' + kind + (it._flash ? ' flash' : '') + '" data-row="' + it._k + '"><span class="o" title="' + esc(it.line) + '">' + esc(it.line) + '</span><span class="m">' + m + '</span><span class="b">' + btns + '</span></div>' + ed;
     }
@@ -1900,6 +1910,10 @@
       html += '<button class="imp-g imp-gt" id="impExactT"><i style="background:#4ADE9A"></i>Точно <span>' + exact.length + ' — ' + (impShowExact ? 'свернуть' : 'показать') + '</span></button>';
       if (impShowExact) html += exact.map(function (i){ return row(i, 'exact'); }).join('');
     }
+    if (removed.length) {
+      html += '<button class="imp-g imp-gt" id="impRemT"><i style="background:#5A5E6C"></i>Убрано <span>' + removed.length + ' — ' + (impShowRemoved ? 'свернуть' : 'показать') + '</span></button>';
+      if (impShowRemoved) html += removed.map(function (i){ return row(i, 'removed'); }).join('');
+    }
     if (!finished) html += '<div class="muted">Ищу… это займёт около ' + Math.max(1, Math.round((imp.items.length - imp.done) / 3 * 1.2 / 60)) + ' мин.</div>';
     html += '</div>' +
       '<div class="imp-save"><button class="pbtn y" id="impSave"' + (finished && inc.length ? '' : ' disabled') + '>Сохранить · ' + inc.length + ' ' + plural(inc.length) + '</button>' +
@@ -1910,6 +1924,7 @@
     var nl = h.querySelector('.imp-list'); if (nl) nl.scrollTop = keep;
     $('impBack').onclick = function(){ if (imp) imp.run++; renderImportInput(); };
     var et = $('impExactT'); if (et) et.onclick = function(){ impShowExact = !impShowExact; renderImportResults(); };
+    var rt = $('impRemT'); if (rt) rt.onclick = function(){ impShowRemoved = !impShowRemoved; renderImportResults(); };
     $('impSave').onclick = saveImport;
   }
   impHost().addEventListener('click', async function(e){
@@ -1918,6 +1933,7 @@
     var d = b.dataset, it;
     if (d.ed != null) { it = imp.items[+d.ed]; it._open = !it._open; renderImportResults(); return; }
     if (d.rm != null) { it = imp.items[+d.rm]; it.removed = true; it._open = false; renderImportResults(); return; }
+    if (d.back != null) { it = imp.items[+d.back]; it.removed = false; it._flash = true; renderImportResults(); setTimeout(function(){ it._flash = false; }, 1600); return; }
     if (d.ok != null) { it = imp.items[+d.ok]; if (it.track) confirmImp(it); return; }
     if (d.pv != null) {
       var pp = String(d.pv).split(':'); it = imp.items[+pp[0]];
