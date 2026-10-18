@@ -39,9 +39,12 @@
   .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
   .col-head .hint { font-size: 13px; color: #8A8E9C; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; }
+  .row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; cursor: pointer; position: relative; }
   .row:hover { background: #171922; }
-  .cover { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
+  .cover-wrap { position: relative; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; background: #222; }
+  .cover { width: 44px; height: 44px; object-fit: cover; display: block; }
+  .cover-ov { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .12s; }
+  .row:hover .cover-ov, .row.playing .cover-ov { opacity: 1; }
   .row .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .row .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -194,6 +197,7 @@
 
   var queue = [];     // {id,title,author,duration,thumb}
   var current = -1;
+  var playingId = null;
   var video = document.getElementById('player');
 
   var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
@@ -225,21 +229,26 @@
     document.getElementById('hint').textContent = 'Сначала лучшие совпадения';
     results.innerHTML = '';
     res.forEach(function (v) {
-      var row = document.createElement('div'); row.className = 'row';
+      var row = document.createElement('div'); row.className = 'row' + (v.id === playingId ? ' playing' : '');
+      row.dataset.id = v.id;
       row.innerHTML =
-        '<img class="cover" src="' + esc(v.thumb) + '" alt="">' +
+        '<div class="cover-wrap"><img class="cover" src="' + esc(v.thumb) + '" alt="">' +
+        '<span class="cover-ov"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"></path></svg></span></div>' +
         '<div class="meta"><div class="t">' + esc(v.title) + '</div><div class="s">' + esc(v.author) + '</div></div>' +
         '<span class="srcpill"><span class="dot" style="background:#FF5A52"></span>YouTube</span>' +
         '<span class="time mono">' + esc(v.duration) + '</span>';
-      var listen = document.createElement('button'); listen.className = 'listen'; listen.title = 'Играть сейчас';
-      listen.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"></path></svg>';
-      listen.onclick = function(){ playNow(v); };
       var add = document.createElement('button'); add.className = 'add';
       add.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E0F13" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
-      add.onclick = function(){ addToQueue(v); };
-      row.appendChild(listen); row.appendChild(add);
+      add.onclick = function(e){ e.stopPropagation(); addToQueue(v); };
+      row.appendChild(add);
+      row.onclick = function(){ playNow(v); };
       results.appendChild(row);
     });
+  }
+
+  function markPlayingRows(){
+    var rows = document.querySelectorAll('.results .row');
+    for (var i = 0; i < rows.length; i++) rows[i].classList.toggle('playing', rows[i].dataset.id === playingId);
   }
 
   function addToQueue(v){ queue.push(v); renderQueue(); if (current === -1) playIndex(0); }
@@ -250,6 +259,7 @@
   async function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
     current = i; var v = queue[i];
+    playingId = v.id; markPlayingRows();
     document.getElementById('card-title').textContent = v.title;
     document.getElementById('f-title').textContent = v.title;
     var fsub = document.getElementById('f-sub');
@@ -275,12 +285,12 @@
     if (video.paused) video.play().catch(function(){}); else video.pause();
   };
   function stopVideo(){ video.pause(); video.removeAttribute('src'); video.load(); }
-  document.getElementById('clearq').onclick = function(){ queue = []; current = -1; stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
+  document.getElementById('clearq').onclick = function(){ queue = []; current = -1; playingId = null; markPlayingRows(); stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
 
   function removeAt(i) {
     queue.splice(i, 1);
     if (i < current) current--;
-    else if (i === current) { if (current >= queue.length) current = queue.length - 1; if (current >= 0) playIndex(current); else { current = -1; stopVideo(); } }
+    else if (i === current) { if (current >= queue.length) current = queue.length - 1; if (current >= 0) playIndex(current); else { current = -1; playingId = null; markPlayingRows(); stopVideo(); } }
     renderQueue();
   }
 
