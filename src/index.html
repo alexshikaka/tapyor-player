@@ -134,13 +134,18 @@
   window.onYouTubeIframeAPIReady = function () {
     player = new YT.Player('player', {
       height: '112', width: '200',
-      playerVars: { autoplay: 0, controls: 1, rel: 0 },
+      playerVars: { autoplay: 1, controls: 1, rel: 0, origin: location.origin },
       events: {
         onReady: function () { playerReady = true; },
         onStateChange: function (e) {
           if (e.data === YT.PlayerState.ENDED) next();
           if (e.data === YT.PlayerState.PLAYING) setPlayIcon('⏸');
           if (e.data === YT.PlayerState.PAUSED) setPlayIcon('▶');
+        },
+        onError: function () {
+          // 101/150 — владелец запретил встраивание, 100 — удалено и т.п.
+          document.getElementById('np-sub').textContent = 'Это видео нельзя встроить — перехожу к следующему';
+          setTimeout(next, 1200);
         }
       }
     });

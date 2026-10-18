@@ -2,9 +2,31 @@ const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain } = require
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const yts = require('yt-search');
+const http = require('http');
+const fs = require('fs');
 
 let mainWindow = null;
 let tray = null;
+let appUrl = null;
+
+// Крошечный локальный веб-сервер — отдаёт страницу приложения по http,
+// чтобы встроенный плеер YouTube работал (из file:// он не запускается).
+function startServer() {
+  const root = __dirname;
+  const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json', '.ico': 'image/x-icon' };
+  const server = http.createServer((req, res) => {
+    let p = decodeURIComponent((req.url || '/').split('?')[0]);
+    if (p === '/') p = '/index.html';
+    const file = path.normalize(path.join(root, p));
+    if (!file.startsWith(root)) { res.writeHead(403); res.end('forbidden'); return; }
+    fs.readFile(file, (err, data) => {
+      if (err) { res.writeHead(404); res.end('not found'); return; }
+      res.writeHead(200, { 'Content-Type': types[path.extname(file).toLowerCase()] || 'application/octet-stream' });
+      res.end(data);
+    });
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server.address().port)));
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -23,7 +45,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadURL(appUrl || ('file://' + path.join(__dirname, 'index.html')));
 
   // Закрытие окна сворачивает в трей, а не выходит из программы
   mainWindow.on('close', (e) => {
@@ -106,8 +128,11 @@ if (!gotTheLock) {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   ipcMain.handle('get-version', () => app.getVersion());
+
+  const port = await startServer();
+  appUrl = 'http://127.0.0.1:' + port + '/index.html';
 
   // Поиск по YouTube (без ключа и входа)
   ipcMain.handle('yt-search', async (event, query) => {
