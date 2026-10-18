@@ -55,16 +55,30 @@
   .muted { color: #8A8E9C; font-size: 13px; text-align: center; margin: auto 0; }
 
   footer { flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
-    padding: 12px 20px; border-top: 1px solid #22242C; background: #12131A; }
-  #player { width: 200px; height: 112px; border-radius: 8px; overflow: hidden; background: #000; flex: 0 0 auto; }
+    padding: 12px 18px; border-top: 1px solid #22242C; background: #101119; }
+  #player { width: 150px; height: 84px; border-radius: 8px; overflow: hidden; background: #000; flex: 0 0 auto; }
   #player iframe { width: 100%; height: 100%; border: 0; }
-  .np { flex: 1; min-width: 0; }
+  .pmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+  .prow { display: flex; align-items: center; gap: 16px; }
+  .np { flex: 1 1 auto; min-width: 0; }
   .np .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .np .s { font-size: 12px; color: #9EA2B0; }
-  .controls { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
-  .controls button { width: 44px; height: 44px; border-radius: 22px; border: 0; cursor: pointer; font-size: 16px; }
-  .controls .main { background: #ECEDF2; color: #0E0F13; }
-  .controls .side { background: transparent; color: #C9CBD4; }
+  .np .s { font-size: 12px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .controls { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .cbtn { display: flex; align-items: center; justify-content: center; border: 0; cursor: pointer; border-radius: 50%; background: transparent; color: #C9CBD4; padding: 0; }
+  .cbtn.side { width: 40px; height: 40px; }
+  .cbtn.side:hover { background: #20222C; color: #ECEDF2; }
+  .cbtn.play { width: 48px; height: 48px; background: #ECEDF2; color: #0E0F13; }
+  .cbtn.play:hover { background: #fff; }
+  .cbtn svg { display: block; }
+  .vol { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; color: #9EA2B0; }
+  .vol input { width: 90px; accent-color: #9B87FF; cursor: pointer; }
+  .timeline { display: flex; align-items: center; gap: 10px; }
+  .tm { font-size: 11px; color: #9EA2B0; font-variant-numeric: tabular-nums; width: 34px; flex: 0 0 auto; }
+  .tm.r { text-align: right; }
+  .wave { flex: 1; height: 34px; display: flex; align-items: center; gap: 2px; cursor: pointer; }
+  .wave .bar { flex: 1 1 0; min-width: 0; border-radius: 2px; background: #2C2F3A; transition: background .12s; }
+  .wave .bar.played { background: #9B87FF; }
+  .wave .bar.head { background: #E6DEFF; }
 </style>
 </head>
 <body>
@@ -104,14 +118,27 @@
 
   <footer>
     <div id="player"></div>
-    <div class="np">
-      <div class="t" id="np-title">Ничего не играет</div>
-      <div class="s" id="np-sub">Найди трек и нажми ▶</div>
-    </div>
-    <div class="controls">
-      <button class="side" id="prev" title="Предыдущий">⏮</button>
-      <button class="main" id="playpause" title="Пауза/играть">⏸</button>
-      <button class="side" id="next" title="Следующий">⏭</button>
+    <div class="pmain">
+      <div class="prow">
+        <div class="np">
+          <div class="t" id="np-title">Ничего не играет</div>
+          <div class="s" id="np-sub">Найди трек и нажми play</div>
+        </div>
+        <div class="controls">
+          <button class="cbtn side" id="prev" title="Предыдущий" aria-label="Предыдущий"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6v12l-9-6z"></path></svg></button>
+          <button class="cbtn play" id="playpause" title="Пауза / играть" aria-label="Пауза / играть"></button>
+          <button class="cbtn side" id="next" title="Следующий" aria-label="Следующий"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6v12l9-6z"></path></svg></button>
+        </div>
+        <div class="vol">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 010 7"></path></svg>
+          <input id="vol" type="range" min="0" max="100" value="100" aria-label="Громкость">
+        </div>
+      </div>
+      <div class="timeline">
+        <span class="tm" id="tcur">0:00</span>
+        <div class="wave" id="wave" title="Перемотка"></div>
+        <span class="tm r" id="tdur">0:00</span>
+      </div>
     </div>
   </footer>
 
@@ -151,7 +178,10 @@
     });
   };
 
-  function setPlayIcon(sym){ document.getElementById('playpause').textContent = sym; }
+  var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
+  var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
+  function setPlayIcon(sym){ document.getElementById('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; }
+  setPlayIcon('▶');
 
   // --- Поиск ---
   var q = document.getElementById('q');
@@ -194,6 +224,7 @@
     document.getElementById('np-title').textContent = v.title;
     document.getElementById('np-sub').textContent = v.author;
     if (playerReady && player) player.loadVideoById(v.id);
+    buildWave();
     renderQueue();
   }
   function next() { if (current+1 < queue.length) playIndex(current+1); }
@@ -233,6 +264,47 @@
 
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // --- Таймлайн-«волна» ---
+  var NB = 64, waveEl = document.getElementById('wave'), bars = [];
+  function buildWave() {
+    waveEl.innerHTML = ''; bars = [];
+    for (var i = 0; i < NB; i++) {
+      var b = document.createElement('div'); b.className = 'bar';
+      var base = Math.abs(Math.sin(i * 0.55) * 0.6 + Math.sin(i * 0.17) * 0.4);
+      var h = Math.round(14 + base * 70 + Math.random() * 16);
+      if (h > 100) h = 100; if (h < 12) h = 12;
+      b.style.height = h + '%';
+      waveEl.appendChild(b); bars.push(b);
+    }
+  }
+  buildWave();
+
+  function fmt(s){ s = Math.max(0, Math.floor(s||0)); var m = Math.floor(s/60), ss = s%60; return m + ':' + (ss<10?'0':'') + ss; }
+
+  setInterval(function () {
+    if (!playerReady || !player || !player.getDuration) return;
+    var dur = player.getDuration() || 0, cur = player.getCurrentTime() || 0;
+    if (dur <= 0) return;
+    document.getElementById('tcur').textContent = fmt(cur);
+    document.getElementById('tdur').textContent = fmt(dur);
+    var head = Math.floor((cur / dur) * NB);
+    for (var i = 0; i < NB; i++) bars[i].className = 'bar' + (i < head ? ' played' : '') + (i === head ? ' head' : '');
+  }, 300);
+
+  waveEl.addEventListener('click', function (e) {
+    if (!playerReady || !player || !player.getDuration) return;
+    var dur = player.getDuration() || 0; if (dur <= 0) return;
+    var rect = waveEl.getBoundingClientRect();
+    var frac = (e.clientX - rect.left) / rect.width;
+    frac = Math.max(0, Math.min(1, frac));
+    player.seekTo(frac * dur, true);
+  });
+
+  var volEl = document.getElementById('vol');
+  volEl.addEventListener('input', function () {
+    if (playerReady && player && player.setVolume) player.setVolume(parseInt(volEl.value, 10));
+  });
 </script>
 </body>
 </html>
