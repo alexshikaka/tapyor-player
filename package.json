@@ -1,0 +1,27 @@
+{
+  "name": "stream-player",
+  "version": "0.1.0",
+  "description": "Плеер для стрима — заказы музыки из нескольких сервисов",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "author": "shikaka",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "33.2.0",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "app.shikaka.streamplayer",
+    "productName": "Плеер для стрима",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
