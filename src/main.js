@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const yts = require('yt-search');
@@ -6,6 +6,12 @@ const http = require('http');
 const fs = require('fs');
 const ytdl = require('@distube/ytdl-core');
 const { execFile } = require('child_process');
+
+// --- Логирование (для отладки) ---
+function logPath() { try { return path.join(app.getPath('userData'), 'log.txt'); } catch (e) { return path.join(__dirname, 'log.txt'); } }
+function log(msg) {
+  try { fs.appendFileSync(logPath(), new Date().toISOString() + '  ' + String(msg) + '\n'); } catch (e) {}
+}
 
 // Путь к yt-dlp (кладётся в ресурсы приложения при сборке)
 function ytdlpPath() {
@@ -16,14 +22,23 @@ function ytdlpPath() {
 // Достать прямую ссылку на поток через yt-dlp (надёжный способ)
 function streamViaYtDlp(videoUrl) {
   return new Promise((resolve) => {
-    execFile(ytdlpPath(), [
+    const bin = ytdlpPath();
+    const exists = fs.existsSync(bin);
+    log('yt-dlp: запуск. bin=' + bin + ' | файл есть=' + exists + ' | url=' + videoUrl);
+    if (!exists) { resolve({ error: 'yt-dlp.exe не найден по пути: ' + bin }); return; }
+    execFile(bin, [
       '-f', 'best[acodec!=none][vcodec!=none]/best',
       '-g', '--no-playlist', '--no-warnings',
       videoUrl
-    ], { timeout: 30000 }, (err, stdout, stderr) => {
-      if (err) { resolve({ error: ('yt-dlp: ' + ((stderr || err.message || '').toString())).slice(0, 300) }); return; }
+    ], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
+      if (err) {
+        log('yt-dlp: ОШИБКА code=' + (err.code) + ' msg=' + (err.message || '') + ' | stderr=' + (stderr || ''));
+        resolve({ error: ('yt-dlp: ' + ((stderr || err.message || '').toString())).slice(0, 400) });
+        return;
+      }
       const url = (stdout || '').trim().split('\n')[0];
-      if (!url) { resolve({ error: 'yt-dlp: пустой ответ' }); return; }
+      if (!url) { log('yt-dlp: пустой вывод'); resolve({ error: 'yt-dlp: пустой ответ' }); return; }
+      log('yt-dlp: успех, длина ссылки=' + url.length);
       resolve({ url: url, hasVideo: true });
     });
   });
@@ -96,6 +111,10 @@ function createTray() {
     {
       label: 'Проверить обновления',
       click: () => checkForUpdates(true)
+    },
+    {
+      label: 'Показать лог (для отладки)',
+      click: () => { try { shell.openPath(logPath()); } catch (e) {} }
     },
     { type: 'separator' },
     {
@@ -194,10 +213,13 @@ app.whenReady().then(async () => {
         const audio = info.formats.filter((x) => x.hasAudio && !x.hasVideo).sort((x, y) => (y.audioBitrate || 0) - (x.audioBitrate || 0));
         f = audio[0];
       }
-      if (f) return { url: f.url, hasVideo: !!f.hasVideo };
-    } catch (err) { /* ниже вернём ошибку от yt-dlp */ }
+      if (f) { log('ytdl-core: успех (запасной способ)'); return { url: f.url, hasVideo: !!f.hasVideo }; }
+    } catch (err) { log('ytdl-core: ошибка ' + (err && err.message)); }
     return { error: (viaDlp && viaDlp.error) ? viaDlp.error : 'не удалось получить поток' };
   });
+
+  ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
+  log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
 
   createWindow();
   createTray();

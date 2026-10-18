@@ -270,7 +270,7 @@
     setSub('Загружаю…');
     var r = await window.app.ytStream(v.id);
     if (i !== current) return; // переключили, пока грузилось
-    if (!r || r.error) { setSub('Не удалось получить поток — пропускаю'); setTimeout(next, 1400); return; }
+    if (!r || r.error) { setSub('⚠ ' + ((r && r.error) ? r.error : 'поток не получен')); return; }
     video.src = r.url;
     video.volume = (parseInt(document.getElementById('vol').value, 10) || 100) / 100;
     video.play().catch(function(){});
