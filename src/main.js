@@ -31,6 +31,12 @@ function log(msg) {
 // --- Настройки и файл «сейчас играет» для OBS ---
 function settingsFile() { return path.join(app.getPath('userData'), 'settings.json'); }
 function readSettingsFile() { try { return JSON.parse(fs.readFileSync(settingsFile(), 'utf8')); } catch (e) { return {}; } }
+const DEFAULTS = {
+  npEnabled: true, nowPlayingFormat: '{artist} — {title}', npIdle: '',
+  videoQuality: '720', startVolume: 80, prefetch: true,
+  autoUpdate: true, autoStart: false, closeToTray: true
+};
+function cfg(key) { const s = readSettingsFile(); return s[key] !== undefined ? s[key] : DEFAULTS[key]; }
 function npFilePath() {
   const s = readSettingsFile();
   return s.nowPlayingPath || path.join(app.getPath('documents'), 'Тапёр', 'now_playing.txt');
@@ -40,13 +46,20 @@ function formatNowPlaying(info, fmt) {
   return String(fmt || '{artist} — {title}')
     .replace(/\{artist\}/g, info.artist || '')
     .replace(/\{title\}/g, info.title || '')
+    .replace(/\{album\}/g, info.album || '')
+    .replace(/\{source\}/g, info.source || '')
     .replace(/^[\s—–-]+|[\s—–-]+$/g, '') // если исполнителя нет — без висящего тире
     .trim();
 }
 let lastNpText = null;
-function writeNowPlaying(info) {
-  const text = formatNowPlaying(info, readSettingsFile().nowPlayingFormat);
-  if (text === lastNpText) return;
+let lastNpInfo = null;
+function writeNowPlaying(info, force) {
+  let text = '';
+  if (cfg('npEnabled')) {
+    text = formatNowPlaying(info, cfg('nowPlayingFormat'));
+    if (!text) text = String(cfg('npIdle') || ''); // ничего не играет — текст «на паузе» (или пусто)
+  }
+  if (text === lastNpText && !force) return;
   const p = npFilePath();
   try {
     fs.mkdirSync(path.dirname(p), { recursive: true });
@@ -167,6 +180,27 @@ function ytdlpSearch(query, count) {
   });
 }
 
+// Содержимое плейлиста YouTube (yt-dlp, без загрузки видео)
+function ytdlpPlaylist(listId) {
+  return new Promise((resolve) => {
+    const bin = ytdlpPath();
+    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    execFile(bin, ['https://www.youtube.com/playlist?list=' + listId, '--flat-playlist', '--dump-single-json', '--no-warnings', '--playlist-end', '500'],
+      { timeout: 60000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
+        if (err) { log('плейлист YouTube: ошибка ' + (stderr || err.message)); resolve({ error: 'не удалось открыть плейлист' }); return; }
+        try {
+          const j = JSON.parse(stdout);
+          const tracks = (j.entries || []).filter((x) => x && x.id && x.title && !/^\[(deleted|private)/i.test(x.title)).map((x) => ({
+            src: 'yt', id: x.id, title: x.title || '', author: x.channel || x.uploader || '',
+            duration: fmtDur(x.duration), seconds: x.duration || 0,
+            thumb: 'https://i.ytimg.com/vi/' + x.id + '/mqdefault.jpg'
+          }));
+          resolve({ src: 'yt', type: 'playlist', listId: listId, title: j.title || 'Плейлист YouTube', author: j.channel || j.uploader || '', count: tracks.length, thumb: tracks[0] ? tracks[0].thumb : '', tracks: tracks });
+        } catch (e) { resolve({ error: 'ошибка разбора плейлиста' }); }
+      });
+  });
+}
+
 // Достать прямую ссылку на поток через yt-dlp (надёжный способ)
 function streamViaYtDlp(videoUrl) {
   return new Promise((resolve) => {
@@ -174,9 +208,13 @@ function streamViaYtDlp(videoUrl) {
     const exists = fs.existsSync(bin);
     log('yt-dlp: запуск. bin=' + bin + ' | файл есть=' + exists + ' | url=' + videoUrl);
     if (!exists) { resolve({ error: 'yt-dlp.exe не найден по пути: ' + bin }); return; }
+    const q = String(cfg('videoQuality'));
+    const fmt = q === 'audio' ? 'ba[ext=m4a]/ba/b'
+      : q === '480' ? 'bv*[height<=480][ext=mp4]+ba[ext=m4a]/bv*[height<=480]+ba/b[height<=480]/b/ba'
+      : 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/bv*[height<=720]+ba/b/ba';
     execFile(bin, [
-      // видео (до 720p) + звук раздельно; иначе единый файл; иначе только звук
-      '-f', 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/bv*[height<=720]+ba/b/ba',
+      // видео + звук раздельно; иначе единый файл; иначе только звук
+      '-f', fmt,
       '-g', '--no-playlist', '--no-warnings',
       videoUrl
     ], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
@@ -190,6 +228,9 @@ function streamViaYtDlp(videoUrl) {
       if (lines.length >= 2) {
         log('yt-dlp: успех, раздельные потоки (видео + звук)');
         resolve({ videoUrl: lines[0], audioUrl: lines[1] });
+      } else if (q === 'audio') {
+        log('yt-dlp: успех, только звук');
+        resolve({ audioUrl: lines[0] });
       } else {
         log('yt-dlp: успех, единый поток');
         resolve({ url: lines[0] });
@@ -200,6 +241,7 @@ function streamViaYtDlp(videoUrl) {
 
 let mainWindow = null;
 let tray = null;
+const startHidden = process.argv.includes('--hidden'); // запуск вместе с Windows — сразу в трей
 let appUrl = null;
 
 // Крошечный локальный веб-сервер — отдаёт страницу приложения по http,
@@ -229,6 +271,7 @@ function createWindow() {
     minHeight: 600,
     backgroundColor: '#0E0F13',
     title: 'Тапёр',
+    show: !startHidden,
     icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     // Тёмная верхняя полоса в цвет оформления; системные кнопки остаются
@@ -248,9 +291,12 @@ function createWindow() {
 
   // Закрытие окна сворачивает в трей, а не выходит из программы
   mainWindow.on('close', (e) => {
-    if (!app.isQuitting) {
+    if (!app.isQuitting && cfg('closeToTray')) {
       e.preventDefault();
       mainWindow.hide();
+    } else if (!app.isQuitting) {
+      app.isQuitting = true; // крестик = выход (так выбрано в настройках)
+      app.quit();
     }
   });
 }
@@ -297,6 +343,8 @@ function createTray() {
 // --- Автообновление (всё показывается в шапке программы, без всплывающих окон) ---
 let manualCheck = false;
 let updaterReady = false;
+let playerBusy = false;      // играет ли сейчас музыка (сообщает окно)
+let installRequested = false; // пользователь сам нажал «Обновить» — ставим сразу
 let updateState = { state: 'idle' };
 
 function sendUpdateState(st) {
@@ -320,8 +368,9 @@ function initUpdater() {
   autoUpdater.on('checking-for-update', () => sendUpdateState({ state: 'checking', manual: manualCheck }));
   autoUpdater.on('update-available', (info) => {
     log('обновление: доступна ' + (info && info.version));
-    sendUpdateState({ state: 'available', version: info && info.version, manual: manualCheck });
+    sendUpdateState({ state: 'available', version: info && info.version, manual: manualCheck, auto: !!cfg('autoUpdate') });
     manualCheck = false;
+    if (cfg('autoUpdate')) autoUpdater.downloadUpdate().catch((e) => log('обновление: автозагрузка — ' + (e && e.message)));
   });
   autoUpdater.on('update-not-available', () => {
     sendUpdateState({ state: 'latest', manual: manualCheck });
@@ -336,10 +385,18 @@ function initUpdater() {
     sendUpdateState({ state: 'downloading', percent: Math.round(p.percent || 0), transferred: p.transferred, total: p.total, bps: p.bytesPerSecond });
   });
   autoUpdater.on('update-downloaded', (info) => {
-    log('обновление: скачано ' + (info && info.version) + ', тихая установка и перезапуск');
-    sendUpdateState({ state: 'installing', version: info && info.version });
-    // Тихая установка без «Далее-Далее» и автоматический перезапуск программы
-    setTimeout(() => { app.isQuitting = true; autoUpdater.quitAndInstall(true, true); }, 1500);
+    const v = info && info.version;
+    const install = () => {
+      log('обновление: тихая установка ' + v + ' и перезапуск');
+      sendUpdateState({ state: 'installing', version: v });
+      // Тихая установка без «Далее-Далее» и автоматический перезапуск программы
+      setTimeout(() => { app.isQuitting = true; autoUpdater.quitAndInstall(true, true); }, 1500);
+    };
+    if (installRequested || !playerBusy) { install(); return; }
+    // Музыка играет — ждём паузы, посреди трека не перезапускаемся
+    log('обновление: скачано ' + v + ', жду, когда музыка остановится');
+    sendUpdateState({ state: 'ready', version: v });
+    const t = setInterval(() => { if (!playerBusy || installRequested) { clearInterval(t); install(); } }, 3000);
   });
 }
 
@@ -374,7 +431,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('yt-search', async (event, query) => {
     try {
       const r = await yts(query);
-      return (r.videos || []).slice(0, 20).map((v) => ({
+      const videos = (r.videos || []).slice(0, 20).map((v) => ({
         id: v.videoId,
         title: v.title,
         author: (v.author && v.author.name) || '',
@@ -382,9 +439,23 @@ app.whenReady().then(async () => {
         seconds: (v.duration && v.duration.seconds) || 0,
         thumb: v.thumbnail
       }));
+      const playlists = (r.playlists || r.lists || []).slice(0, 6).map((p) => ({
+        src: 'yt', type: 'playlist', listId: p.listId, title: p.title || '',
+        author: (p.author && p.author.name) || '', count: p.videoCount || 0, thumb: p.thumbnail || p.image || ''
+      })).filter((p) => p.listId);
+      return { videos, playlists };
     } catch (e) {
       return { error: (e && e.message) ? e.message : String(e) };
     }
+  });
+  ipcMain.handle('yt-playlist', async (e, listId) => {
+    const r = await ytdlpPlaylist(listId);
+    if (!r.error) return r;
+    try { // запасной способ
+      const p = await yts({ listId: listId });
+      const tracks = (p.videos || []).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail || ('https://i.ytimg.com/vi/' + v.videoId + '/mqdefault.jpg') }));
+      return { src: 'yt', type: 'playlist', listId, title: p.title || 'Плейлист YouTube', author: (p.author && p.author.name) || '', count: tracks.length, thumb: p.thumbnail || p.image || '', tracks };
+    } catch (err) { log('плейлист YouTube (запасной): ' + err.message); return r; }
   });
 
   // Получить прямой поток видео/аудио по id ролика (для встроенного плеера)
@@ -412,17 +483,19 @@ app.whenReady().then(async () => {
   const streamCache = new Map();
   const inflight = new Map();
   const CACHE_TTL = 4 * 60 * 60 * 1000;
-  async function getStream(id) {
-    const c = streamCache.get(id);
+  async function getStream(rawId) {
+    const id = rawId;
+    const key = id + '@' + cfg('videoQuality');
+    const c = streamCache.get(key);
     if (c && Date.now() - c.at < CACHE_TTL) { log('кэш: ' + id); return c.value; }
-    if (inflight.has(id)) return inflight.get(id);
+    if (inflight.has(key)) return inflight.get(key);
     const p = resolveStream(id);
-    inflight.set(id, p);
+    inflight.set(key, p);
     try {
       const r = await p;
-      if (r && (r.url || r.audioUrl)) streamCache.set(id, { at: Date.now(), value: r });
+      if (r && (r.url || r.audioUrl)) streamCache.set(key, { at: Date.now(), value: r });
       return r;
-    } finally { inflight.delete(id); }
+    } finally { inflight.delete(key); }
   }
   ipcMain.handle('yt-stream', (event, id) => getStream(id));
   ipcMain.handle('yt-search-more', (event, query, count) => ytdlpSearch(query, Math.min(Math.max(count || 40, 20), 300)));
@@ -430,15 +503,41 @@ app.whenReady().then(async () => {
   // Настройки (запоминаются между запусками)
   const settingsPath = () => path.join(app.getPath('userData'), 'settings.json');
   const readSettings = () => { try { return JSON.parse(fs.readFileSync(settingsPath(), 'utf8')); } catch (e) { return {}; } };
-  ipcMain.handle('get-setting', (e, key) => readSettings()[key]);
+  ipcMain.handle('get-setting', (e, key) => { const v = readSettings()[key]; return v !== undefined ? v : DEFAULTS[key]; });
   ipcMain.handle('set-setting', (e, key, value) => {
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
+    if (key === 'autoStart') applyAutoStart();
+    if (key === 'npEnabled' || key === 'nowPlayingFormat' || key === 'npIdle' || key === 'nowPlayingPath') writeNowPlaying(lastNpInfo, true);
     return true;
   });
+  function applyAutoStart() {
+    try { if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!cfg('autoStart'), args: ['--hidden'] }); }
+    catch (err) { log('автозапуск: ' + err.message); }
+  }
+  applyAutoStart();
+  ipcMain.handle('np-choose-folder', async () => {
+    const r = await dialog.showOpenDialog(mainWindow, { title: 'Папка для now_playing.txt', properties: ['openDirectory', 'createDirectory'], defaultPath: path.dirname(npFilePath()) });
+    if (r.canceled || !r.filePaths || !r.filePaths[0]) return null;
+    const p = path.join(r.filePaths[0], 'now_playing.txt');
+    const s = readSettings(); s.nowPlayingPath = p; writeSettings(s);
+    writeNowPlaying(lastNpInfo, true);
+    return p;
+  });
+  ipcMain.handle('np-open-folder', () => {
+    try {
+      const p = npFilePath();
+      if (!fs.existsSync(p)) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, '', 'utf8'); }
+      shell.showItemInFolder(p);
+    } catch (err) { log('now_playing.txt: не открыть папку ' + err.message); }
+    return true;
+  });
+  ipcMain.handle('log-copy', () => { try { clipboard.writeText(fs.readFileSync(logPath(), 'utf8').slice(-20000)); return true; } catch (err) { return false; } });
+  ipcMain.handle('log-open', () => { try { shell.openPath(logPath()); } catch (err) {} return true; });
 
   // --- Яндекс Музыка ---
   ym.setLogger(log);
+  let ymUid = '';
   const writeSettings = (s) => { try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); } };
   function getYmToken() {
     const v = readSettings().ymToken;
@@ -491,10 +590,106 @@ app.whenReady().then(async () => {
     if (/^https:\/\/([a-z0-9-]+\.)*(yandex\.(ru|com|by|kz)|ya\.ru)\//i.test(String(url || ''))) shell.openExternal(url);
     return true;
   });
-  ipcMain.handle('ym-logout', () => { setYmToken(''); log('Яндекс: выход'); return true; });
+  ipcMain.handle('ym-logout', () => { setYmToken(''); ymUid = ''; log('Яндекс: выход'); return true; });
   ipcMain.handle('ym-search', async (e, q) => {
-    try { const list = await ym.search(q, getYmToken()); log('Яндекс: поиск «' + q + '» → ' + list.length); return list; }
-    catch (err) { log('Яндекс: поиск — ошибка ' + err.message); return []; }
+    try { const r = await ym.search(q, getYmToken()); log('Яндекс: поиск «' + q + '» → треков ' + r.tracks.length + ', плейлистов ' + r.playlists.length); return r; }
+    catch (err) { log('Яндекс: поиск — ошибка ' + err.message); return { tracks: [], playlists: [], artists: [] }; }
+  });
+  ipcMain.handle('ym-search-page', async (e, q, page) => {
+    try { return await ym.searchTracksPage(q, page, getYmToken()); }
+    catch (err) { log('Яндекс: страница поиска — ошибка ' + err.message); return { error: err.message }; }
+  });
+  let stationsCache = null;
+  ipcMain.handle('ym-stations', async () => {
+    if (stationsCache && Date.now() - stationsCache.at < 6 * 3600 * 1000) return stationsCache.list;
+    try { const list = await ym.stationsList(getYmToken()); stationsCache = { at: Date.now(), list }; log('Яндекс: станций ' + list.length); return list; }
+    catch (err) { log('Яндекс: список станций — ошибка ' + err.message); return []; }
+  });
+  ipcMain.handle('ym-wave-variants', async () => {
+    const tok = getYmToken();
+    if (!tok) return { presets: [], dashboard: [] };
+    let presets = [], dashboard = [];
+    try { presets = await ym.wavePresets(tok); } catch (err) { log('Волна: варианты — ' + err.message); }
+    try { dashboard = await ym.stationsDashboard(tok); } catch (err) { log('Волна: подборка станций — ' + err.message); }
+    return { presets, dashboard: dashboard.slice(0, 10) };
+  });
+  async function ymUidGet() {
+    if (ymUid) return ymUid;
+    const a = await ym.accountStatus(getYmToken());
+    ymUid = a.uid || a.login;
+    return ymUid;
+  }
+  ipcMain.handle('ym-my', async () => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'войди в Яндекс' };
+    try { return { playlists: await ym.userPlaylists(tok, await ymUidGet()) }; }
+    catch (err) { log('Яндекс: мои плейлисты — ' + err.message); return { error: err.message }; }
+  });
+  ipcMain.handle('ym-liked', async () => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'войди в Яндекс' };
+    try { return Object.assign({ src: 'ym', type: 'liked' }, await ym.likedTracks(tok, await ymUidGet(), 1000)); }
+    catch (err) { log('Яндекс: «Мне нравится» — ' + err.message); return { error: err.message }; }
+  });
+  ipcMain.handle('ym-playlist', async (e, pl) => {
+    try { return await ym.playlistTracks(getYmToken(), pl || {}); }
+    catch (err) { log('Яндекс: плейлист — ' + err.message); return { error: err.message }; }
+  });
+  ipcMain.handle('ym-like-ids', async () => {
+    const tok = getYmToken();
+    if (!tok) return [];
+    try { return await ym.likedIds(tok, await ymUidGet()); }
+    catch (err) { log('Яндекс: список лайков — ' + err.message); return []; }
+  });
+  ipcMain.handle('ym-like', async (e, trackKey, on) => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'войди в Яндекс' };
+    try { await ym.setLike(tok, await ymUidGet(), trackKey, !!on); log('Яндекс: ' + (on ? 'лайк ' : 'снят лайк ') + trackKey); return { ok: true }; }
+    catch (err) { log('Яндекс: лайк — ' + err.message); return { error: err.message }; }
+  });
+  ipcMain.handle('ym-artist', async (e, id) => {
+    try { return await ym.artistTracks(getYmToken(), id); }
+    catch (err) { log('Яндекс: исполнитель — ' + err.message); return { error: err.message }; }
+  });
+
+  // Ссылка в строке поиска: Яндекс Музыка или YouTube
+  ipcMain.handle('resolve-link', async (e, text) => {
+    const t = String(text || '').trim();
+    let u;
+    try { u = new URL(/^https?:\/\//i.test(t) ? t : 'https://' + t); } catch (err) { return null; }
+    const host = u.hostname.replace(/^www\.|^m\./, '').toLowerCase();
+    const p = u.pathname;
+    const tok = getYmToken();
+    try {
+      if (/^music\.yandex\.(ru|com|by|kz|uz)$/.test(host)) {
+        let m;
+        if ((m = /\/track\/(\d+)/.exec(p))) { const tr = await ym.trackById(tok, m[1]); return tr ? { tracks: [tr] } : { error: 'трек не найден' }; }
+        if ((m = /^\/album\/(\d+)/.exec(p))) return { list: await ym.albumTracks(tok, m[1]) };
+        if ((m = /^\/users\/([^/]+)\/playlists\/(\d+)/.exec(p))) return { list: await ym.playlistTracks(tok, { uid: decodeURIComponent(m[1]), kind: m[2] }) };
+        if ((m = /^\/playlists\/([^/?#]+)/.exec(p))) return { list: await ym.playlistTracks(tok, { uuid: m[1] }) };
+        if ((m = /^\/artist\/(\d+)/.exec(p))) return { list: await ym.artistTracks(tok, m[1]) };
+        return { error: 'такую ссылку Яндекса пока не понимаю' };
+      }
+      if (/^(youtube\.com|music\.youtube\.com|youtu\.be)$/.test(host)) {
+        const vid = host === 'youtu.be' ? p.slice(1).split('/')[0] : (u.searchParams.get('v') || ((/^\/(shorts|live|embed)\/([\w-]{6,})/.exec(p) || [])[2]));
+        const list = u.searchParams.get('list');
+        const out = {};
+        if (vid) {
+          try {
+            const v = await yts({ videoId: vid });
+            out.tracks = [{ src: 'yt', id: vid, title: v.title || '', author: (v.author && v.author.name) || '', duration: v.timestamp || (v.duration && v.duration.timestamp) || '', seconds: v.seconds || 0, thumb: v.thumbnail || ('https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg') }];
+          } catch (err) {
+            out.tracks = [{ src: 'yt', id: vid, title: 'Видео YouTube', author: '', duration: '', seconds: 0, thumb: 'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg' }];
+          }
+        }
+        if (list && !/^(RD|UL|LL|WL)/.test(list)) { // миксы и «Смотреть позже» — не настоящие плейлисты
+          const pl = await ytdlpPlaylist(list);
+          if (!pl.error) out.list = pl; else if (!vid) return { error: pl.error };
+        }
+        return (out.tracks || out.list) ? out : { error: 'не нашёл видео по ссылке' };
+      }
+    } catch (err) { log('ссылка: ошибка ' + err.message); return { error: err.message }; }
+    return null; // не ссылка на музыку — обычный поиск
   });
   const ymCache = new Map();
   ipcMain.handle('ym-stream', async (e, id) => {
@@ -508,12 +703,10 @@ app.whenReady().then(async () => {
   // «Моя волна»
   ipcMain.handle('ym-wave-start', async (e, s) => {
     const tok = getYmToken();
-    if (!tok) return { error: 'для «Моей волны» войди в Яндекс' };
+    if (!tok) return { error: 'для волны войди в Яндекс' };
     try {
-      try { await ym.waveSettings(tok, s); } catch (err) { log('Волна: настройки не применились — ' + err.message); }
-      await ym.waveFeedback(tok, 'radioStarted');
-      const tracks = await ym.waveTracks(tok, '');
-      log('Волна: старт (характер ' + (s && s.diversity) + ', настроение ' + (s && s.mood) + ')');
+      const tracks = await ym.waveStart(tok, s || {});
+      log('Волна: старт ' + ((s && (s.station || (s.seeds || []).join(','))) || 'user:onyourwave') + ' (характер ' + (s && s.diversity) + ', настроение ' + (s && s.mood) + ', язык ' + (s && s.language) + ')');
       return { tracks };
     } catch (err) { log('Волна: ошибка старта ' + err.message); return { error: 'Волна: ' + err.message }; }
   });
@@ -538,6 +731,7 @@ app.whenReady().then(async () => {
 
   // «Сейчас играет» — подсказка на значке в трее
   ipcMain.on('now-playing', (e, info) => {
+    lastNpInfo = info;
     const line = formatNowPlaying(info, '{artist} — {title}');
     try { if (tray) tray.setToolTip(line ? '♪ ' + line.slice(0, 110) : 'Тапёр'); } catch (err) {}
     writeNowPlaying(info);
@@ -550,10 +744,13 @@ app.whenReady().then(async () => {
   ipcMain.handle('update-get-state', () => updateState);
   ipcMain.handle('update-check', () => { checkForUpdates(true); return true; });
   ipcMain.handle('update-download', () => {
+    installRequested = true;
+    if (updateState.state === 'ready' || updateState.state === 'downloading') return true; // уже качается/скачано
     sendUpdateState({ state: 'downloading', percent: 0 });
     autoUpdater.downloadUpdate().catch((e) => sendUpdateState({ state: 'error', message: String(e && e.message || e).slice(0, 300) }));
     return true;
   });
+  ipcMain.on('player-busy', (e, busy) => { playerBusy = !!busy; });
 
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
   log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
