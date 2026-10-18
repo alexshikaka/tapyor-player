@@ -1,6 +1,6 @@
 {
   "name": "stream-player",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Плеер для стрима — заказы музыки из нескольких сервисов",
   "main": "src/main.js",
   "scripts": {
