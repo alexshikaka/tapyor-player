@@ -1,4 +1,5 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage } = require('electron');
+const ym = require('./yandex');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -18,6 +19,46 @@ function log(msg) {
 function ytdlpPath() {
   if (app.isPackaged) return path.join(process.resourcesPath, 'yt-dlp.exe');
   return path.join(__dirname, '..', 'resources', 'yt-dlp.exe');
+}
+
+// Окно входа в Яндекс: настоящая страница Яндекса, ловим пропуск (токен) из адреса после входа
+function yandexLogin() {
+  return new Promise((resolve) => {
+    const win = new BrowserWindow({
+      width: 480, height: 720, parent: mainWindow || undefined, modal: !!mainWindow,
+      autoHideMenuBar: true, title: 'Вход в Яндекс', backgroundColor: '#ffffff',
+      webPreferences: { partition: 'persist:yandex-login' }
+    });
+    let done = false;
+    const check = (u) => {
+      const m = /access_token=([^&#]+)/.exec(u || '');
+      if (m && !done) {
+        done = true;
+        resolve({ token: decodeURIComponent(m[1]) });
+        setImmediate(() => { if (!win.isDestroyed()) win.close(); });
+      }
+    };
+    win.webContents.on('will-redirect', (e, u) => check(u));
+    win.webContents.on('will-navigate', (e, u) => check(u));
+    win.webContents.on('did-navigate', (e, u) => check(u));
+    win.webContents.on('did-navigate-in-page', (e, u) => check(u));
+    win.webContents.setWindowOpenHandler(({ url }) => { win.loadURL(url); return { action: 'deny' }; });
+    win.on('closed', () => { if (!done) resolve({ error: 'вход отменён' }); });
+    win.loadURL('https://oauth.yandex.ru/authorize?response_type=token&client_id=' + ym.CLIENT_ID);
+  });
+}
+
+// Подсказки YouTube (запасной вариант, если у Яндекса пусто)
+async function ytSuggest(q) {
+  const res = await fetch('https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&hl=ru&oe=utf-8&q=' + encodeURIComponent(q), { signal: AbortSignal.timeout(5000) });
+  const buf = Buffer.from(await res.arrayBuffer());
+  let txt;
+  try {
+    const m = /charset=([^;]+)/i.exec(res.headers.get('content-type') || '');
+    txt = new TextDecoder(m ? m[1].trim() : 'utf-8').decode(buf);
+  } catch (e) { txt = buf.toString('utf8'); }
+  const j = JSON.parse(txt);
+  return (Array.isArray(j) && Array.isArray(j[1]) ? j[1] : []).filter((s) => typeof s === 'string').slice(0, 8);
 }
 
 function fmtDur(sec) {
@@ -302,6 +343,61 @@ app.whenReady().then(async () => {
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
     return true;
+  });
+
+  // --- Яндекс Музыка ---
+  ym.setLogger(log);
+  const writeSettings = (s) => { try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); } };
+  function getYmToken() {
+    const v = readSettings().ymToken;
+    if (!v) return '';
+    try { return safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(Buffer.from(v, 'base64')) : Buffer.from(v, 'base64').toString('utf8'); }
+    catch (e) { log('Яндекс: не удалось прочитать токен ' + e.message); return ''; }
+  }
+  function setYmToken(tok) {
+    const s = readSettings();
+    if (!tok) delete s.ymToken;
+    else s.ymToken = (safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(tok) : Buffer.from(tok, 'utf8')).toString('base64');
+    writeSettings(s);
+  }
+  async function ymStatus() {
+    const tok = getYmToken();
+    if (!tok) return { loggedIn: false };
+    try { const a = await ym.accountStatus(tok); return Object.assign({ loggedIn: true }, a); }
+    catch (e) {
+      log('Яндекс: статус аккаунта — ошибка ' + e.message);
+      if (e.status === 401 || e.status === 403) { setYmToken(''); return { loggedIn: false, error: 'вход устарел, войди заново' }; }
+      return { loggedIn: true, name: 'Яндекс', hasPlus: false, offline: true };
+    }
+  }
+  ipcMain.handle('ym-status', () => ymStatus());
+  ipcMain.handle('ym-login', async () => {
+    const r = await yandexLogin();
+    if (r.error) { log('Яндекс: ' + r.error); return r; }
+    setYmToken(r.token);
+    log('Яндекс: вход выполнен');
+    return ymStatus();
+  });
+  ipcMain.handle('ym-logout', () => { setYmToken(''); log('Яндекс: выход'); return true; });
+  ipcMain.handle('ym-search', async (e, q) => {
+    try { const list = await ym.search(q, getYmToken()); log('Яндекс: поиск «' + q + '» → ' + list.length); return list; }
+    catch (err) { log('Яндекс: поиск — ошибка ' + err.message); return []; }
+  });
+  const ymCache = new Map();
+  ipcMain.handle('ym-stream', async (e, id) => {
+    const tok = getYmToken();
+    if (!tok) return { error: 'чтобы слушать Яндекс, войди в аккаунт (кнопка вверху)' };
+    const c = ymCache.get(id);
+    if (c && Date.now() - c.at < 20 * 60 * 1000) return c.value;
+    try { const r = await ym.streamUrl(id, tok); ymCache.set(id, { at: Date.now(), value: r }); return r; }
+    catch (err) { log('Яндекс: поток — ошибка ' + err.message); return { error: 'Яндекс: ' + err.message }; }
+  });
+  ipcMain.handle('suggest', async (e, part) => {
+    try { const a = await ym.suggest(part, getYmToken()); if (a.length) return { source: 'ym', items: a }; }
+    catch (err) { log('Яндекс: подсказки — ошибка ' + err.message); }
+    try { const b = await ytSuggest(part); if (b.length) return { source: 'yt', items: b }; }
+    catch (err) { log('YouTube: подсказки — ошибка ' + err.message); }
+    return { source: '', items: [] };
   });
 
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });

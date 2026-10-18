@@ -16,7 +16,7 @@
 
   /* Шапка */
   header { display: flex; align-items: center; gap: 24px; padding: 16px 150px 16px 24px; border-bottom: 1px solid #22242C; flex: 0 0 auto; -webkit-app-region: drag; }
-  header button, header input, header nav, header .searchbar, header .chip, header .badge, header img { -webkit-app-region: no-drag; }
+  header button, header input, header nav, header .searchbar, header .chip, header .badge, header img, header .suggest { -webkit-app-region: no-drag; }
   .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
   .logo { width: 32px; height: 32px; border-radius: 9px; object-fit: cover; }
   .brand .name { font-weight: 700; font-size: 16px; }
@@ -105,6 +105,20 @@
   .seek-knob { position: absolute; top: 50%; left: 0%; width: 16px; height: 16px; border-radius: 8px; background: #fff; transform: translate(-50%, -50%); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
   .f-right { flex: 1 1 200px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; color: #9EA2B0; }
   .f-right input { width: 110px; accent-color: #9B87FF; cursor: pointer; }
+
+  /* Аккаунт Яндекса */
+  .acct { flex: 0 0 auto; height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #2C2F3A; background: #181A21; color: #ECEDF2; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+  .acct:hover { background: #20222C; }
+
+  /* Подсказки при наборе */
+  .searchwrap { position: relative; }
+  .suggest { position: absolute; top: 50px; left: 0; right: 0; z-index: 50; background: #181A21; border: 1px solid #2C2F3A; border-radius: 12px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.55); display: none; -webkit-app-region: no-drag; }
+  .sg-label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #8A8E9C; padding: 6px 10px 4px; }
+  .sg-item { padding: 9px 12px; border-radius: 8px; font-size: 14px; color: #ECEDF2; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sg-item:hover, .sg-item.active { background: #2A2D38; }
+
+  /* Фильтр по источнику */
+  .results.f-ym .row[data-src="yt"], .results.f-yt .row[data-src="ym"] { display: none; }
 </style>
 </head>
 <body>
@@ -124,13 +138,16 @@
         <input id="search" type="text" placeholder="Название, исполнитель или ссылка">
         <span class="mono" style="font-size:12px;color:#7C8090;border:1px solid #2C2F3A;border-radius:6px;padding:3px 7px">Enter</span>
       </div>
-      <div class="chips">
-        <button class="chip active" title="Пока только YouTube"><span class="dot" style="background:#FF5A52"></span>YouTube</button>
-        <button class="chip soon" disabled><span class="dot" style="background:#FFD43B"></span>Яндекс · скоро</button>
+      <div class="suggest" id="suggest"></div>
+      <div class="chips" id="chips">
+        <button class="chip active" data-f="all">Везде</button>
+        <button class="chip" data-f="ym"><span class="dot" style="background:#FFD43B"></span>Яндекс</button>
+        <button class="chip" data-f="yt"><span class="dot" style="background:#FF5A52"></span>YouTube</button>
         <button class="chip soon" disabled><span class="dot" style="background:#3BA8F0"></span>Telegram · скоро</button>
         <button class="chip soon" disabled><span class="dot" style="background:#FF8A3D"></span>SoundCloud · скоро</button>
       </div>
     </div>
+    <button class="acct" id="acct" title="Аккаунт Яндекс Музыки"><span class="dot" style="background:#FFD43B"></span>Войти в Яндекс</button>
     <span class="badge" id="ver">версия…</span>
   </header>
 
@@ -214,7 +231,14 @@
   // Два режима: 'single' — всё в одном <video>; 'split' — звук в <audio> (главный), видео без звука подстраивается
   var aud = document.getElementById('aud');
   var mode = 'single';
-  function master(){ return mode === 'split' ? aud : video; }
+  // + режим 'audio' — только звук (Яндекс), в окне видео обложка
+  function master(){ return (mode === 'split' || mode === 'audio') ? aud : video; }
+
+  // Источник трека: Яндекс или YouTube
+  function srcOf(v){ return v && v.src === 'ym' ? 'ym' : 'yt'; }
+  function srcName(v){ return srcOf(v) === 'ym' ? 'Яндекс' : 'YouTube'; }
+  function srcColor(v){ return srcOf(v) === 'ym' ? '#FFD43B' : '#FF5A52'; }
+  function srcDot(v){ return '<span class="dot" style="background:' + srcColor(v) + '"></span>'; }
 
   [video, aud].forEach(function (el) {
     el.addEventListener('ended', function(){ if (el === master()) next(); });
@@ -248,7 +272,41 @@
   });
 
   var search = document.getElementById('search'), results = document.getElementById('results');
-  search.addEventListener('keydown', function (e){ if (e.key === 'Enter') doSearch(); });
+  // --- Подсказки при наборе: сначала Яндекс, если пусто — YouTube ---
+  var sgEl = document.getElementById('suggest'), sgItems = [], sgIdx = -1, sgTimer = null, sgToken = 0;
+  function hideSuggest(){ sgEl.style.display = 'none'; sgItems = []; sgIdx = -1; }
+  function highlightSg(){ var els = sgEl.querySelectorAll('.sg-item'); for (var k = 0; k < els.length; k++) els[k].classList.toggle('active', k === sgIdx); }
+  function pickSuggest(i){ var s = sgItems[i]; if (s == null) return; search.value = s; hideSuggest(); doSearch(); }
+  async function loadSuggest(t){
+    var tok = ++sgToken;
+    if (!window.app || !window.app.suggest) return;
+    var r = await window.app.suggest(t);
+    if (tok !== sgToken || search.value.trim() !== t || document.activeElement !== search) return;
+    if (!r || !r.items || !r.items.length) { hideSuggest(); return; }
+    sgItems = r.items; sgIdx = -1;
+    var isYm = r.source === 'ym';
+    sgEl.innerHTML = '<div class="sg-label"><span class="dot" style="background:' + (isYm ? '#FFD43B' : '#FF5A52') + '"></span>' + (isYm ? 'Подсказки Яндекс Музыки' : 'Подсказки YouTube') + '</div>' +
+      sgItems.map(function (s, i){ return '<div class="sg-item" data-i="' + i + '">' + esc(s) + '</div>'; }).join('');
+    sgEl.style.display = 'block';
+  }
+  search.addEventListener('input', function(){
+    clearTimeout(sgTimer);
+    var t = search.value.trim();
+    if (t.length < 2) { sgToken++; hideSuggest(); return; }
+    sgTimer = setTimeout(function(){ loadSuggest(t); }, 220);
+  });
+  sgEl.addEventListener('mousedown', function(e){
+    var it = e.target.closest('.sg-item'); if (!it) return;
+    e.preventDefault(); pickSuggest(parseInt(it.dataset.i, 10));
+  });
+  search.addEventListener('blur', function(){ setTimeout(hideSuggest, 120); });
+  search.addEventListener('keydown', function (e){
+    var open = sgEl.style.display === 'block' && sgItems.length;
+    if (e.key === 'ArrowDown' && open) { e.preventDefault(); sgIdx = Math.min(sgItems.length - 1, sgIdx + 1); highlightSg(); }
+    else if (e.key === 'ArrowUp' && open) { e.preventDefault(); sgIdx = Math.max(-1, sgIdx - 1); highlightSg(); }
+    else if (e.key === 'Escape') { hideSuggest(); }
+    else if (e.key === 'Enter') { if (open && sgIdx >= 0) pickSuggest(sgIdx); else { hideSuggest(); doSearch(); } }
+  });
 
   // Состояние поиска для подгрузки при прокрутке
   var curQuery = '', shownIds = new Set(), loadingMore = false, hasMore = false, searchToken = 0;
@@ -260,13 +318,22 @@
     document.getElementById('hint').textContent = 'Ищу…';
     results.innerHTML = '<div class="muted">Ищу…</div>';
     results.scrollTop = 0;
-    var res = await window.app.ytSearch(q);
+    sgToken++; hideSuggest();
+    // Ищем параллельно: Яндекс (приоритет) + YouTube
+    var ymP = (window.app.ymSearch ? window.app.ymSearch(q) : Promise.resolve([])).catch(function(){ return []; });
+    var ytP = window.app.ytSearch(q).catch(function(e){ return { error: String(e) }; });
+    var both = await Promise.all([ymP, ytP]);
     if (token !== searchToken) return; // уже ищем другое
-    if (res && res.error) { results.innerHTML = '<div class="muted">Ошибка поиска: ' + esc(res.error) + '</div>'; document.getElementById('hint').textContent=''; return; }
-    if (!res || !res.length) { results.innerHTML = '<div class="muted">Ничего не нашлось.</div>'; document.getElementById('hint').textContent=''; return; }
-    document.getElementById('hint').textContent = 'Сначала лучшие совпадения';
+    var ymRes = Array.isArray(both[0]) ? both[0] : [];
+    var ytRes = Array.isArray(both[1]) ? both[1].map(function (v){ v.src = 'yt'; return v; }) : [];
+    if (!ymRes.length && !ytRes.length) {
+      var err = both[1] && both[1].error;
+      results.innerHTML = '<div class="muted">' + (err ? 'Ошибка поиска: ' + esc(err) : 'Ничего не нашлось.') + '</div>';
+      document.getElementById('hint').textContent = ''; return;
+    }
+    document.getElementById('hint').textContent = ymRes.length ? 'Сначала Яндекс Музыка, ниже YouTube' : 'Результаты YouTube';
     results.innerHTML = '';
-    appendResults(res);
+    appendResults(ymRes.concat(ytRes));
     hasMore = true;
     maybeLoadMore();
   }
@@ -284,6 +351,7 @@
   // Подгрузка следующей порции, когда долистали почти до конца
   async function maybeLoadMore() {
     if (!hasMore || loadingMore || !curQuery) return;
+    if (curFilter === 'ym') return; // дальше подгружается YouTube — при фильтре «Яндекс» не нужно
     if (results.scrollTop + results.clientHeight < results.scrollHeight - 300) return;
     if (!window.app || !window.app.ytSearchMore) { hasMore = false; return; }
     loadingMore = true;
@@ -303,11 +371,12 @@
   function makeRow(v) {
       var row = document.createElement('div'); row.className = 'row' + (v.id === playingId ? ' playing' : '');
       row.dataset.id = v.id;
+      row.dataset.src = srcOf(v);
       row.innerHTML =
         '<div class="cover-wrap"><img class="cover" src="' + esc(v.thumb) + '" alt="">' +
         '<span class="cover-ov"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"></path></svg></span></div>' +
         '<div class="meta"><div class="t">' + esc(v.title) + '</div><div class="s">' + esc(v.author) + '</div></div>' +
-        '<span class="srcpill"><span class="dot" style="background:#FF5A52"></span>YouTube</span>' +
+        '<span class="srcpill">' + srcDot(v) + srcName(v) + '</span>' +
         '<span class="time mono">' + esc(v.duration) + '</span>';
       var add = document.createElement('button'); add.className = 'add';
       add.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E0F13" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
@@ -326,7 +395,9 @@
   // Заранее достать поток следующего трека, чтобы переход был без паузы
   function prefetchNext(){
     var n = queue[current + 1];
-    if (n && window.app && window.app.ytStream) window.app.ytStream(n.id).catch(function(){});
+    if (!n || !window.app) return;
+    var f = srcOf(n) === 'ym' ? window.app.ymStream : window.app.ytStream;
+    if (f) f(n.id).catch(function(){});
   }
   function playNow(v){ queue.splice(current + 1, 0, v); playIndex(current + 1); }
 
@@ -339,16 +410,24 @@
     document.getElementById('card-title').textContent = v.title;
     document.getElementById('f-title').textContent = v.title;
     var fsub = document.getElementById('f-sub');
-    fsub.innerHTML = '<span class="dot" style="background:#FF5A52"></span>YouTube · ' + esc(v.author);
+    fsub.innerHTML = srcDot(v) + srcName(v) + ' · ' + esc(v.author);
     var fc = document.getElementById('f-cover');
     if (v.thumb) { fc.src = v.thumb; fc.style.display = ''; } else { fc.style.display = 'none'; }
     renderQueue();
     setSub('Загружаю…');
-    var r = await window.app.ytStream(v.id);
+    var r = srcOf(v) === 'ym' ? await window.app.ymStream(v.id) : await window.app.ytStream(v.id);
     if (i !== current) return; // переключили, пока грузилось
     if (!r || r.error) { setSub('⚠ ' + ((r && r.error) ? r.error : 'поток не получен')); return; }
     var vol = (parseInt(document.getElementById('vol').value, 10) || 100) / 100;
-    if (r.audioUrl) {
+    video.removeAttribute('poster');
+    if (r.audioUrl && !r.videoUrl) {
+      // только звук (Яндекс): в окне видео — обложка
+      mode = 'audio';
+      video.pause(); video.removeAttribute('src'); video.load();
+      if (v.cover || v.thumb) video.setAttribute('poster', v.cover || v.thumb);
+      aud.src = r.audioUrl; aud.volume = vol;
+      aud.play().catch(function(){});
+    } else if (r.audioUrl) {
       mode = 'split';
       video.muted = true; video.src = r.videoUrl;
       aud.src = r.audioUrl; aud.volume = vol;
@@ -360,7 +439,7 @@
       video.play().catch(function(){});
     }
     prefetchNext();
-    document.getElementById('card-sub').textContent = v.author;
+    document.getElementById('card-sub').textContent = v.author + (r.preview ? ' · превью 30 с (нужен Плюс)' : '');
   }
   function next(){ if (current + 1 < queue.length) playIndex(current + 1); }
   function prev(){ if (current - 1 >= 0) playIndex(current - 1); }
@@ -373,6 +452,7 @@
   };
   function stopVideo(){
     [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
+    video.removeAttribute('poster');
     mode = 'single';
   }
   document.getElementById('clearq').onclick = function(){ queue = []; current = -1; playingId = null; markPlayingRows(); stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
@@ -394,7 +474,7 @@
       r.innerHTML =
         '<span class="n">' + (i === current ? '▶' : (i + 1)) + '</span>' +
         '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
-        '<div class="qs"><span class="dot" style="background:#FF5A52"></span>YouTube · ' + esc(v.author) + '</div></div>';
+        '<div class="qs">' + srcDot(v) + srcName(v) + ' · ' + esc(v.author) + '</div></div>';
       var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать';
       x.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
       x.onclick = function(){ removeAt(i); };
@@ -439,6 +519,46 @@
     if (window.app && window.app.setSetting) window.app.setSetting('queueWidth', parseInt(qcol.style.width, 10));
   });
   window.addEventListener('resize', function(){ if (qcol.style.width) setQW(parseInt(qcol.style.width, 10)); });
+
+  // Фильтр по источнику: Везде / Яндекс / YouTube
+  var curFilter = 'all';
+  document.getElementById('chips').addEventListener('click', function(e){
+    var b = e.target.closest('.chip'); if (!b || b.disabled || !b.dataset.f) return;
+    curFilter = b.dataset.f;
+    var all = this.querySelectorAll('.chip[data-f]');
+    for (var k = 0; k < all.length; k++) all[k].classList.toggle('active', all[k] === b);
+    results.classList.toggle('f-ym', curFilter === 'ym');
+    results.classList.toggle('f-yt', curFilter === 'yt');
+    maybeLoadMore();
+  });
+
+  // Аккаунт Яндекс Музыки
+  var acctBtn = document.getElementById('acct');
+  var YM_DOT = '<span class="dot" style="background:#FFD43B"></span>';
+  async function refreshAcct(){
+    if (!window.app || !window.app.ymStatus) return;
+    var s = await window.app.ymStatus();
+    if (s && s.loggedIn) {
+      acctBtn.innerHTML = YM_DOT + esc(s.name || s.login || 'Яндекс') + (s.offline ? '' : (s.hasPlus ? ' · Плюс' : ' · без Плюса'));
+      acctBtn.dataset.in = '1';
+      acctBtn.title = 'Нажми, чтобы выйти из аккаунта';
+    } else {
+      acctBtn.innerHTML = YM_DOT + 'Войти в Яндекс';
+      acctBtn.dataset.in = '';
+      acctBtn.title = (s && s.error) ? s.error : 'Войти в Яндекс Музыку';
+    }
+  }
+  acctBtn.addEventListener('click', async function(){
+    if (acctBtn.dataset.in) {
+      if (confirm('Выйти из аккаунта Яндекс Музыки?')) { await window.app.ymLogout(); refreshAcct(); }
+      return;
+    }
+    acctBtn.textContent = 'Открываю вход…';
+    var r = await window.app.ymLogin();
+    if (r && r.error && r.error !== 'вход отменён') alert('Вход в Яндекс: ' + r.error);
+    refreshAcct();
+  });
+  refreshAcct();
 
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
