@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('app', {
   ymLoginBrowserWait: () => ipcRenderer.invoke('ym-login-browser-wait'),
   ymLoginBrowserCancel: () => ipcRenderer.invoke('ym-login-browser-cancel'),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  nowPlaying: (line) => ipcRenderer.send('now-playing', line),
   ymSearch: (q) => ipcRenderer.invoke('ym-search', q),
   ymStream: (id) => ipcRenderer.invoke('ym-stream', id),
   suggest: (part) => ipcRenderer.invoke('suggest', part),

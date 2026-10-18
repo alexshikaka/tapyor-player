@@ -451,6 +451,11 @@ app.whenReady().then(async () => {
     return { source: '', items: [] };
   });
 
+  // «Сейчас играет» — подсказка на значке в трее
+  ipcMain.on('now-playing', (e, line) => {
+    try { if (tray) tray.setToolTip(line ? '♪ ' + String(line).slice(0, 110) : 'Плеер для стрима'); } catch (err) {}
+  });
+
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
   log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
 

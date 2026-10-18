@@ -267,8 +267,20 @@
   function srcColor(v){ return srcOf(v) === 'ym' ? '#FFD43B' : '#FF5A52'; }
   function srcDot(v){ return '<span class="dot" style="background:' + srcColor(v) + '"></span>'; }
 
+  // Название трека в заголовке окна — его читает плагин Tuna для OBS.
+  // Формат: «Исполнитель — Трек · Плеер для стрима» (хвост Tuna отрезает, а по нему находит окно)
+  var APP_TITLE = 'Плеер для стрима';
+  function setNowPlaying(v){
+    var line = v ? ((v.author ? v.author + ' — ' : '') + v.title) : '';
+    document.title = line ? line + ' · ' + APP_TITLE : APP_TITLE;
+    if (window.app && window.app.nowPlaying) window.app.nowPlaying(line);
+  }
+
   [video, aud].forEach(function (el) {
-    el.addEventListener('ended', function(){ if (el === master()) next(); });
+    el.addEventListener('ended', function(){
+      if (el !== master()) return;
+      if (current + 1 < queue.length) next(); else setNowPlaying(null); // очередь кончилась
+    });
     el.addEventListener('play', function(){
       if (el !== master()) return;
       setPlayIcon('⏸');
@@ -434,6 +446,7 @@
     if (i < 0 || i >= queue.length) return;
     current = i; var v = queue[i];
     playingId = v.id; markPlayingRows();
+    setNowPlaying(v);
     document.getElementById('card-title').textContent = v.title;
     document.getElementById('f-title').textContent = v.title;
     var fsub = document.getElementById('f-sub');
@@ -481,6 +494,7 @@
     [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
     video.removeAttribute('poster');
     mode = 'single';
+    setNowPlaying(null);
   }
   document.getElementById('clearq').onclick = function(){ queue = []; current = -1; playingId = null; markPlayingRows(); stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
 
