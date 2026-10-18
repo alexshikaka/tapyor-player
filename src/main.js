@@ -5,6 +5,29 @@ const yts = require('yt-search');
 const http = require('http');
 const fs = require('fs');
 const ytdl = require('@distube/ytdl-core');
+const { execFile } = require('child_process');
+
+// Путь к yt-dlp (кладётся в ресурсы приложения при сборке)
+function ytdlpPath() {
+  if (app.isPackaged) return path.join(process.resourcesPath, 'yt-dlp.exe');
+  return path.join(__dirname, '..', 'resources', 'yt-dlp.exe');
+}
+
+// Достать прямую ссылку на поток через yt-dlp (надёжный способ)
+function streamViaYtDlp(videoUrl) {
+  return new Promise((resolve) => {
+    execFile(ytdlpPath(), [
+      '-f', 'best[acodec!=none][vcodec!=none]/best',
+      '-g', '--no-playlist', '--no-warnings',
+      videoUrl
+    ], { timeout: 30000 }, (err, stdout, stderr) => {
+      if (err) { resolve({ error: ('yt-dlp: ' + ((stderr || err.message || '').toString())).slice(0, 300) }); return; }
+      const url = (stdout || '').trim().split('\n')[0];
+      if (!url) { resolve({ error: 'yt-dlp: пустой ответ' }); return; }
+      resolve({ url: url, hasVideo: true });
+    });
+  });
+}
 
 let mainWindow = null;
 let tray = null;
@@ -157,8 +180,13 @@ app.whenReady().then(async () => {
 
   // Получить прямой поток видео/аудио по id ролика (для встроенного плеера)
   ipcMain.handle('yt-stream', async (event, id) => {
+    const videoUrl = 'https://www.youtube.com/watch?v=' + id;
+    // 1) основной способ — yt-dlp
+    const viaDlp = await streamViaYtDlp(videoUrl);
+    if (viaDlp && viaDlp.url) return viaDlp;
+    // 2) запасной — ytdl-core
     try {
-      const info = await ytdl.getInfo('https://www.youtube.com/watch?v=' + id);
+      const info = await ytdl.getInfo(videoUrl);
       let muxed = info.formats.filter((f) => f.hasAudio && f.hasVideo);
       muxed.sort((a, b) => (b.height || 0) - (a.height || 0));
       let f = muxed[0];
@@ -166,11 +194,9 @@ app.whenReady().then(async () => {
         const audio = info.formats.filter((x) => x.hasAudio && !x.hasVideo).sort((x, y) => (y.audioBitrate || 0) - (x.audioBitrate || 0));
         f = audio[0];
       }
-      if (!f) return { error: 'нет подходящего потока' };
-      return { url: f.url, hasVideo: !!f.hasVideo };
-    } catch (err) {
-      return { error: (err && err.message) ? err.message : String(err) };
-    }
+      if (f) return { url: f.url, hasVideo: !!f.hasVideo };
+    } catch (err) { /* ниже вернём ошибку от yt-dlp */ }
+    return { error: (viaDlp && viaDlp.error) ? viaDlp.error : 'не удалось получить поток' };
   });
 
   createWindow();

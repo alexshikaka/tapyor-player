@@ -23,6 +23,12 @@ jobs:
       - name: Установить зависимости
         run: npm install
 
+      - name: Скачать yt-dlp
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path resources | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "resources/yt-dlp.exe"
+
       - name: Собрать установщик и выложить в Releases
         run: npm run dist
         env:

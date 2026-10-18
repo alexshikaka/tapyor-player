@@ -28,6 +28,9 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
+    "extraResources": [
+      { "from": "resources/yt-dlp.exe", "to": "yt-dlp.exe" }
+    ],
     "publish": [
       {
         "provider": "github",
