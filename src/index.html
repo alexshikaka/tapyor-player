@@ -564,7 +564,22 @@
     wavePlaying = false; waveCur = null; renderWaveUi();
     setNowPlaying(null);
   }
-  document.getElementById('clearq').onclick = function(){ queue = []; current = -1; playingId = null; markPlayingRows(); stopVideo(); document.getElementById('card-title').textContent='Ничего не играет'; document.getElementById('card-sub').textContent='Найди трек и запусти'; document.getElementById('f-title').textContent='Ничего не играет'; document.getElementById('f-sub').textContent='Найди трек и нажми play'; renderQueue(); };
+  // «Очистить очередь»: убираем ожидающие заказы, играющий трек (или волна) не прерывается
+  document.getElementById('clearq').onclick = function(){
+    if (wavePlaying) { queue = []; current = -1; renderQueue(); return; }
+    var m = master();
+    var finished = m.getAttribute('src') && m.ended;
+    if (current >= 0 && current < queue.length && !finished) {
+      queue = [queue[current]]; current = 0; renderQueue(); return;
+    }
+    queue = []; current = -1; playingId = null; markPlayingRows(); stopVideo();
+    document.getElementById('card-title').textContent = 'Ничего не играет';
+    document.getElementById('card-sub').textContent = 'Найди трек и запусти';
+    document.getElementById('f-title').textContent = 'Ничего не играет';
+    document.getElementById('f-sub').textContent = 'Найди трек и нажми play';
+    document.getElementById('f-cover').style.display = 'none';
+    renderQueue();
+  };
 
   function removeAt(i) {
     queue.splice(i, 1);
