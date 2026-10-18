@@ -90,6 +90,19 @@
   .vmeta .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .qlist { flex: 1 1 0; min-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; position: relative; }
+  .qrow.pend { cursor: grab; }
+  .qrow.pend:active { cursor: grabbing; }
+  .qrow.dragging { opacity: .35; }
+  .qrow.drop-before { box-shadow: inset 0 2px 0 #9B87FF; }
+  .qrow.drop-after { box-shadow: inset 0 -2px 0 #9B87FF; }
+  .qrow .nx { opacity: 0; }
+  .qrow:hover .nx, .qrow .nx:focus { opacity: 1; }
+  .qrow:hover:not(.playing) { background: #171922; }
+  .ctx { position: fixed; z-index: 200; min-width: 240px; background: #1D1F28; border: 1px solid #2C2F3A; border-radius: 12px; padding: 5px; box-shadow: 0 16px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; }
+  .ctx button { display: flex; align-items: center; height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #ECEDF2; font: 500 13px Onest, sans-serif; text-align: left; cursor: pointer; white-space: nowrap; }
+  .ctx button:hover, .ctx button:focus { background: #2A2D38; outline: none; }
+  .ctx button.danger { color: #FF8A7A; }
+  .ctx-sep { height: 1px; background: #2C2F3A; margin: 4px 6px; }
   .qrow.done { opacity: .45; }
   .qrow.done:hover { opacity: .8; }
   .qrow.done .qt { font-weight: 500; }
@@ -896,7 +909,11 @@
     queue.forEach(function (v, i) {
       var isCur = i === current;
       var r = document.createElement('div');
-      r.className = 'qrow' + (isCur ? ' playing' : '') + (v.played && !isCur ? ' done' : '');
+      var pend = i > current && !v.played;
+      r.className = 'qrow' + (isCur ? ' playing' : '') + (v.played && !isCur ? ' done' : '') + (pend ? ' pend' : '');
+      r.dataset.i = i;
+      if (pend) { r.draggable = true; r.title = 'Перетащи, чтобы поменять порядок. Правая кнопка — меню'; }
+      else r.title = 'Правая кнопка — меню';
       r.innerHTML =
         '<span class="n">' + (isCur ? '▶' : (v.played ? '✓' : (i + 1))) + '</span>' +
         '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
@@ -904,8 +921,15 @@
       var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать'; x.setAttribute('aria-label', 'Убрать');
       x.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
       x.onclick = function(){ removeAt(i); };
+      if (pend && i !== current + 1) {
+        var nb = document.createElement('button'); nb.className = 'x nx'; nb.title = 'Играть следующим'; nb.setAttribute('aria-label', 'Играть следующим');
+        nb.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M12 20V9M7 13l5-5 5 5"></path></svg>';
+        nb.onclick = function(){ moveItem(i, current + 1); };
+        r.appendChild(nb);
+      }
       r.appendChild(x);
-      r.querySelector('.qt').onclick = function(){ playIndex(i); };
+      r.querySelector('.qt').onclick = function(){ playQueueItem(i); };
+      r.oncontextmenu = function(e){ openQueueMenu(e, i); };
       box.appendChild(r);
     });
     // Играющий трек — наверху списка (сыгранные уезжают вверх, один виден для ориентира)
@@ -918,6 +942,110 @@
       } else box.scrollTop = box.scrollHeight;
     }
   }
+
+  // Переставить несыгранную песню: to — место вставки (индекс до удаления); выше играющего не ставим
+  function moveItem(from, to){
+    if (from < 0 || from >= queue.length) return;
+    to = Math.max(to, current + 1);
+    if (to === from || to === from + 1) return;
+    var item = queue.splice(from, 1)[0];
+    if (from < to) to--;
+    queue.splice(to, 0, item);
+    renderQueue(); saveToday(); prefetchNext();
+  }
+  // «Играть сейчас»: несыгранная — сразу после текущей и включаем; сыгранная — копия следующей (история не откатывается)
+  function playQueueItem(i){
+    var v = queue[i]; if (!v) return;
+    if (i === current) { playIndex(i); return; }
+    if (i > current && !v.played) { moveItem(i, current + 1); playIndex(current + 1); return; }
+    queue.splice(current + 1, 0, copyTrack(v)); playIndex(current + 1);
+  }
+  function trackUrl(v){
+    if (srcOf(v) === 'ym') return 'https://music.yandex.ru/' + (v.albumId ? 'album/' + v.albumId + '/' : '') + 'track/' + v.id;
+    return 'https://www.youtube.com/watch?v=' + v.id;
+  }
+  function copyText(t){
+    function fb(){ var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb();
+  }
+
+  // Меню по правой кнопке
+  var ctxEl = null;
+  function closeCtx(){ if (ctxEl) { ctxEl.remove(); ctxEl = null; } }
+  function showCtx(x, y, items){
+    closeCtx();
+    var m = document.createElement('div'); m.className = 'ctx'; m.setAttribute('role', 'menu');
+    items.forEach(function (it){
+      if (it === '-') { var hr = document.createElement('div'); hr.className = 'ctx-sep'; m.appendChild(hr); return; }
+      var b = document.createElement('button'); b.setAttribute('role', 'menuitem');
+      if (it.danger) b.className = 'danger';
+      b.textContent = it.label;
+      b.onclick = function(){ closeCtx(); it.act(); };
+      m.appendChild(b);
+    });
+    document.body.appendChild(m);
+    var w = m.offsetWidth, h = m.offsetHeight;
+    m.style.left = Math.max(8, Math.min(x, window.innerWidth - w - 8)) + 'px';
+    m.style.top = Math.max(8, Math.min(y, window.innerHeight - h - 8)) + 'px';
+    ctxEl = m;
+    var first = m.querySelector('button'); if (first) first.focus();
+  }
+  document.addEventListener('mousedown', function(e){ if (ctxEl && !e.target.closest('.ctx')) closeCtx(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeCtx(); });
+  window.addEventListener('blur', closeCtx);
+  window.addEventListener('resize', closeCtx);
+  $('queue').addEventListener('scroll', closeCtx);
+
+  function openQueueMenu(e, i){
+    e.preventDefault();
+    var v = queue[i]; if (!v) return;
+    var pend = i > current && !v.played;
+    var items = [];
+    items.push({ label: i === current ? 'Начать сначала' : 'Играть сейчас', act: function(){ playQueueItem(i); } });
+    if (pend && i !== current + 1) items.push({ label: 'Играть следующим', act: function(){ moveItem(i, current + 1); } });
+    if (!pend && i !== current) items.push({ label: 'Сыграть ещё раз — следующим', act: function(){ queue.splice(current + 1, 0, copyTrack(v)); renderQueue(); saveToday(); prefetchNext(); } });
+    if (pend && i !== queue.length - 1) items.push({ label: 'В конец очереди', act: function(){ moveItem(i, queue.length); } });
+    items.push('-');
+    if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
+    items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
+    items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на YouTube', act: function(){ A.openExternal(trackUrl(v)); } });
+    if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch(); } });
+    items.push('-');
+    items.push({ label: 'Убрать из очереди', danger: true, act: function(){ removeAt(i); } });
+    showCtx(e.clientX, e.clientY, items);
+  }
+
+  // Перетаскивание несыгранных песен
+  var dragFrom = -1, dropTo = -1;
+  function clearDrop(){ var ms = document.querySelectorAll('#queue .drop-before, #queue .drop-after'); for (var k = 0; k < ms.length; k++) ms[k].classList.remove('drop-before', 'drop-after'); }
+  (function(){
+    var box = $('queue');
+    box.addEventListener('dragstart', function(e){
+      var r = e.target.closest && e.target.closest('.qrow'); if (!r || !r.draggable) return;
+      dragFrom = parseInt(r.dataset.i, 10); r.classList.add('dragging'); closeCtx();
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (err) {}
+    });
+    box.addEventListener('dragover', function(e){
+      if (dragFrom < 0) return;
+      e.preventDefault();
+      clearDrop();
+      var r = e.target.closest && e.target.closest('.qrow');
+      var to;
+      if (!r) to = queue.length;
+      else { var i = parseInt(r.dataset.i, 10), rc = r.getBoundingClientRect(); to = e.clientY > rc.top + rc.height / 2 ? i + 1 : i; }
+      to = Math.max(to, current + 1);
+      dropTo = to;
+      var rows = box.querySelectorAll('.qrow');
+      if (to < rows.length) rows[to].classList.add('drop-before'); else if (rows.length) rows[rows.length - 1].classList.add('drop-after');
+    });
+    box.addEventListener('drop', function(e){
+      if (dragFrom < 0) return;
+      e.preventDefault();
+      var f = dragFrom; dragFrom = -1; clearDrop();
+      moveItem(f, dropTo);
+    });
+    box.addEventListener('dragend', function(){ dragFrom = -1; clearDrop(); var d = box.querySelector('.dragging'); if (d) d.classList.remove('dragging'); });
+  })();
 
   // Лента за сегодня (день начинается в 6 утра — стримы идут за полночь)
   function streamDay(){ var d = new Date(Date.now() - 6 * 3600 * 1000); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
@@ -955,8 +1083,8 @@
     b.title = on ? 'Убрать из «Мне нравится»' : 'В «Мне нравится» Яндекса';
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   }
-  $('likeBtn').onclick = async function(){
-    var t = curTrack; if (!t) return;
+  $('likeBtn').onclick = function(){ if (curTrack) toggleLike(curTrack); };
+  async function toggleLike(t){
     var id = String(t.id), on = !likedSet.has(id);
     if (on) likedSet.add(id); else likedSet.delete(id);
     renderLike();
@@ -966,7 +1094,7 @@
       renderLike();
       setSub('⚠ лайк не сохранился: ' + ((r && r.error) || 'ошибка'));
     } else if (t.bg && bgSel.kind === 'wave') A.ymWaveFeedback(on ? 'like' : 'unlike', ymKey(t));
-  };
+  }
 
   // Полоса прогресса
   var seekEl = $('seek'), fillEl = $('seekFill'), knobEl = $('seekKnob'), dragging = false;

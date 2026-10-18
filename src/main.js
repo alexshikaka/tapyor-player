@@ -587,7 +587,7 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle('ym-login-browser-cancel', () => { if (deviceLogin) deviceLogin.cancelled = true; return true; });
   ipcMain.handle('open-external', (e, url) => {
-    if (/^https:\/\/([a-z0-9-]+\.)*(yandex\.(ru|com|by|kz)|ya\.ru)\//i.test(String(url || ''))) shell.openExternal(url);
+    if (/^https:\/\/([a-z0-9-]+\.)*(yandex\.(ru|com|by|kz)|ya\.ru|youtube\.com|youtu\.be)\//i.test(String(url || ''))) shell.openExternal(url);
     return true;
   });
   ipcMain.handle('ym-logout', () => { setYmToken(''); ymUid = ''; log('Яндекс: выход'); return true; });
