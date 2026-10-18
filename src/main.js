@@ -128,34 +128,48 @@ function createTray() {
 }
 
 // --- Автообновление ---
-function checkForUpdates(manual) {
-  autoUpdater.autoDownload = true;
-  autoUpdater.on('update-available', () => {
-    if (mainWindow) mainWindow.webContents.send('update-status', 'Найдено обновление, качаю…');
-  });
-  autoUpdater.on('update-not-available', () => {
-    if (manual) {
-      dialog.showMessageBox({ message: 'У тебя уже последняя версия.', buttons: ['OK'] });
+let manualCheck = false;
+let updaterReady = false;
+
+function initUpdater() {
+  if (updaterReady) return;
+  updaterReady = true;
+  autoUpdater.autoDownload = false; // решаем сами, качать или нет
+
+  autoUpdater.on('update-available', (info) => {
+    if (manualCheck) {
+      dialog.showMessageBox({
+        type: 'info',
+        message: 'Доступна новая версия ' + (info && info.version ? info.version : '') + '.',
+        detail: 'Скачать и установить сейчас?',
+        buttons: ['Скачать', 'Позже'], defaultId: 0, cancelId: 1
+      }).then((r) => { if (r.response === 0) autoUpdater.downloadUpdate(); else manualCheck = false; });
+    } else {
+      autoUpdater.downloadUpdate(); // при запуске качаем тихо
     }
-  });
-  autoUpdater.on('error', (err) => {
-    if (manual) {
-      dialog.showMessageBox({ message: 'Не удалось проверить обновления:\n' + (err && err.message ? err.message : err), buttons: ['OK'] });
-    }
-  });
-  autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
-      type: 'info',
-      message: 'Обновление загружено. Перезапустить сейчас?',
-      buttons: ['Перезапустить', 'Позже']
-    }).then((res) => {
-      if (res.response === 0) {
-        app.isQuitting = true;
-        autoUpdater.quitAndInstall();
-      }
-    });
   });
 
+  autoUpdater.on('update-not-available', () => {
+    if (manualCheck) { manualCheck = false; dialog.showMessageBox({ message: 'У тебя уже последняя версия.', buttons: ['OK'] }); }
+  });
+
+  autoUpdater.on('error', (err) => {
+    if (manualCheck) { manualCheck = false; dialog.showMessageBox({ message: 'Не удалось проверить обновления:\n' + (err && err.message ? err.message : err), buttons: ['OK'] }); }
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    manualCheck = false;
+    dialog.showMessageBox({
+      type: 'info',
+      message: 'Обновление ' + (info && info.version ? info.version : '') + ' загружено.',
+      detail: 'Перезапустить сейчас?',
+      buttons: ['Перезапустить', 'Позже'], defaultId: 0, cancelId: 1
+    }).then((res) => { if (res.response === 0) { app.isQuitting = true; autoUpdater.quitAndInstall(); } });
+  });
+}
+
+function checkForUpdates(manual) {
+  manualCheck = !!manual;
   autoUpdater.checkForUpdates().catch(() => { /* тихо, если нет сети */ });
 }
 
@@ -225,6 +239,7 @@ app.whenReady().then(async () => {
   createTray();
 
   // Проверяем обновления при запуске (тихо)
+  initUpdater();
   checkForUpdates(false);
 
   app.on('activate', () => {
