@@ -751,6 +751,8 @@
   }
   function isIdle(){ var m = master(); return loadingIdx < 0 && (!m.getAttribute('src') || m.ended); }
   function orderActive(){ return current >= 0 && queue[current] && !queue[current].bg && !isIdle(); }
+  // играет одиночный заказ зрителя (не трек из «Всё в очередь») — его фон не прерывает
+  function singleOrderActive(){ return orderActive() && !queue[current].fromList; }
 
   async function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
@@ -788,12 +790,12 @@
     if (n) fetchStream(n).catch(noop);
   }
 
-  function copyTrack(v){ var o = {}; for (var k in v) if (k !== 'played' && k !== 'bg') o[k] = v[k]; return o; }
+  function copyTrack(v){ var o = {}; for (var k in v) if (k !== 'played' && k !== 'bg' && k !== 'fromList') o[k] = v[k]; return o; }
   // Заказ встаёт в конец; если ничего не играет или играет фон — фон доигрывает трек, потом заказ
   function addToQueue(v){ addMany([v]); }
-  function addMany(list){
+  function addMany(list, fromList){
     var first = queue.length;
-    list.forEach(function (v){ queue.push(copyTrack(v)); });
+    list.forEach(function (v){ var c = copyTrack(v); if (fromList) c.fromList = true; queue.push(c); });
     renderQueue(); saveToday();
     if (!list.length) return;
     if (isIdle() && !(queue[current] && queue[current].bg && !isIdle())) playIndex(firstPending(first));
@@ -808,6 +810,8 @@
 
   // Вперёд: следующий в ленте; если его нет — фон
   function advance(auto){
+    var nx = queue[current + 1];
+    if (bgPending && !(nx && !nx.played && !nx.fromList && !nx.bg)) { startBg(); return; }
     if (current + 1 < queue.length) { playIndex(current + 1); return; }
     if (bgOn || waveCfg.on || bgPending) playBgNext();
     else if (!auto) { /* дальше ничего нет */ }
@@ -915,7 +919,7 @@
     saveTimer = setTimeout(function(){
       if (!A.setSetting) return;
       var items = queue.slice(-400).map(function (v){
-        return { src: v.src, id: v.id, albumId: v.albumId, title: v.title, author: v.author, album: v.album, duration: v.duration, thumb: v.thumb, cover: v.cover, bg: !!v.bg, played: !!v.played };
+        return { src: v.src, id: v.id, albumId: v.albumId, title: v.title, author: v.author, album: v.album, duration: v.duration, thumb: v.thumb, cover: v.cover, bg: !!v.bg, played: !!v.played, fromList: !!v.fromList };
       });
       var cut = queue.length - items.length;
       A.setSetting('today', { day: streamDay(), items: items, current: current - cut });
@@ -1056,7 +1060,7 @@
     if (changed) { waveBuf = []; bgToken++; bgNeedStart = true; }
     saveWaveCfg(); renderWaveUi(); renderVariants();
     if (!now) return;
-    if (orderActive()) { bgPending = true; setSub('«' + bgTitle() + '» включится, когда доиграют заказы'); return; }
+    if (singleOrderActive()) { bgPending = true; renderWaveUi(); setSub('«' + bgTitle() + '» включится после этого заказа'); return; }
     startBg();
   }
   async function fillBg(){
@@ -1083,8 +1087,22 @@
     waveStarting = false;
     if (err) { if (err !== 'отменено') setErr('⚠ ' + err); return; }
     bgOn = true; bgPending = false;
-    // начинаем фон сразу после текущего: незаказанное (неигравшее) после него не трогаем
-    playBgTrack(waveBuf.shift(), true);
+    placeBgNow(waveBuf.shift());
+  }
+  // Включаем фон сейчас: несыгранные песни из «Всё в очередь» остаются в списке сыгранными,
+  // трек фона встаёт в самый низ (после всего сыгранного), одиночные заказы — сразу под ним
+  function placeBgNow(t){
+    if (!t) return;
+    var item = copyTrack(t); item.bg = true;
+    var head = queue.slice(0, current + 1), tail = queue.slice(current + 1);
+    var keep = [], orders = [];
+    tail.forEach(function (v){
+      if (v.played) keep.push(v);
+      else if (v.fromList) { v.played = true; keep.push(v); }
+      else orders.push(v);
+    });
+    queue = head.concat(keep, [item], orders);
+    playIndex(head.length + keep.length);
   }
   async function playBgNext(){
     if (waveStarting) return;
@@ -1159,7 +1177,7 @@
   bindWaveChips('waveDiv', 'diversity'); bindWaveChips('waveMood', 'mood'); bindWaveChips('waveLang', 'language');
   $('wavePlay').onclick = function(){
     var onAir = queue[current] && queue[current].bg && (!isIdle() || loadingIdx >= 0);
-    if (!onAir) { if (orderActive()) { bgPending = true; renderWaveUi(); setSub('«' + bgTitle() + '» включится, когда доиграют заказы'); } else startBg(); return; }
+    if (!onAir) { if (singleOrderActive()) { bgPending = true; renderWaveUi(); setSub('«' + bgTitle() + '» включится после этого заказа'); } else startBg(); return; }
     stopVideo();
   };
   // «Встряхнуть»: волна берёт новое направление, плейлист перемешивается заново
@@ -1167,7 +1185,7 @@
     if (bgSel.kind === 'list') { bgSel.shuffle = true; waveBuf = listOrder(); renderWaveUi(); }
     else { waveBuf = []; await refreshWave(); }
     if (queue[current] && queue[current].bg && !isIdle()) { if (current + 1 < queue.length) playIndex(current + 1); else playBgNext(); }
-    else if (!orderActive()) startBg();
+    else if (!singleOrderActive()) startBg();
   };
 
   // Варианты от Яндекса и волны по жанрам
@@ -1491,7 +1509,7 @@
       if (!L.tracks.length) return;
       if (b.dataset.a === 'bg') setBg({ kind: 'list', list: L, shuffle: false }, true);
       else if (b.dataset.a === 'shuffle') setBg({ kind: 'list', list: L, shuffle: true }, true);
-      else if (b.dataset.a === 'queue') addMany(L.tracks);
+      else if (b.dataset.a === 'queue') addMany(L.tracks, true);
       else if (b.dataset.a === 'save') { toggleSaved(L); b.textContent = isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр'; }
     };
   }
