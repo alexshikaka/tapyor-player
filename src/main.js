@@ -27,7 +27,8 @@ function streamViaYtDlp(videoUrl) {
     log('yt-dlp: запуск. bin=' + bin + ' | файл есть=' + exists + ' | url=' + videoUrl);
     if (!exists) { resolve({ error: 'yt-dlp.exe не найден по пути: ' + bin }); return; }
     execFile(bin, [
-      '-f', 'best[acodec!=none][vcodec!=none]/best',
+      // видео (до 720p) + звук раздельно; иначе единый файл; иначе только звук
+      '-f', 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/bv*[height<=720]+ba/b/ba',
       '-g', '--no-playlist', '--no-warnings',
       videoUrl
     ], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
@@ -36,10 +37,15 @@ function streamViaYtDlp(videoUrl) {
         resolve({ error: ('yt-dlp: ' + ((stderr || err.message || '').toString())).slice(0, 400) });
         return;
       }
-      const url = (stdout || '').trim().split('\n')[0];
-      if (!url) { log('yt-dlp: пустой вывод'); resolve({ error: 'yt-dlp: пустой ответ' }); return; }
-      log('yt-dlp: успех, длина ссылки=' + url.length);
-      resolve({ url: url, hasVideo: true });
+      const lines = (stdout || '').trim().split(/\r?\n/).filter(Boolean);
+      if (!lines.length) { log('yt-dlp: пустой вывод'); resolve({ error: 'yt-dlp: пустой ответ' }); return; }
+      if (lines.length >= 2) {
+        log('yt-dlp: успех, раздельные потоки (видео + звук)');
+        resolve({ videoUrl: lines[0], audioUrl: lines[1] });
+      } else {
+        log('yt-dlp: успех, единый поток');
+        resolve({ url: lines[0] });
+      }
     });
   });
 }
@@ -216,7 +222,7 @@ app.whenReady().then(async () => {
     const videoUrl = 'https://www.youtube.com/watch?v=' + id;
     // 1) основной способ — yt-dlp
     const viaDlp = await streamViaYtDlp(videoUrl);
-    if (viaDlp && viaDlp.url) return viaDlp;
+    if (viaDlp && (viaDlp.url || viaDlp.audioUrl)) return viaDlp;
     // 2) запасной — ytdl-core
     try {
       const info = await ytdl.getInfo(videoUrl);
