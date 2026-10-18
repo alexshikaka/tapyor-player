@@ -6,6 +6,19 @@ const { autoUpdater } = require('electron-updater');
 const yts = require('yt-search');
 const http = require('http');
 const fs = require('fs');
+
+// Папка данных программы (вход в Яндекс, настройки, лог) не должна меняться при переименовании.
+// Берём ту, что уже есть от прошлых версий; для новой установки — «Тапёр».
+(function pinUserData() {
+  try {
+    const base = app.getPath('appData');
+    for (const n of ['Плеер для стрима', 'stream-player']) {
+      const p = path.join(base, n);
+      if (fs.existsSync(p)) { app.setPath('userData', p); return; }
+    }
+    app.setPath('userData', path.join(base, 'Тапёр'));
+  } catch (e) { /* оставим путь по умолчанию */ }
+})();
 const ytdl = require('@distube/ytdl-core');
 const { execFile } = require('child_process');
 
@@ -20,7 +33,7 @@ function settingsFile() { return path.join(app.getPath('userData'), 'settings.js
 function readSettingsFile() { try { return JSON.parse(fs.readFileSync(settingsFile(), 'utf8')); } catch (e) { return {}; } }
 function npFilePath() {
   const s = readSettingsFile();
-  return s.nowPlayingPath || path.join(app.getPath('documents'), 'Плеер для стрима', 'now_playing.txt');
+  return s.nowPlayingPath || path.join(app.getPath('documents'), 'Тапёр', 'now_playing.txt');
 }
 function formatNowPlaying(info, fmt) {
   if (!info || !info.title) return '';
@@ -82,7 +95,7 @@ function yandexLogin() {
 const YM_CLIENT_SECRET = '53bc75238f0c4d08a118e51fe9203300'; // публичный секрет того же клиента Яндекс Музыки
 let deviceLogin = null;
 async function ymDeviceStart() {
-  const body = new URLSearchParams({ client_id: ym.CLIENT_ID, device_name: 'Плеер для стрима' });
+  const body = new URLSearchParams({ client_id: ym.CLIENT_ID, device_name: 'Тапёр' });
   const res = await fetch('https://oauth.yandex.ru/device/code', { method: 'POST', body, signal: AbortSignal.timeout(10000) });
   const j = await res.json().catch(() => ({}));
   if (!res.ok || !j.device_code) throw new Error(j.error_description || j.error || ('HTTP ' + res.status));
@@ -215,7 +228,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#0E0F13',
-    title: 'Плеер для стрима',
+    title: 'Тапёр',
     icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     // Тёмная верхняя полоса в цвет оформления; системные кнопки остаются
@@ -245,7 +258,7 @@ function createWindow() {
 function createTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
   tray = new Tray(icon);
-  tray.setToolTip('Плеер для стрима');
+  tray.setToolTip('Тапёр');
 
   const menu = Menu.buildFromTemplate([
     {
@@ -526,7 +539,7 @@ app.whenReady().then(async () => {
   // «Сейчас играет» — подсказка на значке в трее
   ipcMain.on('now-playing', (e, info) => {
     const line = formatNowPlaying(info, '{artist} — {title}');
-    try { if (tray) tray.setToolTip(line ? '♪ ' + line.slice(0, 110) : 'Плеер для стрима'); } catch (err) {}
+    try { if (tray) tray.setToolTip(line ? '♪ ' + line.slice(0, 110) : 'Тапёр'); } catch (err) {}
     writeNowPlaying(info);
   });
   ipcMain.handle('np-path', () => npFilePath());

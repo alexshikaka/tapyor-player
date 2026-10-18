@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>Плеер для стрима</title>
+<title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -180,7 +180,7 @@
     <div class="hrow hrow1">
       <div class="brand">
         <img class="logo" src="assets/icon.png" alt="">
-        <div class="name">Заказы</div>
+        <div class="name">Тапёр</div>
         <nav>
           <button class="active">Поиск</button>
           <button>Браузер</button>
@@ -383,8 +383,8 @@
   function srcDot(v){ return '<span class="dot" style="background:' + srcColor(v) + '"></span>'; }
 
   // Название трека в заголовке окна — его читает плагин Tuna для OBS.
-  // Формат: «Исполнитель — Трек · Плеер для стрима» (хвост Tuna отрезает, а по нему находит окно)
-  var APP_TITLE = 'Плеер для стрима';
+  // Формат: «Исполнитель — Трек · Тапёр» (хвост Tuna отрезает, а по нему находит окно)
+  var APP_TITLE = 'Тапёр';
   function setNowPlaying(v){
     var line = v ? ((v.author ? v.author + ' — ' : '') + v.title) : '';
     document.title = line ? line + ' · ' + APP_TITLE : APP_TITLE;

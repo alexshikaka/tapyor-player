@@ -1,7 +1,7 @@
 {
   "name": "stream-player",
   "version": "0.4.1",
-  "description": "Плеер для стрима — заказы музыки из нескольких сервисов",
+  "description": "Тапёр — музыка и заказы для стрима из нескольких сервисов",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "app.shikaka.streamplayer",
-    "productName": "Плеер для стрима",
+    "productName": "Тапёр",
     "win": {
       "target": "nsis"
     },
