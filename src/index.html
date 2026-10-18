@@ -8,14 +8,14 @@
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: #0E0F13; color: #ECEDF2;
+  body { margin: 0; background: #15161C; color: #ECEDF2;
     font-family: 'Onest', 'Segoe UI', system-ui, sans-serif;
     height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
   .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
   input::placeholder { color: #7C8090; }
 
   /* Шапка */
-  header { display: flex; flex-direction: column; gap: 10px; padding: 10px 24px 12px; border-bottom: 1px solid #22242C; flex: 0 0 auto; -webkit-app-region: drag; }
+  header { display: flex; flex-direction: column; gap: 10px; padding: 10px 24px 12px; border-bottom: 1px solid #24262F; flex: 0 0 auto; -webkit-app-region: drag; }
   .hrow { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .hrow1 { padding-right: 130px; min-height: 36px; } /* справа — системные кнопки окна */
   .hspace { flex: 1 1 auto; }
@@ -39,7 +39,7 @@
   nav button { height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: #C9CBD4; font-size: 13px; font-weight: 500; cursor: pointer; }
   nav button.active { background: #2A2D38; color: #ECEDF2; font-weight: 600; }
   .searchwrap { flex: 1 1 auto; min-width: 0; max-width: 820px; display: flex; flex-direction: column; }
-  .searchbar { display: flex; align-items: center; gap: 10px; background: #181A21; border: 1px solid #2C2F3A; border-radius: 12px; padding: 0 14px; height: 46px; }
+  .searchbar { display: flex; align-items: center; gap: 10px; background: #1C1D25; border: 1px solid #2C2F3A; border-radius: 12px; padding: 0 14px; height: 46px; }
   .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: #ECEDF2; font-size: 15px; font-weight: 500; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; cursor: pointer; }
@@ -56,7 +56,7 @@
   .col-head .hint { font-size: 13px; color: #8A8E9C; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; cursor: pointer; position: relative; }
-  .row:hover { background: #171922; }
+  .row:hover { background: rgba(255,255,255,.05); }
   .cover-wrap { position: relative; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; background: #222; }
   .cover { width: 44px; height: 44px; object-fit: cover; display: block; }
   .cover-ov { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .12s; }
@@ -76,15 +76,18 @@
   .hsplitter::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 3px; border-radius: 2px; background: #3A3D4A; transform: translate(-50%, -50%); }
   .hsplitter:hover, .hsplitter.drag { background: rgba(155,135,255,.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 1px solid #22242C; background: #12131A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 0; box-shadow: inset 1px 0 0 rgba(255,255,255,.05); background: #07070A; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; }
+  /* «Сцена»: свечение цветом обложки играющего трека */
+  .qglow { position: absolute; left: 0; right: 0; top: 0; height: 600px; pointer-events: none; opacity: 0; transition: opacity .6s ease; z-index: 0; }
+  .queue-col > *:not(.qglow) { position: relative; z-index: 1; }
   .queue-col .qhead { display: flex; justify-content: space-between; align-items: baseline; flex: 0 0 auto; }
   .queue-col .qhead h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
   .queue-col .qhead span { font-size: 13px; color: #8A8E9C; }
 
-  .nowcard { flex: 0 0 auto; border-radius: 14px; background: #1A1C25; border: 1px solid #2C2F3A; overflow: hidden; }
-  .video { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #3A2F6B, #10121A 70%); }
-  #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; object-fit: contain; }
-  .vmeta { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .nowcard { flex: 0 0 auto; border-radius: 12px; background: transparent; border: 0; overflow: hidden; }
+  .video { position: relative; aspect-ratio: 16 / 9; background: transparent; border-radius: 12px; overflow: hidden; }
+  #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; object-fit: contain; }
+  .vmeta { padding: 12px 4px 2px; display: flex; flex-direction: column; gap: 4px; }
   .nplabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9B87FF; }
   .vmeta .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vmeta .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -108,7 +111,7 @@
   .qrow.drop-after { box-shadow: inset 0 -2px 0 #9B87FF; }
   .qrow .nx { opacity: 0; }
   .qrow:hover .nx, .qrow .nx:focus { opacity: 1; }
-  .qrow:hover:not(.playing) { background: #171922; }
+  .qrow:hover:not(.playing) { background: rgba(255,255,255,.05); }
   .ctx { position: fixed; z-index: 200; min-width: 240px; background: #1D1F28; border: 1px solid #2C2F3A; border-radius: 12px; padding: 5px; box-shadow: 0 16px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; }
   .ctx button { display: flex; align-items: center; height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #ECEDF2; font: 500 13px Onest, sans-serif; text-align: left; cursor: pointer; white-space: nowrap; }
   .ctx button:hover, .ctx button:focus { background: #2A2D38; outline: none; }
@@ -129,7 +132,7 @@
   .muted { color: #8A8E9C; font-size: 13px; text-align: center; padding: 16px 0; }
 
   /* Нижняя панель-плеер */
-  footer { flex: 0 0 auto; display: flex; align-items: center; gap: 28px; padding: 14px 24px; border-top: 1px solid #22242C; background: #12131A; }
+  footer { flex: 0 0 auto; display: flex; align-items: center; gap: 28px; padding: 14px 24px; border-top: 1px solid #1B1C22; background: #07070A; }
   .f-now { display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-width: 0; }
   .f-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
   .f-now .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -175,7 +178,7 @@
   .mbtn.ghost { background: transparent; color: #9EA2B0; margin-left: auto; }
 
   /* «Моя волна» */
-  .wavecard { flex: 0 0 auto; border-radius: 14px; background: #171922; border: 1px solid #2C2F3A; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .wavecard { flex: 0 0 auto; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
   .wavecard.on-air { border-color: #FFD43B; }
   .whead { display: flex; align-items: center; gap: 10px; }
   .wicon { width: 32px; height: 32px; border-radius: 16px; background: #FFD43B; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
@@ -344,7 +347,7 @@
   .set .sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
   .set .sec-h h2 { margin: 0; font-size: 18px; font-weight: 700; }
   .set .sec-h span { font-size: 13px; color: #8F93A1; }
-  .set .card { background: #14151C; border: 1px solid #23252E; border-radius: 16px; padding: 6px 20px; display: flex; flex-direction: column; }
+  .set .card { background: #1B1C24; border: 1px solid #272934; border-radius: 16px; padding: 6px 20px; display: flex; flex-direction: column; }
   .set .srow { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid #20222A; flex-wrap: wrap; }
   .set .srow:last-child { border-bottom: 0; }
   .set .sl { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -561,6 +564,7 @@
     <div class="splitter" id="splitter" title="Потяни, чтобы изменить ширину"></div>
 
     <aside class="queue-col" aria-label="Очередь">
+      <div class="qglow" id="qglow" aria-hidden="true"></div>
       <div class="qhead">
         <h2>Очередь</h2>
         <span id="qcount">0 в очереди</span>
@@ -766,8 +770,28 @@
     if (A.nowPlaying) A.nowPlaying(v ? { artist: v.author || '', title: v.title || '', album: v.album || '', source: srcName(v) } : null);
     renderLike();
     updNpPreview();
+    updateGlow(v);
   }
   function busy(b){ if (A.playerBusy) A.playerBusy(!!b); }
+
+  // «Сцена»: правая колонка светится цветом обложки; при смене трека — плавный переход
+  var glowUrl = null, glowTimer = null;
+  async function updateGlow(v){
+    var url = v ? (v.cover || v.thumb || '') : '';
+    if (url === glowUrl) return;
+    glowUrl = url;
+    var g = $('qglow');
+    var color = url && A.coverColor ? await A.coverColor(url).catch(function(){ return null; }) : null;
+    if (glowUrl !== url) return; // уже другой трек
+    clearTimeout(glowTimer);
+    g.style.opacity = '0';
+    if (!url) return;
+    color = color || '#9B87FF';
+    glowTimer = setTimeout(function(){
+      g.style.background = 'radial-gradient(130% 60% at 50% 0%, ' + color + '70, ' + color + '00 72%)';
+      g.style.opacity = '1';
+    }, 350);
+  }
 
   [video, aud].forEach(function (el) {
     el.addEventListener('ended', function(){ if (el === master()) onTrackEnded(); });
@@ -1367,7 +1391,7 @@
       var bs = document.querySelectorAll('#' + p[0] + ' .wchip');
       for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('active', bs[k].dataset.v === waveCfg[p[1]]);
     });
-    var onAir = !!(queue[current] && queue[current].bg && !isIdle()) || (loadingIdx >= 0 && queue[loadingIdx] && queue[loadingIdx].bg);
+    var onAir = !!(queue[current] && queue[current].bg && !isIdle()) || !!(loadingIdx >= 0 && queue[loadingIdx] && queue[loadingIdx].bg);
     $('wavecard').classList.toggle('on-air', onAir);
     $('waveTitle').textContent = bgTitle();
     var sub = $('waveSub'), cfgText;
@@ -1399,7 +1423,7 @@
   }
   bindWaveChips('waveDiv', 'diversity'); bindWaveChips('waveMood', 'mood'); bindWaveChips('waveLang', 'language');
   $('wavePlay').onclick = function(){
-    var onAir = queue[current] && queue[current].bg && (!isIdle() || loadingIdx >= 0);
+    var onAir = !!(queue[current] && queue[current].bg && (!isIdle() || loadingIdx >= 0));
     if (!onAir) { startBg(); return; } // волна — сразу, что бы ни играло
     stopVideo();
   };

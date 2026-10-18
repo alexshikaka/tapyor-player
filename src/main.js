@@ -270,14 +270,14 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: '#0E0F13',
+    backgroundColor: '#15161C',
     title: 'Тапёр',
     show: !startHidden,
     icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     // Тёмная верхняя полоса в цвет оформления; системные кнопки остаются
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#0E0F13', symbolColor: '#C9CBD4', height: 36 },
+    titleBarOverlay: { color: '#15161C', symbolColor: '#C9CBD4', height: 36 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -674,6 +674,32 @@ app.whenReady().then(async () => {
       log('Яндекс: создан плейлист «' + title + '», треков ' + r.count);
       return { ok: true, kind: r.kind, uid: uid, count: r.count };
     } catch (err) { log('Яндекс: создание плейлиста — ' + err.message); return { error: err.message }; }
+  });
+  // Цвет обложки для «сцены»: уменьшаем картинку и берём средний цвет с упором на насыщенные пиксели
+  const coverColors = new Map();
+  ipcMain.handle('cover-color', async (e, url) => {
+    if (!url || !/^https:\/\//i.test(url)) return null;
+    if (coverColors.has(url)) return coverColors.get(url);
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      const img0 = nativeImage.createFromBuffer(Buffer.from(await res.arrayBuffer()));
+      if (img0.isEmpty()) return null;
+      const px = img0.resize({ width: 24, height: 24 }).toBitmap(); // BGRA
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let i = 0; i + 3 < px.length; i += 4) {
+        const B = px[i], G = px[i + 1], R = px[i + 2];
+        const mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+        const sat = mx ? (mx - mn) / mx : 0;
+        const w = sat * sat * (mx / 255) + 0.02;
+        r += R * w; g += G * w; b += B * w; n += w;
+      }
+      r /= n; g /= n; b /= n;
+      const k = 210 / Math.max(r, g, b, 1); // ровная яркость свечения
+      const hex = '#' + [r, g, b].map((x) => Math.round(Math.min(255, x * k)).toString(16).padStart(2, '0')).join('');
+      if (coverColors.size > 300) coverColors.clear();
+      coverColors.set(url, hex);
+      return hex;
+    } catch (err) { return null; }
   });
   ipcMain.handle('ym-artist', async (e, id) => {
     try { return await ym.artistTracks(getYmToken(), id); }
