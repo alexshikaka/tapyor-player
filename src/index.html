@@ -1067,8 +1067,7 @@
     if (changed) { waveBuf = []; bgToken++; bgNeedStart = true; }
     saveWaveCfg(); renderWaveUi(); renderVariants();
     if (!now) return;
-    if (singleOrderActive()) { bgPending = true; renderWaveUi(); setSub('«' + bgTitle() + '» включится после этого заказа'); return; }
-    startBg();
+    startBg(); // выбрал — играет сразу; несыгранные заказы встанут под него
   }
   async function fillBg(){
     if (bgSel.kind === 'list') { waveBuf = listOrder(); return waveBuf.length ? null : 'плейлист пуст'; }
@@ -1200,7 +1199,7 @@
   bindWaveChips('waveDiv', 'diversity'); bindWaveChips('waveMood', 'mood'); bindWaveChips('waveLang', 'language');
   $('wavePlay').onclick = function(){
     var onAir = queue[current] && queue[current].bg && (!isIdle() || loadingIdx >= 0);
-    if (!onAir) { if (singleOrderActive()) { bgPending = true; renderWaveUi(); setSub('«' + bgTitle() + '» включится после этого заказа'); } else startBg(); return; }
+    if (!onAir) { startBg(); return; } // волна — сразу, что бы ни играло
     stopVideo();
   };
   // «Встряхнуть»: волна берёт новое направление, плейлист перемешивается заново
