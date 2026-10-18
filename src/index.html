@@ -500,7 +500,7 @@
           <button class="toggle on" id="waveToggle" title="Автоматически включать фон, когда очередь пуста" aria-pressed="true"><span></span></button>
         </div>
         <div class="wsettings" id="waveSettings" hidden>
-          <button class="wshake" id="waveShake"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12c2-4 4 4 6 0s4 4 6 0 3-2 4-2"></path><path d="m17 5 3 3-3 3"></path></svg>Встряхнуть</button>
+          <button class="wshake" id="waveShake"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12c2-4 4 4 6 0s4 4 6 0 3-2 4-2"></path><path d="m17 5 3 3-3 3"></path></svg>Встряхнуть (со следующего трека)</button>
           <div class="wsub">Варианты от Яндекса</div>
           <div class="wvlist" id="waveVariants"></div>
           <div class="wrow" id="waveDiv">
@@ -1204,11 +1204,16 @@
     stopVideo();
   };
   // «Встряхнуть»: волна берёт новое направление, плейлист перемешивается заново
+  // Текущий трек доигрывает, «встряхнутая» волна (или заново перемешанный плейлист) идёт со следующего
   $('waveShake').onclick = async function(){
+    var playing = !isIdle() || loadingIdx >= 0;
+    if (!playing) { startBg(); return; }
     if (bgSel.kind === 'list') { bgSel.shuffle = true; waveBuf = listOrder(); renderWaveUi(); }
-    else { waveBuf = []; await refreshWave(); }
-    if (queue[current] && queue[current].bg && !isIdle()) { if (current + 1 < queue.length) playIndex(current + 1); else playBgNext(); }
-    else if (!singleOrderActive()) startBg();
+    else {
+      waveBuf = []; await refreshWave();
+    }
+    setSub('Встряхнул — новое пойдёт со следующего трека');
+    prefetchNext();
   };
 
   // Варианты от Яндекса и волны по жанрам
