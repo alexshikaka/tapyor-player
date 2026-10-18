@@ -20,6 +20,39 @@ function ytdlpPath() {
   return path.join(__dirname, '..', 'resources', 'yt-dlp.exe');
 }
 
+function fmtDur(sec) {
+  sec = Math.max(0, Math.floor(sec || 0));
+  if (!sec) return '';
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  const pad = (n) => (n < 10 ? '0' : '') + n;
+  return h ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s);
+}
+
+// Поиск через yt-dlp (для подгрузки следующих страниц результатов)
+function ytdlpSearch(query, count) {
+  return new Promise((resolve) => {
+    const bin = ytdlpPath();
+    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    execFile(bin, ['ytsearch' + count + ':' + query, '--flat-playlist', '--dump-single-json', '--no-warnings'],
+      { timeout: 45000, windowsHide: true, maxBuffer: 32 * 1024 * 1024 }, (err, stdout, stderr) => {
+        if (err) { log('поиск (ещё): ошибка ' + (stderr || err.message)); resolve({ error: 'не удалось загрузить ещё' }); return; }
+        try {
+          const j = JSON.parse(stdout);
+          const list = (j.entries || []).filter((x) => x && x.id).map((x) => ({
+            id: x.id,
+            title: x.title || '',
+            author: x.channel || x.uploader || '',
+            duration: fmtDur(x.duration),
+            seconds: x.duration || 0,
+            thumb: 'https://i.ytimg.com/vi/' + x.id + '/mqdefault.jpg'
+          }));
+          log('поиск (ещё): «' + query + '» запрошено ' + count + ', получено ' + list.length);
+          resolve(list);
+        } catch (e) { log('поиск (ещё): ошибка разбора ' + e.message); resolve({ error: 'ошибка разбора' }); }
+      });
+  });
+}
+
 // Достать прямую ссылку на поток через yt-dlp (надёжный способ)
 function streamViaYtDlp(videoUrl) {
   return new Promise((resolve) => {
@@ -259,6 +292,7 @@ app.whenReady().then(async () => {
     } finally { inflight.delete(id); }
   }
   ipcMain.handle('yt-stream', (event, id) => getStream(id));
+  ipcMain.handle('yt-search-more', (event, query, count) => ytdlpSearch(query, Math.min(Math.max(count || 40, 20), 300)));
 
   // Настройки (запоминаются между запусками)
   const settingsPath = () => path.join(app.getPath('userData'), 'settings.json');

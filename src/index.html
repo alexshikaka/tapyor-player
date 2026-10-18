@@ -250,16 +250,57 @@
   var search = document.getElementById('search'), results = document.getElementById('results');
   search.addEventListener('keydown', function (e){ if (e.key === 'Enter') doSearch(); });
 
+  // Состояние поиска для подгрузки при прокрутке
+  var curQuery = '', shownIds = new Set(), loadingMore = false, hasMore = false, searchToken = 0;
+
   async function doSearch() {
     var q = search.value.trim(); if (!q) return;
+    var token = ++searchToken;
+    curQuery = q; shownIds = new Set(); hasMore = false; loadingMore = false;
     document.getElementById('hint').textContent = 'Ищу…';
     results.innerHTML = '<div class="muted">Ищу…</div>';
+    results.scrollTop = 0;
     var res = await window.app.ytSearch(q);
+    if (token !== searchToken) return; // уже ищем другое
     if (res && res.error) { results.innerHTML = '<div class="muted">Ошибка поиска: ' + esc(res.error) + '</div>'; document.getElementById('hint').textContent=''; return; }
     if (!res || !res.length) { results.innerHTML = '<div class="muted">Ничего не нашлось.</div>'; document.getElementById('hint').textContent=''; return; }
     document.getElementById('hint').textContent = 'Сначала лучшие совпадения';
     results.innerHTML = '';
-    res.forEach(function (v) {
+    appendResults(res);
+    hasMore = true;
+    maybeLoadMore();
+  }
+
+  function appendResults(list) {
+    var added = 0;
+    list.forEach(function (v) {
+      if (!v || !v.id || shownIds.has(v.id)) return;
+      shownIds.add(v.id); added++;
+      results.appendChild(makeRow(v));
+    });
+    return added;
+  }
+
+  // Подгрузка следующей порции, когда долистали почти до конца
+  async function maybeLoadMore() {
+    if (!hasMore || loadingMore || !curQuery) return;
+    if (results.scrollTop + results.clientHeight < results.scrollHeight - 300) return;
+    if (!window.app || !window.app.ytSearchMore) { hasMore = false; return; }
+    loadingMore = true;
+    var token = searchToken;
+    var loader = document.createElement('div'); loader.className = 'muted'; loader.textContent = 'Загружаю ещё…';
+    results.appendChild(loader);
+    var more = await window.app.ytSearchMore(curQuery, shownIds.size + 20);
+    loader.remove();
+    loadingMore = false;
+    if (token !== searchToken) return;
+    if (!more || more.error) { hasMore = false; return; }
+    if (appendResults(more) === 0) { hasMore = false; return; }
+    maybeLoadMore();
+  }
+  results.addEventListener('scroll', maybeLoadMore);
+
+  function makeRow(v) {
       var row = document.createElement('div'); row.className = 'row' + (v.id === playingId ? ' playing' : '');
       row.dataset.id = v.id;
       row.innerHTML =
@@ -273,8 +314,7 @@
       add.onclick = function(e){ e.stopPropagation(); addToQueue(v); };
       row.appendChild(add);
       row.onclick = function(){ playNow(v); };
-      results.appendChild(row);
-    });
+      return row;
   }
 
   function markPlayingRows(){
