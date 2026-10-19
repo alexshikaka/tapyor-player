@@ -2,6 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('app', {
+  chromeUA: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
   getVersion: () => ipcRenderer.invoke('get-version'),
   ytSearch: (query) => ipcRenderer.invoke('yt-search', query),
   ytStream: (id) => ipcRenderer.invoke('yt-stream', id),
@@ -58,6 +59,8 @@ contextBridge.exposeInMainWorld('app', {
   ytLogout: (kind) => ipcRenderer.invoke('yt-logout', kind),
   ytMy: () => ipcRenderer.invoke('yt-my'),
   ytLiked: () => ipcRenderer.invoke('yt-liked'),
+  healthGet: () => ipcRenderer.invoke('health-get'),
+  healthRun: () => ipcRenderer.invoke('health-run'),
   log: (msg) => ipcRenderer.send('log', msg),
   onHotkey: (cb) => ipcRenderer.on('hotkey', (e, action) => cb(action)),
   hotkeysPause: (paused) => ipcRenderer.invoke('hotkeys-pause', paused),

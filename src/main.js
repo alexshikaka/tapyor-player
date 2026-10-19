@@ -4,6 +4,7 @@ const match = require('./match');
 const ymweb = require('./ymweb');
 const ytauth = require('./ytauth');
 const ytoauth = require('./ytoauth');
+const recipes = require('./recipes');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -87,9 +88,42 @@ function writeNowPlaying(info, force) {
 }
 
 // Путь к yt-dlp (кладётся в ресурсы приложения при сборке)
-function ytdlpPath() {
+function ytdlpBundled() {
   if (app.isPackaged) return path.join(process.resourcesPath, 'yt-dlp.exe');
   return path.join(__dirname, '..', 'resources', 'yt-dlp.exe');
+}
+// Рабочая копия yt-dlp лежит в папке данных — её можно обновлять, не дожидаясь новой версии Тапёра
+function ytdlpUserPath() { return path.join(app.getPath('userData'), 'bin', 'yt-dlp.exe'); }
+function ytdlpPath() { const u = ytdlpUserPath(); return fs.existsSync(u) ? u : ytdlpBundled(); }
+function ytdlpVersion(bin) {
+  return new Promise((resolve) => {
+    if (!fs.existsSync(bin)) { resolve(''); return; }
+    execFile(bin, ['--version'], { timeout: 20000, windowsHide: true }, (err, out) => resolve(err ? '' : String(out || '').trim()));
+  });
+}
+async function ensureYtdlp() {
+  const b = ytdlpBundled(), u = ytdlpUserPath();
+  if (!fs.existsSync(b)) return;
+  try {
+    let copy = !fs.existsSync(u);
+    if (!copy) { const [vb, vu] = await Promise.all([ytdlpVersion(b), ytdlpVersion(u)]); copy = !vu || (vb && vb > vu); }
+    if (copy) { fs.mkdirSync(path.dirname(u), { recursive: true }); fs.copyFileSync(b, u); log('yt-dlp: рабочая копия обновлена из установки'); }
+  } catch (e) { log('yt-dlp: не удалось сделать рабочую копию — ' + e.message); }
+}
+// yt-dlp сам скачивает свежую версию (YouTube часто ломает старые)
+function ytdlpUpdate() {
+  return new Promise((resolve) => {
+    const u = ytdlpUserPath();
+    if (!fs.existsSync(u)) { resolve({ ok: false, text: 'нет рабочей копии' }); return; }
+    execFile(u, ['-U'], { timeout: 180000, windowsHide: true }, (err, out, errOut) => {
+      const txt = String(out || '') + String(errOut || '');
+      const m = /Updated yt-dlp to\s+\S*?([\d.]{8,})/i.exec(txt) || /yt-dlp is up to date \(\S*?([\d.]{8,})/i.exec(txt);
+      if (err && !m) { log('yt-dlp: обновление не удалось — ' + txt.trim().slice(-300)); resolve({ ok: false, text: txt.trim().slice(-200) }); return; }
+      const updated = /Updated yt-dlp/i.test(txt);
+      if (updated) log('yt-dlp: обновлён до ' + (m ? m[1] : '?'));
+      resolve({ ok: true, updated, version: m ? m[1] : '' });
+    });
+  });
 }
 
 // Окно входа в Яндекс: настоящая страница Яндекса, ловим пропуск (токен) из адреса после входа
@@ -335,7 +369,8 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      webviewTag: true // вкладка «Браузер»: сайты сервисов
     }
   });
 
@@ -897,6 +932,79 @@ app.whenReady().then(async () => {
 
   // --- Запасной способ для Яндекса: официальный сайт в скрытом окне ---
   ymweb.setup({ log, send: (ch, d) => { try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(ch, d); } catch (e) {} } });
+  // --- Самопроверка сервисов ---
+  recipes.setup({ log, cacheFile: path.join(app.getPath('userData'), 'recipes.json'), appVersion: app.getVersion() });
+  recipes.refresh();
+  ensureYtdlp();
+  let healthRunning = null;
+  const step = (name, ok, text, details) => ({ name, ok, text, details: details || '' });
+  async function checkYandex() {
+    const steps = [];
+    const tok = getYmToken();
+    if (!tok) return { status: 'skip', title: 'Нет входа в Яндекс — проверять нечего', steps };
+    const R = recipes.get().yandex || {};
+    let tr = null;
+    try {
+      const r = await ym.search(R.testQuery || 'Кино Группа крови', tok);
+      tr = (r.tracks || []).find((x) => x.albumId) || (r.tracks || [])[0];
+      steps.push(step('Поиск в Яндексе', !!tr, tr ? 'работает' : 'ничего не нашёл'));
+    } catch (e) { steps.push(step('Поиск в Яндексе', false, 'не работает — Яндекс мог поменять своё API', e.message)); }
+    if (!tr) { const last = settingsStore.get('healthYmTrack'); if (last) tr = last; }
+    let apiOk = false;
+    if (tr) {
+      try { const s2 = await ym.streamUrl(tr.id, tok); apiOk = !!(s2 && s2.audioUrl); steps.push(step('Воспроизведение (основной способ)', apiOk, apiOk ? (s2.preview ? 'работает, но только отрывки — нет Плюса' : 'работает') : 'поток не получен')); }
+      catch (e) { steps.push(step('Воспроизведение (основной способ)', false, 'не работает — Яндекс мог поменять своё API', e.message)); }
+      settingsStore.set('healthYmTrack', { id: tr.id, albumId: tr.albumId, title: tr.title, seconds: tr.seconds });
+    }
+    let siteOk = null;
+    if (!cfg('ymWebFallback')) steps.push(step('Запасной способ (сайт Яндекс Музыки)', null, 'выключен в настройках'));
+    else if (tr) {
+      const r = await ymweb.play(tr, 0);
+      await ymweb.stop();
+      siteOk = !!(r && r.ok);
+      steps.push(step('Запасной способ (сайт Яндекс Музыки)', siteOk, siteOk ? 'работает' : (r.error || 'не работает'), (r && r.details) || ''));
+    }
+    const status = apiOk && siteOk !== false ? 'ok' : (apiOk || siteOk ? 'warn' : 'fail');
+    const title = status === 'ok' ? 'Работает' : (apiOk ? 'Работает, но запасной способ сломан' : (siteOk ? 'Основной способ сломан — играет через сайт' : 'Не работает — слушай во вкладке «Браузер»'));
+    return { status, title, steps };
+  }
+  async function checkYouTube() {
+    const steps = [];
+    if (cfg('ytEnabled') === false) return { status: 'skip', title: 'YouTube выключен в настройках', steps };
+    const R = recipes.get().youtube || {};
+    let net1 = true;
+    try { const r = await ytsT(R.testQuery || 'Кино Группа крови', 8000); steps.push(step('Поиск на YouTube', !!(r.videos && r.videos.length), (r.videos && r.videos.length) ? 'работает' : 'ничего не нашёл')); }
+    catch (e) { net1 = false; steps.push(step('Поиск на YouTube', false, 'YouTube не отвечает — возможно, нужен VPN на весь компьютер', e.message)); }
+    const up = await ytdlpUpdate();
+    const ver = await ytdlpVersion(ytdlpPath());
+    steps.push(step('Библиотека yt-dlp', !!ver, ver ? 'версия ' + ver + (up.updated ? ' — только что обновлена' : (up.ok ? ', свежая' : ', обновить не удалось')) : 'не найдена', up.ok ? '' : up.text));
+    let dlOk = false;
+    if (net1) {
+      const r = await streamViaYtDlp('https://www.youtube.com/watch?v=' + (R.testVideo || 'jNQXAC9IVRw'));
+      dlOk = !!(r && (r.url || r.audioUrl));
+      steps.push(step('Воспроизведение (основной способ)', dlOk, dlOk ? 'работает' : 'не работает — включится плеер YouTube', r && r.error ? String(r.error).slice(0, 300) : ''));
+    }
+    const status = !net1 ? 'fail' : (dlOk ? 'ok' : 'warn');
+    const title = status === 'ok' ? 'Работает' : (status === 'warn' ? 'Основной способ сломан — играет через плеер YouTube' : 'YouTube недоступен');
+    return { status, title, steps };
+  }
+  async function runHealth() {
+    if (healthRunning) return healthRunning;
+    healthRunning = (async () => {
+      log('самопроверка: начало');
+      await recipes.refresh();
+      const res = { at: Date.now(), services: {}, recipes: recipes.info() };
+      try { res.services.yandex = await checkYandex(); } catch (e) { res.services.yandex = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
+      try { res.services.youtube = await checkYouTube(); } catch (e) { res.services.youtube = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
+      settingsStore.set('health', res);
+      log('самопроверка: Яндекс — ' + res.services.yandex.status + ', YouTube — ' + res.services.youtube.status);
+      return res;
+    })();
+    try { return await healthRunning; } finally { healthRunning = null; }
+  }
+  ipcMain.handle('health-get', () => settingsStore.get('health') || null);
+  ipcMain.handle('health-run', () => (playerBusy ? { busy: true } : runHealth()));
+
   ipcMain.handle('ymweb-play', (e, t, vol) => ymweb.play(t, vol).catch((err) => { log('Яндекс (сайт): ' + err.message); return { error: err.message }; }));
   ipcMain.handle('ymweb-cmd', (e, name, value) => ymweb.cmd(name, value));
   ipcMain.handle('ymweb-stop', () => ymweb.stop());
@@ -973,6 +1081,15 @@ app.whenReady().then(async () => {
 });
 
 // Не выходим при закрытии всех окон — живём в трее
+// Вкладка «Браузер»: встраиваемые сайты — только сервисы музыки и без доступа к системе
+app.on('web-contents-created', (e, contents) => {
+  contents.on('will-attach-webview', (ev, wp, params) => {
+    delete wp.preload;
+    wp.nodeIntegration = false; wp.contextIsolation = true; wp.sandbox = true;
+    if (!/^https:\/\/([a-z0-9-]+\.)*(yandex\.ru|youtube\.com|vk\.com|vk\.ru)\//i.test(params.src || '')) ev.preventDefault();
+  });
+  if (contents.getType() === 'webview') contents.setWindowOpenHandler(({ url }) => { if (/^https:\/\//.test(url)) contents.loadURL(url); return { action: 'deny' }; });
+});
 app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) {} });
 app.on('window-all-closed', (e) => {
   // на Windows держим процесс ради трея

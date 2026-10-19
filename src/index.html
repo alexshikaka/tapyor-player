@@ -45,6 +45,35 @@
   .chip { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; cursor: pointer; }
   .chip.active { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
   .chip.soon { opacity: .5; cursor: default; }
+  /* Состояние сервисов, предупреждение, вкладка «Браузер» */
+  .hwarn { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid rgba(255,212,59,.45); background: rgba(255,212,59,.1); color: #FFD43B; font: 600 12.5px Onest, sans-serif; cursor: pointer; margin-right: 8px; white-space: nowrap; }
+  .disc { display: flex; gap: 12px; background: #1A1B22; border: 1px solid #2C2F3A; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; font-size: 13px; color: #B5B8C4; line-height: 1.55; }
+  .disc b { color: #ECEDF2; }
+  .hs-svc { padding: 14px 16px; border-bottom: 1px solid #23252F; }
+  .hs-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .hs-head b { font-size: 15px; }
+  .hs-title { flex: 1; font-size: 13px; color: #9EA2B0; min-width: 160px; }
+  .hs-pill { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+  .hs-pill.ok { background: rgba(74,222,154,.14); color: #4ADE9A; } .hs-pill.warn { background: rgba(255,212,59,.14); color: #FFD43B; }
+  .hs-pill.fail { background: rgba(255,90,82,.16); color: #FF8A84; } .hs-pill.skip { background: #23252F; color: #9EA2B0; }
+  .hs-step { display: grid; grid-template-columns: 22px minmax(150px, 230px) 1fr; gap: 8px; font-size: 13px; padding: 3px 0; align-items: baseline; }
+  .hs-ic { color: #7C8090; font-weight: 700; } .hs-ic.ok { color: #4ADE9A; } .hs-ic.bad { color: #FF8A84; }
+  .hs-n { color: #C9CBD4; } .hs-t { color: #9EA2B0; }
+  .hs-foot { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .hs-det summary { cursor: pointer; font-size: 12.5px; color: #8A8E9C; }
+  .hs-det pre { max-height: 220px; overflow: auto; background: #0E0F13; border: 1px solid #2C2F3A; border-radius: 10px; padding: 10px; font: 11.5px 'JetBrains Mono', Consolas, monospace; color: #9EA2B0; white-space: pre-wrap; word-break: break-word; }
+  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 10px 12px 12px; gap: 8px; }
+  .br-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .br-seg { display: flex; background: #0E0F13; border: 1px solid #2C2F3A; border-radius: 10px; padding: 3px; gap: 2px; }
+  .br-seg button { height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: #C9CBD4; font: 500 13px Onest, sans-serif; cursor: pointer; }
+  .br-seg button.on { background: #2A2D38; color: #ECEDF2; font-weight: 600; } .br-seg button:disabled { opacity: .45; cursor: default; }
+  .br-ic { width: 32px; height: 32px; border-radius: 8px; border: 0; background: #1E2029; color: #C9CBD4; font-size: 15px; cursor: pointer; }
+  .br-ic:hover { background: #2A2D38; color: #ECEDF2; }
+  .br-url { flex: 1; min-width: 120px; font-size: 12px; color: #7C8090; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'JetBrains Mono', Consolas, monospace; }
+  .br-note { font-size: 12.5px; color: #8A8E9C; line-height: 1.45; }
+  .br-wrap { flex: 1; min-height: 0; border-radius: 12px; overflow: hidden; border: 1px solid #2C2F3A; background: #fff; display: flex; }
+  .br-web { flex: 1; width: 100%; height: 100%; border: 0; }
+  .br-empty { flex: 1; display: flex; align-items: center; justify-content: center; background: #15161C; color: #8A8E9C; font-size: 14px; text-align: center; padding: 30px; line-height: 1.5; }
   /* Вход в YouTube */
   .yl-ov { position: fixed; inset: 0; background: rgba(5,5,8,.72); z-index: 60; overflow: auto; padding: 48px 16px; }
   .yl-dlg { position: relative; margin: 0 auto; max-width: 980px; background: #15161C; border: 1px solid #2C2F3A; border-radius: 20px; padding: 26px 28px 28px; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
@@ -467,6 +496,7 @@
         </nav>
       </div>
       <div class="hspace"></div>
+      <button class="hwarn" id="healthWarn" hidden></button>
       <button class="acct" id="acct" title="Аккаунт Яндекс Музыки"><span class="dot" style="background:#FFD43B"></span>Войти в Яндекс</button>
       <div class="upd">
         <span class="badge" id="ver">версия…</span>
@@ -510,13 +540,22 @@
       <div class="my-main"><div class="plview" id="myPl"></div></div>
     </section>
 
-    <section class="view placeholder" id="viewBrowser" hidden>Встроенный браузер (для ВКонтакте и других сайтов) появится в одной из следующих версий.</section>
+    <section class="view brv" id="viewBrowser" hidden aria-label="Браузер">
+      <div class="br-bar">
+        <div class="br-seg" id="brSvc"><button data-svc="ym">Яндекс Музыка</button><button data-svc="yt">YouTube</button><button data-svc="vk" disabled title="Скоро">ВКонтакте</button></div>
+        <button class="br-ic" id="brBack" title="Назад" aria-label="Назад">←</button><button class="br-ic" id="brFwd" title="Вперёд" aria-label="Вперёд">→</button><button class="br-ic" id="brReload" title="Обновить" aria-label="Обновить">↻</button><button class="br-ic" id="brHome" title="На главную сервиса" aria-label="На главную">⌂</button>
+        <span class="br-url" id="brUrl"></span>
+      </div>
+      <div class="br-note">Это сайт самого сервиса — вход тот же, что в Тапёре. Если кнопки Тапёра не работают, слушай здесь. Пока играет сайт, Тапёр стоит на паузе.</div>
+      <div class="br-wrap" id="brWrap"><div class="br-empty" id="brEmpty">Выбери сервис сверху</div></div>
+    </section>
 
     <section class="view set" id="viewSettings" hidden aria-label="Настройки">
       <div class="set-in">
         <aside class="set-side">
           <div class="cap">Настройки</div>
           <button data-go="sAcc">Аккаунты</button>
+          <button data-go="sHealth">Состояние сервисов</button>
           <button data-go="sObs">OBS и стрим</button>
           <button data-go="sPlay">Воспроизведение</button>
           <button data-go="sKeys">Горячие клавиши</button>
@@ -526,6 +565,7 @@
 
           <section id="sAcc">
             <div class="sec-h"><h2>Аккаунты</h2><span>Пароли программа не видит — вход через браузер</span></div>
+            <div class="disc"><div style="font-size:18px">ℹ</div><div><b>Тапёр — неофициальная программа.</b> Он не связан с Яндексом, Google (YouTube), ВКонтакте или Spotify и работает с их музыкой так же, как ты в браузере — через их сайты и плееры. Если сервис что-то поменяет, кнопки Тапёра могут временно перестать работать: Тапёр сам это заметит (раздел «Состояние сервисов»), а слушать всегда можно во вкладке «Браузер».</div></div>
             <div class="card">
               <div class="srow">
                 <div class="ico" style="background:#FFD43B"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E0F13" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 18V6l10-2v12"></path><circle cx="6.5" cy="18" r="2.5"></circle><circle cx="16.5" cy="16" r="2.5"></circle></svg></div>
@@ -562,6 +602,14 @@
                 <div class="sl"><div class="st">SoundCloud</div><div class="sd">Ремиксы и треки, которых нет в других сервисах</div></div>
                 <span class="pill">скоро</span>
               </div>
+            </div>
+          </section>
+
+          <section id="sHealth">
+            <div class="sec-h"><h2>Состояние сервисов</h2><span>Тапёр сам проверяет их раз в сутки, когда музыка не играет</span></div>
+            <div class="card">
+              <div id="healthBox"></div>
+              <div class="srow"><div class="sl"><div class="sd">Если что-то сломалось, обычно хватает подождать: правила для сайтов Тапёр берёт свежие с GitHub, а исправление прилетает без переустановки.</div></div><button class="btn" id="hsRun">Проверить сейчас</button></div>
             </div>
           </section>
 
@@ -862,6 +910,7 @@
     $('main').classList.toggle('no-queue', t === 'settings');
     if (t === 'my') loadMy(false);
     if (t === 'settings') refreshSettings();
+    if (t === 'browser' && !BR.cur) brShow('ym');
   }
   $('tabs').addEventListener('click', function(e){ var b = e.target.closest('button[data-tab]'); if (b) setTab(b.dataset.tab); });
 
@@ -2804,6 +2853,109 @@
   var ytCookTg = $('setYtUseCk');
   if (ytCookTg) ytCookTg.onclick = function(){ var on = !ytCookTg.classList.contains('on'); setTg(ytCookTg, on); ytAuth.useCookies = on; if (A.setSetting) A.setSetting('ytUseCookies', on); };
   ytAuthRefresh().then(function(){ if (ytCookTg) setTg(ytCookTg, ytAuth.useCookies); });
+
+
+  // ===== Состояние сервисов (самопроверка) =====
+  var health = null, healthBusy = false, healthNote = '';
+  var SVC_NAMES = { yandex: 'Яндекс Музыка', youtube: 'YouTube' };
+  var ST_TEXT = { ok: 'Работает', warn: 'Частично', fail: 'Не работает', skip: 'Не проверялось' };
+  function agoText(t){
+    var m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад';
+    var h = Math.round(m / 60); if (h < 24) return h + ' ч назад';
+    return Math.round(h / 24) + ' дн назад';
+  }
+  function renderHealth(){
+    var box = $('healthBox'); if (!box) return;
+    var h = '';
+    if (!health) h += '<div class="srow"><div class="sl"><div class="sd">Проверки ещё не было. Тапёр проверяет сервисы сам раз в сутки, когда музыка не играет, — или нажми «Проверить сейчас».</div></div></div>';
+    else {
+      ['yandex', 'youtube'].forEach(function (k){
+        var s = health.services && health.services[k]; if (!s) return;
+        h += '<div class="hs-svc"><div class="hs-head"><b>' + SVC_NAMES[k] + '</b><span class="hs-pill ' + s.status + '">' + ST_TEXT[s.status] + '</span><span class="hs-title">' + esc(s.title || '') + '</span>' +
+          ((s.status === 'fail' || s.status === 'warn') ? '<button class="btn ghost" data-hs-browser="' + (k === 'yandex' ? 'ym' : 'yt') + '">Слушать на сайте</button>' : '') + '</div>';
+        (s.steps || []).forEach(function (st){
+          var ic = st.ok === true ? '<span class="hs-ic ok">✓</span>' : (st.ok === false ? '<span class="hs-ic bad">✕</span>' : '<span class="hs-ic">–</span>');
+          h += '<div class="hs-step">' + ic + '<span class="hs-n">' + esc(st.name) + '</span><span class="hs-t">' + esc(st.text || '') + '</span></div>';
+        });
+        h += '</div>';
+      });
+      var det = JSON.stringify(health, null, 2);
+      h += '<div class="hs-foot"><span class="sd">Проверено ' + agoText(health.at) + ' · правила сайтов: версия ' + ((health.recipes && health.recipes.version) || '?') + ' (' + esc((health.recipes && health.recipes.source) || '') + ')</span>' +
+        '<details class="hs-det"><summary>Подробности для разработчика</summary><pre>' + esc(det) + '</pre><button class="btn ghost" id="hsCopy">Скопировать</button></details></div>';
+    }
+    if (healthNote) h += '<div class="srow"><div class="sl"><div class="sd" style="color:#FFD43B">' + esc(healthNote) + '</div></div></div>';
+    box.innerHTML = h;
+    var c = $('hsCopy'); if (c) c.onclick = function(){ copyText(JSON.stringify(health, null, 2)); c.textContent = '✓ Скопировано'; };
+    $('hsRun').disabled = healthBusy; $('hsRun').textContent = healthBusy ? 'Проверяю… (до минуты)' : 'Проверить сейчас';
+    // значок в шапке, если что-то сломано
+    var bad = health && ['yandex', 'youtube'].filter(function (k){ var s = health.services && health.services[k]; return s && (s.status === 'fail' || s.status === 'warn'); });
+    var w = $('healthWarn');
+    if (bad && bad.length) { var s0 = health.services[bad[0]]; w.hidden = false; w.textContent = '⚠ ' + SVC_NAMES[bad[0]] + ': ' + (s0.status === 'fail' ? 'не работает' : 'частично'); w.title = s0.title + ' — нажми, чтобы посмотреть'; }
+    else w.hidden = true;
+  }
+  async function runHealth(manual){
+    if (healthBusy || !A.healthRun) return;
+    var playing = !isIdle() || loadingIdx >= 0;
+    if (playing) { if (manual) { healthNote = 'Поставь музыку на паузу или останови: проверка ненадолго открывает сайт Яндекса без звука.'; renderHealth(); } return; }
+    healthBusy = true; healthNote = ''; renderHealth();
+    var r = await A.healthRun().catch(function(){ return null; });
+    healthBusy = false;
+    if (r && r.busy) healthNote = 'Музыка играет — проверю позже.';
+    else if (r) health = r;
+    renderHealth();
+  }
+  $('hsRun').onclick = function(){ runHealth(true); };
+  $('healthBox').addEventListener('click', function(e){ var b = e.target.closest('[data-hs-browser]'); if (b) { setTab('browser'); brShow(b.dataset.hsBrowser); } });
+  $('healthWarn').onclick = function(){ setTab('settings'); var s = $('sHealth'); if (s) s.scrollIntoView({ block: 'start' }); };
+  if (A.healthGet) A.healthGet().then(function (h){ health = h; renderHealth(); });
+  // Сама раз в сутки, когда ничего не играет (первый раз — через 3 минуты после запуска)
+  function healthTick(){ if (!health || Date.now() - health.at > 20 * 3600 * 1000) runHealth(false); }
+  setTimeout(healthTick, 3 * 60 * 1000);
+  setInterval(healthTick, 30 * 60 * 1000);
+
+  // ===== Вкладка «Браузер»: сайты сервисов (если кнопки Тапёра не работают) =====
+  var BR = { cur: '', views: {} };
+  var BR_SVC = {
+    ym: { url: 'https://music.yandex.ru/', partition: 'persist:yandex-login' },
+    yt: { url: 'https://www.youtube.com/', partition: '' }
+  };
+  function brView(){ return BR.views[BR.cur]; }
+  function brShow(svc){
+    if (!BR_SVC[svc]) return;
+    BR.cur = svc;
+    var bs = $('brSvc').querySelectorAll('button'); for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', bs[k].dataset.svc === svc);
+    if (!BR.views[svc]) {
+      var w = document.createElement('webview');
+      if (BR_SVC[svc].partition) w.setAttribute('partition', BR_SVC[svc].partition);
+      if (svc === 'yt' && A.chromeUA) w.setAttribute('useragent', A.chromeUA);
+      w.setAttribute('src', BR_SVC[svc].url);
+      w.className = 'br-web';
+      w.addEventListener('media-started-playing', brOnPlay);
+      var upd = function(){ if (BR.cur === svc) { try { $('brUrl').textContent = w.getURL(); } catch (e) {} } };
+      w.addEventListener('did-navigate', upd); w.addEventListener('did-navigate-in-page', upd);
+      var em = $('brEmpty'); if (em) em.remove();
+      $('brWrap').appendChild(w);
+      BR.views[svc] = w;
+    }
+    for (var key in BR.views) BR.views[key].style.display = key === svc ? 'flex' : 'none';
+    try { $('brUrl').textContent = BR.views[svc].getURL() || BR_SVC[svc].url; } catch (e) { $('brUrl').textContent = BR_SVC[svc].url; }
+  }
+  // Сайт заиграл — Тапёр встаёт на паузу, чтобы не было двух музык сразу
+  function brOnPlay(){
+    var m = master();
+    if (m.getAttribute('src') && !m.paused) { m.pause(); setSub('Тапёр на паузе — играет сайт во вкладке «Браузер»'); }
+  }
+  // Тапёр заиграл — останавливаем звук на сайтах
+  function brPauseAll(){
+    for (var key in BR.views) { try { BR.views[key].executeJavaScript("document.querySelectorAll('audio,video').forEach(function(m){ try { m.pause(); } catch (e) {} })"); } catch (e) {} }
+  }
+  allEls().concat([ytx, ymx]).forEach(function (el){ el.addEventListener('play', function(){ if (el === master()) brPauseAll(); }); });
+  $('brSvc').onclick = function(e){ var b = e.target.closest('button[data-svc]'); if (b && !b.disabled) brShow(b.dataset.svc); };
+  $('brBack').onclick = function(){ var w = brView(); if (w && w.canGoBack()) w.goBack(); };
+  $('brFwd').onclick = function(){ var w = brView(); if (w && w.canGoForward()) w.goForward(); };
+  $('brReload').onclick = function(){ var w = brView(); if (w) w.reload(); };
+  $('brHome').onclick = function(){ var w = brView(); if (w) w.loadURL(BR_SVC[BR.cur].url); };
 
   // Запасной способ Яндекса: вход на сайте и проверка
   $('setYwLogin').onclick = async function(){

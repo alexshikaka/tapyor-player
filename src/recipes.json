@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "minApp": "0.9.1",
+  "note": "Правила для сайтов музыкальных сервисов. Только данные: адреса, слова и CSS-селекторы. Тапёр берёт свежую версию этого файла с GitHub, чтобы чинить поломки без новой версии программы.",
+  "yandex": {
+    "trackUrl": "https://music.yandex.ru/album/{albumId}/track/{id}",
+    "trackUrlNoAlbum": "https://music.yandex.ru/track/{id}",
+    "play": {
+      "preferSelectors": [],
+      "include": "play|слушать|воспроизв|играть",
+      "exclude": "pause|пауза|playerbar|next|prev|след|пред|shuffle|перемеш|repeat|повтор|like|нрав|volume|громк|video|видео|trailer|трейлер|wave|волн",
+      "boost": "track|трек|header|page",
+      "barSelector": "[class*=\"PlayerBar\"],[class*=\"playerBar\"],[class*=\"player-controls\"],[data-test-id*=\"PLAYERBAR\"],footer"
+    },
+    "loggedInSelector": "[class*=\"UserAvatar\"],[data-test-id*=\"USER\"],[aria-label*=\"Профиль\"],[aria-label*=\"профиль\"]",
+    "testQuery": "Кино Группа крови"
+  },
+  "youtube": {
+    "testVideo": "jNQXAC9IVRw",
+    "testQuery": "Кино Группа крови"
+  }
+}
