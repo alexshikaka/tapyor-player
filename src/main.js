@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard, globalShortcut, session } = require('electron');
 const ym = require('./yandex');
 const match = require('./match');
+const ymweb = require('./ymweb');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -37,6 +38,7 @@ const DEFAULTS = {
   videoQuality: '720', startVolume: 80, prefetch: true,
   autoUpdate: true, autoStart: false, closeToTray: true,
   normalize: true, crossfade: 6,
+  ytEnabled: true, ymWebFallback: true,
   mediaKeys: true,
   hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
@@ -471,9 +473,11 @@ app.whenReady().then(async () => {
   appUrl = 'http://127.0.0.1:' + port + '/index.html';
 
   // Поиск по YouTube (без ключа и входа)
+  // YouTube в России часто открывается только через VPN — не ждём его дольше 8 секунд
+  const ytsT = (q, ms) => Promise.race([yts(q), new Promise((_, rej) => setTimeout(() => rej(new Error('YouTube не отвечает')), ms || 8000))]);
   ipcMain.handle('yt-search', async (event, query) => {
     try {
-      const r = await yts(query);
+      const r = await ytsT(query);
       const videos = (r.videos || []).slice(0, 20).map((v) => ({
         id: v.videoId,
         title: v.title,
@@ -698,9 +702,9 @@ app.whenReady().then(async () => {
     let ymList = [], ytList = [];
     try { ymList = (await ym.searchTracksPage(q.query, 0, getYmToken())).slice(0, 6); } catch (err) { log('из текста: Яндекс — ' + err.message); }
     let r = match.decide(q, ymList, []);
-    if (r.status !== 'exact') {
+    if (r.status !== 'exact' && cfg('ytEnabled') !== false) {
       try {
-        const y = await yts(q.query);
+        const y = await ytsT(q.query, 8000);
         ytList = (y.videos || []).slice(0, 5).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail }));
       } catch (err) { log('из текста: YouTube — ' + err.message); }
       r = match.decide(q, ymList, ytList);
@@ -824,6 +828,37 @@ app.whenReady().then(async () => {
     try { const b = await ytSuggest(part); if (b.length) return { source: 'yt', items: b }; }
     catch (err) { log('YouTube: подсказки — ошибка ' + err.message); }
     return { source: '', items: [] };
+  });
+
+  // --- Запасной способ для Яндекса: официальный сайт в скрытом окне ---
+  ymweb.setup({ log, send: (ch, d) => { try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(ch, d); } catch (e) {} } });
+  ipcMain.handle('ymweb-play', (e, t, vol) => ymweb.play(t, vol).catch((err) => { log('Яндекс (сайт): ' + err.message); return { error: err.message }; }));
+  ipcMain.handle('ymweb-cmd', (e, name, value) => ymweb.cmd(name, value));
+  ipcMain.handle('ymweb-stop', () => ymweb.stop());
+  ipcMain.handle('ymweb-login', () => ymweb.login());
+  app.on('before-quit', () => ymweb.destroy());
+
+  // Тот же трек в другом сервисе (если в своём он не играет)
+  ipcMain.handle('find-alt', async (e, t, target) => {
+    if (!t || !t.title) return null;
+    let line;
+    if (t.src === 'yt') {
+      const ch = String(t.author || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '');
+      line = /\s[-–—]\s/.test(t.title) ? t.title : (ch ? ch + ' - ' + t.title : t.title);
+    } else line = (t.author ? t.author + ' - ' : '') + t.title;
+    const q = match.clean(line);
+    if (!q.query) return null;
+    let ymList = [], ytList = [];
+    try {
+      if (target === 'ym') ymList = (await ym.searchTracksPage(q.query, 0, getYmToken())).slice(0, 6);
+      else {
+        const y = await ytsT(q.query, 8000);
+        ytList = (y.videos || []).slice(0, 5).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail }));
+      }
+    } catch (err) { log('замена трека: поиск — ' + err.message); return { error: err.message }; }
+    const r = match.decide(q, ymList, ytList);
+    log('замена трека: «' + line + '» → ' + (target === 'ym' ? 'Яндекс' : 'YouTube') + ': ' + r.status + (r.track ? ' «' + (r.track.author || '') + ' — ' + r.track.title + '»' : ''));
+    return r.status === 'none' ? null : { status: r.status, track: r.track };
   });
 
   // «Сейчас играет» — подсказка на значке в трее
