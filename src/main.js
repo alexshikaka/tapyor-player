@@ -2,6 +2,8 @@ const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nat
 const ym = require('./yandex');
 const match = require('./match');
 const ymweb = require('./ymweb');
+const ytauth = require('./ytauth');
+const ytoauth = require('./ytoauth');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -38,11 +40,18 @@ const DEFAULTS = {
   videoQuality: '720', startVolume: 80, prefetch: true,
   autoUpdate: true, autoStart: false, closeToTray: true,
   normalize: true, crossfade: 6,
-  ytEnabled: true, ymWebFallback: true,
+  ytEnabled: true, ymWebFallback: true, ytUseCookies: false,
   mediaKeys: true,
   hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
 function cfg(key) { const s = readSettingsFile(); return s[key] !== undefined ? s[key] : DEFAULTS[key]; }
+// Простое хранилище для модулей входа (ключи шифруются внутри модулей)
+const settingsStore = {
+  get: (k) => readSettingsFile()[k],
+  set: (k, v) => { const s = readSettingsFile(); if (v == null) delete s[k]; else s[k] = v; try { fs.writeFileSync(settingsFile(), JSON.stringify(s, null, 2)); } catch (e) { log('настройки: ошибка записи ' + e.message); } }
+};
+function ytCookieFile() { return path.join(app.getPath('userData'), 'yt-cookies.txt'); }
+function ytCookieArgs(forStream) { return (ytauth.hasCookies() && (!forStream || cfg('ytUseCookies'))) ? ['--cookies', ytCookieFile()] : []; }
 function npFilePath() {
   const s = readSettingsFile();
   return s.nowPlayingPath || path.join(app.getPath('documents'), 'Тапёр', 'now_playing.txt');
@@ -191,7 +200,7 @@ function ytdlpPlaylist(listId) {
   return new Promise((resolve) => {
     const bin = ytdlpPath();
     if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
-    execFile(bin, ['https://www.youtube.com/playlist?list=' + listId, '--flat-playlist', '--dump-single-json', '--no-warnings', '--playlist-end', '500'],
+    execFile(bin, ['https://www.youtube.com/playlist?list=' + listId, '--flat-playlist', '--dump-single-json', '--no-warnings', '--playlist-end', '500', ...ytCookieArgs(false)],
       { timeout: 60000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
         if (err) { log('плейлист YouTube: ошибка ' + (stderr || err.message)); resolve({ error: 'не удалось открыть плейлист' }); return; }
         try {
@@ -222,6 +231,7 @@ function streamViaYtDlp(videoUrl) {
       // видео + звук раздельно; иначе единый файл; иначе только звук
       '-f', fmt,
       '-g', '--no-playlist', '--no-warnings',
+      ...ytCookieArgs(true),
       videoUrl
     ], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
       if (err) {
@@ -495,7 +505,11 @@ app.whenReady().then(async () => {
       return { error: (e && e.message) ? e.message : String(e) };
     }
   });
-  ipcMain.handle('yt-playlist', async (e, listId) => {
+  ipcMain.handle('yt-playlist', async (e, listId, title) => {
+    if (ytoauth.loggedIn()) {
+      try { return await ytoauth.playlistTracks(listId, title); }
+      catch (err) { log('YouTube API: плейлист — ' + err.message + ' (пробую yt-dlp)'); }
+    }
     const r = await ytdlpPlaylist(listId);
     if (!r.error) return r;
     try { // запасной способ
@@ -828,6 +842,57 @@ app.whenReady().then(async () => {
     try { const b = await ytSuggest(part); if (b.length) return { source: 'yt', items: b }; }
     catch (err) { log('YouTube: подсказки — ошибка ' + err.message); }
     return { source: '', items: [] };
+  });
+
+  // --- Вход в YouTube: через браузер (OAuth), окном внутри Тапёра, ключом из браузера ---
+  ytauth.setup({ log, store: settingsStore, cookieFile: ytCookieFile() });
+  ytoauth.setup({ log, store: settingsStore });
+  ytauth.restore().catch((e) => log('YouTube: восстановление входа — ' + e.message));
+  const ytAuthStatus = () => ({
+    cookies: settingsStore.get('ytAccount') || null,
+    oauth: { configured: ytoauth.configured(), account: ytoauth.loggedIn() ? (settingsStore.get('ytOauthAccount') || { name: 'аккаунт Google' }) : null },
+    useCookies: !!cfg('ytUseCookies')
+  });
+  ipcMain.handle('yt-auth-status', () => ytAuthStatus());
+  ipcMain.handle('yt-login-paste', async (e, text) => {
+    const t = text != null && String(text).trim() ? String(text) : clipboard.readText();
+    try { return await ytauth.loginWithText(t); } catch (err) { log('YouTube: ключ — ' + err.message); return { error: 'failed', message: err.message }; }
+  });
+  ipcMain.handle('yt-login-window', () => ytauth.loginWindow(mainWindow));
+  ipcMain.handle('yt-oauth-login', () => ytoauth.login());
+  ipcMain.handle('yt-oauth-cancel', () => { ytoauth.cancel(); return true; });
+  ipcMain.handle('yt-logout', async (e, kind) => { if (kind === 'oauth') ytoauth.logout(); else await ytauth.logout(); return ytAuthStatus(); });
+  // Мои плейлисты и лайки YouTube: через API (вход через браузер) или через yt-dlp с ключом
+  function ytdlpFeed(url, end) {
+    return new Promise((resolve) => {
+      const bin = ytdlpPath();
+      if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+      execFile(bin, [url, '--flat-playlist', '--dump-single-json', '--no-warnings', '--playlist-end', String(end || 300), ...ytCookieArgs(false)],
+        { timeout: 60000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
+          if (err) { log('YouTube: ' + url + ' — ' + String(stderr || err.message).slice(0, 300)); resolve({ error: 'не удалось загрузить' }); return; }
+          try { resolve(JSON.parse(stdout)); } catch (e2) { resolve({ error: 'ошибка разбора' }); }
+        });
+    });
+  }
+  ipcMain.handle('yt-my', async () => {
+    if (ytoauth.loggedIn()) {
+      try { return { via: 'api', playlists: await ytoauth.myPlaylists(), liked: { src: 'yt', type: 'liked', title: 'Понравившиеся на YouTube', listId: 'LL' } }; }
+      catch (err) { log('YouTube API: мои плейлисты — ' + err.message); }
+    }
+    if (!ytauth.hasCookies()) return { error: 'нет входа' };
+    const j = await ytdlpFeed('https://www.youtube.com/feed/playlists', 200);
+    if (j.error) return j;
+    const playlists = (j.entries || []).filter((x) => x && (x.id || x.url)).map((x) => {
+      const id = x.id && !/^https?:/.test(x.id) ? x.id : ((/[?&]list=([\w-]+)/.exec(x.url || '') || [])[1]);
+      return { src: 'yt', type: 'playlist', listId: id, title: x.title || 'Плейлист', author: x.channel || x.uploader || '', count: x.playlist_count || 0, thumb: (x.thumbnails && x.thumbnails.length ? x.thumbnails[x.thumbnails.length - 1].url : ''), mine: true };
+    }).filter((p) => p.listId && p.listId !== 'LL' && p.listId !== 'WL');
+    return { via: 'cookies', playlists, liked: { src: 'yt', type: 'liked', title: 'Понравившиеся на YouTube', listId: 'LL' } };
+  });
+  ipcMain.handle('yt-liked', async () => {
+    if (ytoauth.loggedIn()) { try { return await ytoauth.liked(); } catch (err) { log('YouTube API: лайки — ' + err.message); } }
+    const r = await ytdlpPlaylist('LL');
+    if (r && !r.error) { r.type = 'liked'; r.title = 'Понравившиеся на YouTube'; }
+    return r;
   });
 
   // --- Запасной способ для Яндекса: официальный сайт в скрытом окне ---
