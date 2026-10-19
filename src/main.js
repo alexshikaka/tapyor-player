@@ -41,7 +41,7 @@ const DEFAULTS = {
   videoQuality: '720', startVolume: 80, prefetch: true,
   autoUpdate: true, autoStart: false, closeToTray: true,
   normalize: true, crossfade: 6,
-  ytEnabled: true, ymWebFallback: true, ytUseCookies: false,
+  ytEnabled: true, ymWebFallback: true, ytUseCookies: false, scEnabled: true, auEnabled: true,
   mediaKeys: true,
   hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
@@ -250,6 +250,73 @@ function ytdlpPlaylist(listId) {
   });
 }
 
+// --- SoundCloud, Bandcamp и другие сайты через yt-dlp ---
+function bestThumb(e) {
+  const t = (e.thumbnails || []).filter((x) => x && x.url);
+  const mid = t.find((x) => /t300x300|t500x500|_7\.|_16\./.test(x.url)) || t.find((x) => (x.width || 0) >= 200) || t[t.length - 1];
+  return (mid && mid.url) || e.thumbnail || '';
+}
+function srcOfUrl(u) { return /bandcamp\.com/i.test(u || '') ? 'bc' : 'sc'; }
+function mapYdl(e, src) {
+  const url = e.webpage_url || (/^https?:/.test(e.url || '') ? e.url : '') || e.original_url || '';
+  return { src: src || srcOfUrl(url), id: url, title: e.track || e.title || 'Без названия', author: e.artist || e.uploader || e.channel || '', seconds: Math.round(e.duration || 0), duration: fmtDur(e.duration), thumb: bestThumb(e) };
+}
+function ydlJson(args, timeout) {
+  return new Promise((resolve) => {
+    const bin = ytdlpPath();
+    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    execFile(bin, [...args, '--dump-single-json', '--no-warnings'], { timeout: timeout || 45000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) { resolve({ error: String(stderr || err.message).trim().split('\n').pop().slice(0, 300) }); return; }
+      try { resolve(JSON.parse(stdout)); } catch (e) { resolve({ error: 'ошибка разбора' }); }
+    });
+  });
+}
+async function scSearch(q, n) {
+  const j = await ydlJson(['scsearch' + (n || 15) + ':' + q, '--flat-playlist'], 30000);
+  if (j.error) { log('SoundCloud: поиск — ' + j.error); return { error: j.error }; }
+  return (j.entries || []).filter((e) => e && (e.webpage_url || e.url)).map((e) => mapYdl(e, 'sc'));
+}
+async function urlList(url) {
+  const j = await ydlJson([url, '--flat-playlist', '--playlist-end', '500'], 60000);
+  if (j.error) { log('список по ссылке: ' + j.error); return { error: j.error }; }
+  const src = srcOfUrl(url);
+  if (!j.entries) return { tracks: [mapYdl(j, src)] };
+  const tracks = j.entries.filter((e) => e && (e.webpage_url || e.url)).map((e) => mapYdl(e, src));
+  return { list: { src, type: 'playlist', listId: url, title: j.title || 'Плейлист', author: j.uploader || j.artist || '', count: tracks.length, thumb: bestThumb(j) || (tracks[0] && tracks[0].thumb) || '', tracks } };
+}
+// Поток звука по ссылке: обычный файл или HLS (тогда окно играет его через hls.js)
+function urlStream(url) {
+  return new Promise((resolve) => {
+    const bin = ytdlpPath();
+    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    execFile(bin, ['-f', 'ba[protocol^=http]/ba/b', '--print', '%(protocol)s|%(url)s', '--no-playlist', '--no-warnings', url], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
+      if (err) { const m = String(stderr || err.message).trim().split('\n').pop(); log('поток по ссылке: ' + m); resolve({ error: m.slice(0, 300) }); return; }
+      const line = String(stdout || '').trim().split(/\r?\n/).pop() || '';
+      const i = line.indexOf('|'); const proto = line.slice(0, i), u = line.slice(i + 1);
+      if (!/^https?:/.test(u)) { resolve({ error: 'поток не получен' }); return; }
+      resolve({ audioUrl: u, hls: /m3u8/.test(proto) || /\.m3u8/.test(u) });
+    });
+  });
+}
+
+// --- Audius: открытая площадка независимых артистов (свой API) ---
+const AUDIUS = 'https://api.audius.co/v1';
+const AU_APP = 'Taper';
+async function auSearch(q, n) {
+  const { net } = require('electron');
+  try {
+    const r = await net.fetch(AUDIUS + '/tracks/search?query=' + encodeURIComponent(q) + '&app_name=' + AU_APP + '&limit=' + (n || 10), { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) { const err = r.status === 401 || r.status === 403 ? 'Audius просит ключ разработчика' : 'HTTP ' + r.status; log('Audius: поиск — ' + err); return { error: err }; }
+    const j = await r.json();
+    return (j.data || []).filter((t) => t && t.id && t.is_streamable !== false).slice(0, n || 10).map((t) => ({
+      src: 'au', id: String(t.id), title: t.title || 'Без названия', author: (t.user && t.user.name) || '',
+      seconds: t.duration || 0, duration: fmtDur(t.duration), link: t.permalink ? 'https://audius.co' + t.permalink : '',
+      thumb: (t.artwork && (t.artwork['480x480'] || t.artwork['150x150'])) || ''
+    }));
+  } catch (e) { log('Audius: поиск — ' + e.message); return { error: e.message }; }
+}
+function auStreamUrl(id) { return AUDIUS + '/tracks/' + encodeURIComponent(id) + '/stream?app_name=' + AU_APP; }
+
 // Достать прямую ссылку на поток через yt-dlp (надёжный способ)
 function streamViaYtDlp(videoUrl) {
   return new Promise((resolve) => {
@@ -319,7 +386,8 @@ function applyHotkeys() {
 function allowMediaAnalysis() {
   try {
     session.defaultSession.webRequest.onHeadersReceived({ urls: ['https://*/*'] }, (d, cb) => {
-      if (d.resourceType !== 'media') { cb({}); return; }
+      const cdn = /^https:\/\/[^/]*(sndcdn\.com|soundcloud\.cloud|bcbits\.com)\//i.test(d.url || '');
+      if (d.resourceType !== 'media' && !(cdn && (d.resourceType === 'xhr' || d.resourceType === 'fetch'))) { cb({}); return; }
       const h = Object.assign({}, d.responseHeaders);
       const has = Object.keys(h).some((k) => k.toLowerCase() === 'access-control-allow-origin');
       if (!has) h['Access-Control-Allow-Origin'] = ['*'];
@@ -594,6 +662,16 @@ app.whenReady().then(async () => {
     } finally { inflight.delete(key); }
   }
   ipcMain.handle('yt-stream', (event, id) => getStream(id));
+  const urlCache = new Map();
+  ipcMain.handle('url-stream', async (e, url) => {
+    const c = urlCache.get(url); if (c && Date.now() - c.at < 30 * 60 * 1000) return c.value;
+    const r = await urlStream(url); if (r && r.audioUrl) urlCache.set(url, { at: Date.now(), value: r });
+    return r;
+  });
+  ipcMain.handle('sc-search', (e, q, n) => (cfg('scEnabled') === false ? [] : scSearch(q, n)));
+  ipcMain.handle('au-search', (e, q, n) => (cfg('auEnabled') === false ? [] : auSearch(q, n)));
+  ipcMain.handle('au-stream', (e, id) => ({ audioUrl: auStreamUrl(id) }));
+  ipcMain.handle('url-list', async (e, url) => { const r = await urlList(url); return r.list || r; });
   ipcMain.handle('yt-search-more', (event, query, count) => ytdlpSearch(query, Math.min(Math.max(count || 40, 20), 300)));
 
   // Настройки (запоминаются между запусками)
@@ -684,7 +762,7 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle('ym-login-browser-cancel', () => { if (deviceLogin) deviceLogin.cancelled = true; return true; });
   ipcMain.handle('open-external', (e, url) => {
-    if (/^https:\/\/([a-z0-9-]+\.)*(yandex\.(ru|com|by|kz)|ya\.ru|youtube\.com|youtu\.be)\//i.test(String(url || ''))) shell.openExternal(url);
+    if (/^https:\/\/([a-z0-9-]+\.)*(yandex\.(ru|com|by|kz)|ya\.ru|youtube\.com|youtu\.be|soundcloud\.com|bandcamp\.com|audius\.co)\//i.test(String(url || ''))) shell.openExternal(url);
     return true;
   });
   ipcMain.handle('ym-logout', () => { setYmToken(''); ymUid = ''; log('Яндекс: выход'); return true; });
@@ -819,6 +897,10 @@ app.whenReady().then(async () => {
         if ((m = /^\/playlists\/([^/?#]+)/.exec(p))) return { list: await ym.playlistTracks(tok, { uuid: m[1] }) };
         if ((m = /^\/artist\/(\d+)/.exec(p))) return { list: await ym.artistTracks(tok, m[1]) };
         return { error: 'такую ссылку Яндекса пока не понимаю' };
+      }
+      if (/^(soundcloud\.com|on\.soundcloud\.com)$/.test(host) || /(^|\.)bandcamp\.com$/.test(host)) {
+        const r = await urlList(u.toString());
+        return r.error ? { error: (/bandcamp/.test(host) ? 'Bandcamp' : 'SoundCloud') + ': ' + r.error } : r;
       }
       if (/^(youtube\.com|music\.youtube\.com|youtu\.be)$/.test(host)) {
         const vid = host === 'youtu.be' ? p.slice(1).split('/')[0] : (u.searchParams.get('v') || ((/^\/(shorts|live|embed)\/([\w-]{6,})/.exec(p) || [])[2]));
@@ -988,6 +1070,28 @@ app.whenReady().then(async () => {
     const title = status === 'ok' ? 'Работает' : (status === 'warn' ? 'Основной способ сломан — играет через плеер YouTube' : 'YouTube недоступен');
     return { status, title, steps };
   }
+  async function checkSoundCloud() {
+    if (cfg('scEnabled') === false) return { status: 'skip', title: 'SoundCloud выключен в настройках', steps: [] };
+    const steps = [];
+    const r = await scSearch('Kino Gruppa krovi', 3);
+    const ok = Array.isArray(r) && r.length > 0;
+    steps.push(step('Поиск на SoundCloud', ok, ok ? 'работает' : 'не работает', r && r.error ? r.error : ''));
+    let st = false;
+    if (ok) { const s2 = await urlStream(r[0].id); st = !!(s2 && s2.audioUrl); steps.push(step('Воспроизведение', st, st ? 'работает' + (s2.hls ? ' (поток HLS)' : '') : 'не работает', s2 && s2.error ? s2.error : '')); }
+    return { status: ok && st ? 'ok' : (ok ? 'warn' : 'fail'), title: ok && st ? 'Работает' : (ok ? 'Поиск работает, воспроизведение — нет' : 'Не работает'), steps };
+  }
+  async function checkAudius() {
+    if (cfg('auEnabled') === false) return { status: 'skip', title: 'Audius выключен в настройках', steps: [] };
+    const r = await auSearch('lofi', 3);
+    const ok = Array.isArray(r) && r.length > 0;
+    let st = null;
+    if (ok) {
+      try { const { net } = require('electron'); const s2 = await net.fetch(auStreamUrl(r[0].id), { method: 'GET', headers: { Range: 'bytes=0-1023' }, signal: AbortSignal.timeout(10000) }); st = s2.ok || s2.status === 206; }
+      catch (e) { st = false; }
+    }
+    const steps = [step('Поиск на Audius', ok, ok ? 'работает' : ((r && r.error) || 'не работает')), step('Воспроизведение', ok ? st : null, ok ? (st ? 'работает' : 'не работает') : 'не проверялось')];
+    return { status: ok && st ? 'ok' : (ok ? 'warn' : 'fail'), title: ok && st ? 'Работает' : (r && r.error ? r.error : 'Не работает'), steps };
+  }
   async function runHealth() {
     if (healthRunning) return healthRunning;
     healthRunning = (async () => {
@@ -995,9 +1099,11 @@ app.whenReady().then(async () => {
       await recipes.refresh();
       const res = { at: Date.now(), services: {}, recipes: recipes.info() };
       try { res.services.yandex = await checkYandex(); } catch (e) { res.services.yandex = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
+      try { res.services.soundcloud = await checkSoundCloud(); } catch (e) { res.services.soundcloud = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
+      try { res.services.audius = await checkAudius(); } catch (e) { res.services.audius = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
       try { res.services.youtube = await checkYouTube(); } catch (e) { res.services.youtube = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
       settingsStore.set('health', res);
-      log('самопроверка: Яндекс — ' + res.services.yandex.status + ', YouTube — ' + res.services.youtube.status);
+      log('самопроверка: Яндекс — ' + res.services.yandex.status + ', YouTube — ' + res.services.youtube.status + ', SoundCloud — ' + res.services.soundcloud.status);
       return res;
     })();
     try { return await healthRunning; } finally { healthRunning = null; }
@@ -1015,7 +1121,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('find-alt', async (e, t, target) => {
     if (!t || !t.title) return null;
     let line;
-    if (t.src === 'yt') {
+    if (t.src === 'yt' || t.src === 'sc' || t.src === 'bc') {
       const ch = String(t.author || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '');
       line = /\s[-–—]\s/.test(t.title) ? t.title : (ch ? ch + ' - ' + t.title : t.title);
     } else line = (t.author ? t.author + ' - ' : '') + t.title;

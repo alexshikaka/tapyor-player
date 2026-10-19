@@ -306,7 +306,7 @@
   .wchip.active { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
 
   /* Фильтр по источнику */
-  .results.f-ym [data-src="yt"], .results.f-yt [data-src="ym"] { display: none !important; }
+  .results[data-f="ym"] [data-src]:not([data-src="ym"]), .results[data-f="yt"] [data-src]:not([data-src="yt"]), .results[data-f="sc"] [data-src]:not([data-src="sc"]), .results[data-f="au"] [data-src]:not([data-src="au"]) { display: none !important; }
 
   /* Вкладки */
   .view[hidden], .hrow2[hidden], [hidden].plview, .results[hidden] { display: none !important; }
@@ -518,7 +518,8 @@
         <button class="chip" data-f="ym"><span class="dot" style="background:#FFD43B"></span>Яндекс</button>
         <button class="chip" data-f="yt"><span class="dot" style="background:#FF5A52"></span>YouTube</button>
         <button class="chip soon" disabled title="Скоро"><span class="dot" style="background:#3BA8F0"></span>Telegram</button>
-        <button class="chip soon" disabled title="Скоро"><span class="dot" style="background:#FF8A3D"></span>SoundCloud</button>
+        <button class="chip" data-f="sc"><span class="dot" style="background:#FF7A1A"></span>SoundCloud</button>
+        <button class="chip" data-f="au"><span class="dot" style="background:#CC0FE0"></span>Audius</button>
       </div>
     </div>
   </header>
@@ -597,10 +598,15 @@
                 <div class="sl"><div class="st">Telegram</div><div class="sd">Поиск треков в каналах и чатах, ссылки t.me</div></div>
                 <span class="pill">скоро</span>
               </div>
-              <div class="srow soon">
-                <div class="ico" style="background:#FF7A1A"></div>
-                <div class="sl"><div class="st">SoundCloud</div><div class="sd">Ремиксы и треки, которых нет в других сервисах</div></div>
-                <span class="pill">скоро</span>
+              <div class="srow">
+                <div class="ico" style="background:#FF7A1A"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M3 15v3M6 13v5M9 11v7M12 9v9h7a3 3 0 0 0 0-6 5 5 0 0 0-7-3z" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"></path></svg></div>
+                <div class="sl"><div class="st">SoundCloud и Bandcamp</div><div class="sd">Ремиксы и треки, которых нет в других сервисах. Работают без входа. Ссылки Bandcamp вставляй прямо в поиск</div></div>
+                <button class="toggle" data-set-tg="scEnabled" aria-label="Искать на SoundCloud"><span></span></button>
+              </div>
+              <div class="srow">
+                <div class="ico" style="background:#CC0FE0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 3 19h18z"></path></svg></div>
+                <div class="sl"><div class="st">Audius</div><div class="sd">Бесплатная площадка независимых артистов: полные треки без подписки и без входа</div></div>
+                <button class="toggle" data-set-tg="auEnabled" aria-label="Искать на Audius"><span></span></button>
               </div>
             </div>
           </section>
@@ -930,9 +936,12 @@
   setPlayIcon('▶');
   function master(){ return mode === 'iframe' ? ytx : (mode === 'ymweb' ? ymx : ((mode === 'split' || mode === 'audio') ? aud : video)); }
 
-  function srcOf(v){ return v && v.src === 'ym' ? 'ym' : 'yt'; }
-  function srcName(v){ return v && v.src === 'tap' ? 'Тапёр' : (srcOf(v) === 'ym' ? 'Яндекс' : 'YouTube'); }
-  function srcColor(v){ return v && v.src === 'tap' ? '#9B87FF' : (srcOf(v) === 'ym' ? '#FFD43B' : '#FF5A52'); }
+  var SRC = { ym: { n: 'Яндекс', in: 'Яндексе', c: '#FFD43B' }, yt: { n: 'YouTube', in: 'YouTube', c: '#FF5A52' }, sc: { n: 'SoundCloud', in: 'SoundCloud', c: '#FF7A1A' }, bc: { n: 'Bandcamp', in: 'Bandcamp', c: '#41A8C6' }, au: { n: 'Audius', in: 'Audius', c: '#CC0FE0' } };
+  function srcOf(v){ return v && SRC[v.src] ? v.src : 'yt'; }
+  function srcName(v){ return v && v.src === 'tap' ? 'Тапёр' : SRC[srcOf(v)].n; }
+  function srcIn(v){ return SRC[srcOf(v)].in; }
+  function srcColor(v){ return v && v.src === 'tap' ? '#9B87FF' : SRC[srcOf(v)].c; }
+  function isUrlSrc(v){ var s = srcOf(v); return s === 'sc' || s === 'bc' || s === 'au'; }
   function srcDot(v){ return '<span class="dot" style="background:' + srcColor(v) + '"></span>'; }
   function ymKey(t){ return t.id + (t.albumId ? ':' + t.albumId : ''); }
   // «Исполнитель ● Источник» — исполнитель обычным шрифтом, источник моноширинным
@@ -1060,7 +1069,7 @@
 
   // ===== Доступность сервисов =====
   // YouTube в России часто открывается только через VPN, а кто-то им вообще не пользуется
-  var SVC = { ytOn: true, ytDownAt: 0, ymweb: true };
+  var SVC = { ytOn: true, ytDownAt: 0, ymweb: true, scOn: true, auOn: true };
   var YT_RETRY = 10 * 60 * 1000;
   function ytUsable(){ return SVC.ytOn && (!SVC.ytDownAt || Date.now() - SVC.ytDownAt > YT_RETRY); }
   function isNetErr(why){ return /не отвечает|ENOTFOUND|ECONN|ETIMEDOUT|EAI_AGAIN|getaddrinfo|network|fetch failed|timed out|socket hang up|unable to connect|Connection/i.test(String(why || '')); }
@@ -1080,6 +1089,7 @@
     var y = srcOf(v) === 'yt';
     if (r && !r.error) { if (y) markYtOk(); return r; }
     var why = (r && r.error) || 'нет ответа';
+    if (isUrlSrc(v)) return { alt: ymLoggedIn ? 'ym' : 'yt', why: srcName(v) + ': ' + why };
     if (y) {
       if (isNetErr(why)) markYtDown(why);
       if (SVC.ytOn && ytUsable()) { axLog('YouTube: наш способ не сработал (' + String(why).slice(0, 120) + ') — играю через плеер YouTube'); return { iframe: true }; }
@@ -1103,7 +1113,7 @@
       if (v.bg || v.fromList) setTimeout(function(){ if (queue[current] === v) advance(true); }, 1500);
       return;
     }
-    setSub('Не играет в ' + (srcOf(v) === 'ym' ? 'Яндексе' : 'YouTube') + ' — ищу в ' + (target === 'yt' ? 'YouTube' : 'Яндексе') + '…');
+    setSub('Не играет в ' + srcIn(v) + ' — ищу в ' + (target === 'yt' ? 'YouTube' : 'Яндексе') + '…');
     var res = await A.findAlt(slimForWeb(v), target).catch(function(){ return null; });
     if (queue[current] !== v) return;
     if (!res || res.error || !res.track) {
@@ -1227,7 +1237,7 @@
     }
     if (done) el._fadeDone = setTimeout(done, sec * 1000 + 60);
   }
-  function stopEl(el){ clearInterval(el._fadeT); clearTimeout(el._fadeDone); el.pause(); el.removeAttribute('src'); el.load(); setFade(el, 1); }
+  function stopEl(el){ clearInterval(el._fadeT); clearTimeout(el._fadeDone); dropHls(el); el.pause(); el.removeAttribute('src'); el.load(); setFade(el, 1); }
 
   // Плавный переход: текущий трек (только звук) затихает, следующий в это время набирает громкость
   var xf = { el: null, inSec: 0 };
@@ -1321,6 +1331,7 @@
         var v = queue[current];
         if (el === ytx && v && !previewT) { ytxStop(); failOver(v, 'ym', 'YouTube: ' + (YX.errText || 'не воспроизводится')); return; }
         if (el === ymx && v && !previewT) { ymxStop(); failOver(v, 'yt', 'Яндекс (сайт): ' + (YW.err || 'ошибка')); return; }
+        if (v && isUrlSrc(v) && !previewT) { failOver(v, ymLoggedIn ? 'ym' : 'yt', srcName(v) + ': поток не играет'); return; }
         setErr('⚠ ' + (el === ytx ? 'YouTube: ' + (YX.errText || 'не воспроизводится') : 'не удалось воспроизвести поток'));
         if (v && v.bg) setTimeout(function(){ advance(true); }, 1500);
       }
@@ -1336,7 +1347,33 @@
     var fc = $('f-cover');
     if (v.thumb) { fc.src = v.thumb; fc.style.display = ''; } else { fc.style.display = 'none'; }
   }
-  function fetchStream(v){ return srcOf(v) === 'ym' ? A.ymStream(v.id) : A.ytStream(v.id); }
+  function fetchStream(v){ var s = srcOf(v); return s === 'ym' ? A.ymStream(v.id) : (s === 'au' ? A.auStream(v.id) : (isUrlSrc(v) ? A.urlStream(v.id) : A.ytStream(v.id))); }
+  // HLS (SoundCloud): Chromium не умеет его сам — подключаем hls.js по требованию
+  var hlsLoading = null;
+  function loadHls(){
+    if (window.Hls) return Promise.resolve();
+    if (hlsLoading) return hlsLoading;
+    hlsLoading = new Promise(function (res, rej){ var sc = document.createElement('script'); sc.src = 'vendor/hls.min.js'; sc.onload = res; sc.onerror = function(){ hlsLoading = null; rej(new Error('hls.js не загрузился')); }; document.head.appendChild(sc); });
+    return hlsLoading;
+  }
+  function dropHls(el){ if (el && el._hls) { try { el._hls.destroy(); } catch (e) {} el._hls = null; } }
+  function setAudioSrc(el, r){
+    dropHls(el);
+    if (!r.hls) { el.src = r.audioUrl; el.play().catch(noop); return; }
+    loadHls().then(function(){
+      if (!window.Hls || !Hls.isSupported()) { el.src = r.audioUrl; el.play().catch(noop); return; }
+      var h = new Hls({ enableWorker: true, xhrSetup: function (x){ x.withCredentials = false; } });
+      el._hls = h;
+      h.on(Hls.Events.ERROR, function (ev, d){ if (d && d.fatal) { axLog('HLS: ' + d.type + ' ' + d.details); setTimeout(function(){ if (el._hls === h) dropHls(el); urlSrcFailed(el, 'поток не играет (' + d.details + ')'); }, 0); } });
+      h.loadSource(r.audioUrl); h.attachMedia(el);
+      h.on(Hls.Events.MANIFEST_PARSED, function(){ el.play().catch(noop); });
+    }).catch(function (e){ axLog(e.message); urlSrcFailed(el, e.message); });
+  }
+  function urlSrcFailed(el, why){
+    if (el !== master() || previewT) { if (previewT) setErr('⚠ ' + why); return; }
+    var v = queue[current]; if (!v) return;
+    failOver(v, ymLoggedIn ? 'ym' : 'yt', srcName(v) + ': ' + why);
+  }
   function startMedia(v, r){
     video.removeAttribute('poster');
     if (r.alt) { failOver(v, r.alt, r.why || 'не играет'); return; }
@@ -1364,8 +1401,7 @@
       mode = 'audio'; // только звук: в окне видео — обложка
       video.pause(); video.removeAttribute('src'); video.load();
       if (v.cover || v.thumb) video.setAttribute('poster', v.cover || v.thumb);
-      aud.src = r.audioUrl;
-      aud.play().catch(noop);
+      setAudioSrc(aud, r);
     } else if (r.audioUrl) {
       mode = 'split';
       video.muted = true; video.src = r.videoUrl;
@@ -1609,6 +1645,8 @@
   }
   function trackUrl(v){
     if (srcOf(v) === 'ym') return 'https://music.yandex.ru/' + (v.albumId ? 'album/' + v.albumId + '/' : '') + 'track/' + v.id;
+    if (srcOf(v) === 'au') return v.link || 'https://audius.co/';
+    if (isUrlSrc(v)) return v.id;
     return 'https://www.youtube.com/watch?v=' + v.id;
   }
   function copyText(t){
@@ -1655,7 +1693,7 @@
     items.push('-');
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
     items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
-    items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на YouTube', act: function(){ A.openExternal(trackUrl(v)); } });
+    items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на ' + srcName(v), act: function(){ A.openExternal(trackUrl(v)); } });
     if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch(); } });
     items.push('-');
     items.push({ label: 'Убрать из очереди', danger: true, act: function(){ removeAt(i); } });
@@ -1671,7 +1709,7 @@
     items.push('-');
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
     items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
-    items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на YouTube', act: function(){ A.openExternal(trackUrl(v)); } });
+    items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на ' + srcName(v), act: function(){ A.openExternal(trackUrl(v)); } });
     if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch(); } });
     showCtx(x, y, items);
     if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px';
@@ -2114,11 +2152,14 @@
       if (lr) { renderLinkResult(lr); return; }
     }
     var ymP = (A.ymSearch ? A.ymSearch(q) : Promise.resolve(null)).catch(function(){ return null; });
+    var scP = (SVC.scOn && A.scSearch) ? A.scSearch(q, 15).catch(function(){ return []; }) : Promise.resolve([]);
+    var auP = (SVC.auOn && A.auSearch) ? A.auSearch(q, 10).catch(function(){ return []; }) : Promise.resolve([]);
     var ytSkip = !ytUsable();
     var ytP = ytSkip ? Promise.resolve({ skipped: true }) : A.ytSearch(q).catch(function(e){ return { error: String(e) }; });
     var both = await Promise.all([ymP, ytP]);
     if (token !== searchToken) return; // уже ищем другое
     var ym = both[0] || {}, yt = both[1] || {};
+    var scTracks = [];
     if (yt.error && isNetErr(yt.error)) markYtDown(yt.error); else if (yt.videos && yt.videos.length) markYtOk();
     var ytNote = !SVC.ytOn ? 'YouTube выключен в настройках' : ((ytSkip || (yt.error && isNetErr(yt.error))) ? 'YouTube не отвечает — показываю только Яндекс' : '');
     var ymTracks = ym.tracks || [];
@@ -2128,7 +2169,11 @@
     var waves = ymLoggedIn ? computeWaves(q, ym.artists || []) : [];
     if (!ymTracks.length && !ytVideos.length && !pls.length) {
       results.innerHTML = '<div class="muted">' + (ytNote ? esc(ytNote) + '. В Яндексе ничего не нашлось.' : (yt.error ? 'Ошибка поиска: ' + esc(yt.error) : 'Ничего не нашлось.')) + '</div>';
-      $('hint').textContent = ''; return;
+      $('hint').textContent = '';
+      var cleared = false;
+      var late = function (p, src, name){ p.then(function (list){ if (token !== searchToken || !Array.isArray(list) || !list.length) return; if (!cleared) { results.innerHTML = ''; cleared = true; } addLateSection(list, src, name); }); };
+      late(scP, 'sc', 'SoundCloud'); late(auP, 'au', 'Audius');
+      return;
     }
     $('hint').textContent = ytNote || (ymTracks.length ? 'Сначала Яндекс Музыка, ниже YouTube' : 'Результаты YouTube');
     results.innerHTML = '';
@@ -2139,8 +2184,17 @@
     appendResults(ymTracks.concat(ytVideos));
     hasMoreYt = ytUsable() && !yt.error; hasMoreYm = ymTracks.length >= 10;
     maybeLoadMore();
+    // SoundCloud приходит позже (yt-dlp) — дописываем ниже, не задерживая основной поиск
+    appendLate(scP, 'sc', 'SoundCloud', token); appendLate(auP, 'au', 'Audius', token);
   }
 
+  // Источники, которые отвечают дольше (SoundCloud через yt-dlp, Audius) — дописываем ниже, не задерживая поиск
+  function addLateSection(list, src, name){
+    var lbl = document.createElement('div'); lbl.className = 'xlbl'; lbl.dataset.src = src; lbl.style.padding = '10px 8px 4px'; lbl.textContent = name;
+    results.appendChild(lbl);
+    list.forEach(function (v){ if (!shownIds.has(v.src + v.id)) { shownIds.add(v.src + v.id); results.appendChild(makeRow(v)); } });
+  }
+  function appendLate(p, src, name, token){ p.then(function (list){ if (token !== searchToken || !Array.isArray(list) || !list.length) return; addLateSection(list, src, name); }); }
   function renderLinkResult(lr){
     results.innerHTML = '';
     if (lr.error) { results.innerHTML = '<div class="muted">По ссылке: ' + esc(lr.error) + '</div>'; $('hint').textContent = ''; return; }
@@ -2258,7 +2312,7 @@
 
   // Подгрузка следующей порции, когда долистали почти до конца
   async function maybeLoadMore() {
-    if (loadingMore || !curQuery || results.hidden) return;
+    if (loadingMore || !curQuery || results.hidden || curFilter === 'sc' || curFilter === 'au') return;
     if (results.scrollTop + results.clientHeight < results.scrollHeight - 300) return;
     var useYm = curFilter === 'ym';
     if (useYm ? !hasMoreYm : (curFilter === 'yt' ? !hasMoreYt : !hasMoreYt)) return;
@@ -2312,8 +2366,7 @@
     curFilter = b.dataset.f;
     var all = this.querySelectorAll('.chip[data-f]');
     for (var k = 0; k < all.length; k++) all[k].classList.toggle('active', all[k] === b);
-    results.classList.toggle('f-ym', curFilter === 'ym');
-    results.classList.toggle('f-yt', curFilter === 'yt');
+    results.dataset.f = curFilter;
     maybeLoadMore();
   });
 
@@ -2340,6 +2393,7 @@
   function loadList(meta){
     if (meta.src === 'ym' && meta.type === 'liked') return A.ymLiked();
     if (meta.src === 'yt' && meta.type === 'liked') return A.ytLiked();
+    if (meta.src === 'sc' || meta.src === 'bc') return A.urlList(meta.listId);
     if (meta.src === 'ym' && meta.type === 'artist') return A.ymArtist(meta.artistId);
     if (meta.src === 'ym') return A.ymPlaylist({ uid: meta.uid, kind: meta.kind, uuid: meta.uuid, title: meta.title });
     return A.ytPlaylist(meta.listId, meta.title);
@@ -2684,6 +2738,8 @@
     A.getSetting('normalize').then(function (v){ AX.norm = v !== false; if (AX.norm && !anyMediaLoaded()) axInit(); });
     A.getSetting('ytEnabled').then(function (v){ SVC.ytOn = v !== false; renderSvc(); });
     A.getSetting('ymWebFallback').then(function (v){ SVC.ymweb = v !== false; });
+    A.getSetting('scEnabled').then(function (v){ SVC.scOn = v !== false; });
+    A.getSetting('auEnabled').then(function (v){ SVC.auOn = v !== false; });
   } else { axInit(); }
 
   // ===== Настройки =====
@@ -2700,6 +2756,8 @@
       if (key === 'normalize') setNormalize(on);
       if (key === 'ytEnabled') { SVC.ytOn = on; renderSvc(); }
       if (key === 'ymWebFallback') SVC.ymweb = on;
+      if (key === 'scEnabled') SVC.scOn = on;
+      if (key === 'auEnabled') SVC.auOn = on;
     };
   });
   var qSeg = $('setQuality');
@@ -2857,7 +2915,7 @@
 
   // ===== Состояние сервисов (самопроверка) =====
   var health = null, healthBusy = false, healthNote = '';
-  var SVC_NAMES = { yandex: 'Яндекс Музыка', youtube: 'YouTube' };
+  var SVC_NAMES = { yandex: 'Яндекс Музыка', youtube: 'YouTube', soundcloud: 'SoundCloud', audius: 'Audius' };
   var ST_TEXT = { ok: 'Работает', warn: 'Частично', fail: 'Не работает', skip: 'Не проверялось' };
   function agoText(t){
     var m = Math.round((Date.now() - t) / 60000);
@@ -2870,10 +2928,10 @@
     var h = '';
     if (!health) h += '<div class="srow"><div class="sl"><div class="sd">Проверки ещё не было. Тапёр проверяет сервисы сам раз в сутки, когда музыка не играет, — или нажми «Проверить сейчас».</div></div></div>';
     else {
-      ['yandex', 'youtube'].forEach(function (k){
+      ['yandex', 'youtube', 'soundcloud', 'audius'].forEach(function (k){
         var s = health.services && health.services[k]; if (!s) return;
         h += '<div class="hs-svc"><div class="hs-head"><b>' + SVC_NAMES[k] + '</b><span class="hs-pill ' + s.status + '">' + ST_TEXT[s.status] + '</span><span class="hs-title">' + esc(s.title || '') + '</span>' +
-          ((s.status === 'fail' || s.status === 'warn') ? '<button class="btn ghost" data-hs-browser="' + (k === 'yandex' ? 'ym' : 'yt') + '">Слушать на сайте</button>' : '') + '</div>';
+          ((s.status === 'fail' || s.status === 'warn') && (k === 'yandex' || k === 'youtube') ? '<button class="btn ghost" data-hs-browser="' + (k === 'yandex' ? 'ym' : 'yt') + '">Слушать на сайте</button>' : '') + '</div>';
         (s.steps || []).forEach(function (st){
           var ic = st.ok === true ? '<span class="hs-ic ok">✓</span>' : (st.ok === false ? '<span class="hs-ic bad">✕</span>' : '<span class="hs-ic">–</span>');
           h += '<div class="hs-step">' + ic + '<span class="hs-n">' + esc(st.name) + '</span><span class="hs-t">' + esc(st.text || '') + '</span></div>';
