@@ -72,6 +72,14 @@
   #f-sub { display: flex; align-items: center; gap: 7px; }
   .srcpill { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #C9CBD4; background: #1E2029; border-radius: 6px; padding: 4px 8px; }
   .time { flex: 0 0 48px; text-align: right; font-size: 13px; color: #9EA2B0; }
+  .row .more { flex: 0 0 auto; width: 28px; height: 28px; margin-left: -4px; border-radius: 8px; border: 0; background: transparent; color: #7C8090; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color .12s, background .12s; }
+  .row:hover .more, .row .more:focus-visible { color: #C9CBD4; }
+  .row .more:hover { background: rgba(255,255,255,.07); color: #ECEDF2; }
+  .kcap { min-width: 150px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid #2C2F3A; background: #1E2029; color: #ECEDF2; font: 500 13px 'JetBrains Mono', monospace; cursor: pointer; white-space: nowrap; }
+  .kcap:hover { border-color: #4A4E5E; }
+  .kcap.empty { color: #7C8090; font-family: Onest, sans-serif; }
+  .kcap.rec { border-color: #9B87FF; color: #C9BEFF; box-shadow: 0 0 0 3px rgba(155,135,255,.18); font-family: Onest, sans-serif; }
+  .kcap.bad { border-color: #FF5A52; color: #FFB4AE; }
   .add { flex: 0 0 auto; height: 28px; padding: 0 10px; border-radius: 8px; border: 0; background: rgba(155,135,255,.16); color: #C9BEFF; font: 600 12px Onest, sans-serif; display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; }
   .add:hover { background: rgba(155,135,255,.3); color: #E4DDFF; }
 
@@ -455,6 +463,7 @@
           <button data-go="sAcc">Аккаунты</button>
           <button data-go="sObs">OBS и стрим</button>
           <button data-go="sPlay">Воспроизведение</button>
+          <button data-go="sKeys">Горячие клавиши</button>
           <button data-go="sApp">Программа</button>
         </aside>
         <div class="set-main">
@@ -530,12 +539,35 @@
                 <div style="display:flex;align-items:center;gap:12px"><input id="setVol" type="range" min="0" max="100" style="width:180px;accent-color:#9B87FF"><span class="mono" id="setVolVal" style="font-size:13px;color:#C9CBD4;width:40px">80%</span></div>
               </div>
               <div class="srow">
+                <div class="sl"><div class="st">Ровная громкость</div><div class="sd" id="setNormNote">YouTube и Яндекс звучат одинаково громко, резкие пики приглушаются</div></div>
+                <button class="toggle" data-set-tg="normalize" aria-label="Ровная громкость"><span></span></button>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Плавный переход между треками</div><div class="sd">Конец трека затихает, а следующий в это время набирает громкость. Для треков без видео — Яндекса и «Только звук»</div></div>
+                <div class="seg" id="setXfade"><button data-v="0">Выкл</button><button data-v="3">3 с</button><button data-v="6">6 с</button><button data-v="10">10 с</button></div>
+              </div>
+              <div class="srow">
                 <div class="sl"><div class="st">Включать фон, когда очередь закончилась</div><div class="sd">«Моя волна» или выбранный плейлист — чтобы на стриме не было тишины</div></div>
                 <button class="toggle" id="setWaveAuto" aria-label="Включать фон после очереди"><span></span></button>
               </div>
               <div class="srow">
                 <div class="sl"><div class="st">Готовить следующий трек заранее</div><div class="sd">Переход между треками без паузы</div></div>
                 <button class="toggle" data-set-tg="prefetch" aria-label="Готовить следующий трек заранее"><span></span></button>
+              </div>
+            </div>
+          </section>
+
+          <section id="sKeys">
+            <div class="sec-h"><h2>Горячие клавиши</h2><span>Работают, даже когда в фокусе игра</span></div>
+            <div class="card">
+              <div class="srow">
+                <div class="sl"><div class="st">Медиаклавиши</div><div class="sd">Кнопки ⏯ ⏭ ⏮ на клавиатуре и наушниках управляют Тапёром</div></div>
+                <button class="toggle" data-set-tg="mediaKeys" aria-label="Медиаклавиши управляют Тапёром"><span></span></button>
+              </div>
+              <div id="hkList"></div>
+              <div class="srow">
+                <div class="sl"><div class="sd" id="hkNote">Нажми на сочетание, чтобы назначить новое. Esc — отмена, Backspace — без сочетания</div></div>
+                <button class="btn ghost" id="hkReset">Как было</button>
               </div>
             </div>
           </section>
@@ -629,7 +661,7 @@
       </div>
 
       <div class="nowcard">
-        <div class="video"><video id="player" playsinline></video><audio id="aud"></audio></div>
+        <div class="video"><video id="player" playsinline></video><audio id="aud"></audio><audio id="aud2"></audio></div>
         <div class="vmeta">
           <div class="nplabel" id="nplabel">Сейчас играет</div>
           <div class="t" id="card-title">Ничего не играет</div>
@@ -758,7 +790,7 @@
   var queue = [];
   var current = -1;
   var playingId = null;
-  var video = $('player'), aud = $('aud');
+  var video = $('player'), aud = $('aud'), aud2 = $('aud2'); // aud и aud2 меняются местами при плавном переходе
   var mode = 'single';            // 'single' | 'split' (звук в <audio>) | 'audio' (только звук, обложка)
   var loadingIdx = -1;            // какой трек сейчас грузится
   var prefOn = true;
@@ -780,6 +812,142 @@
       '<span class="dot sd" style="background:' + srcColor(v) + '"></span><span class="ss">' + esc(extra || srcName(v)) + '</span></div>';
   }
   function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
+  function allEls(){ return [video, aud, aud2]; }
+
+  // ===== Звук: ровная громкость и плавные переходы =====
+  // Граф: элемент → норм. громкость (подгонка трека) → затухание (кроссфейд) → общая громкость → ограничитель → колонки.
+  // Параллельно звук идёт в анализатор, чтобы измерить громкость треков без данных (YouTube).
+  var AX = { ctx: null, master: null, nodes: [], norm: true, xfade: 6, guess: dbLin(-5), broken: false };
+  var TARGET_LUFS = -14;
+  function dbLin(db){ return Math.pow(10, db / 20); }
+  function axNode(el){ for (var k = 0; k < AX.nodes.length; k++) if (AX.nodes[k].el === el) return AX.nodes[k]; return null; }
+  function axInit(){
+    if (AX.ctx || AX.broken) return !!AX.ctx;
+    try {
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return false;
+      var ctx = new C({ latencyHint: 'playback' });
+      var master = ctx.createGain();
+      var lim = ctx.createDynamicsCompressor(); // мягкий ограничитель: громкий трек не «перегрузит» стрим
+      lim.threshold.value = -3; lim.knee.value = 3; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.25;
+      master.connect(lim); lim.connect(ctx.destination);
+      AX.ctx = ctx; AX.master = master;
+      allEls().forEach(function (el){
+        el.crossOrigin = 'anonymous';
+        var src = ctx.createMediaElementSource(el);
+        var g = ctx.createGain(), f = ctx.createGain();
+        var hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 60;
+        var sh = ctx.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 1500; sh.gain.value = 4;
+        var an = ctx.createAnalyser(); an.fftSize = 2048;
+        src.connect(g); g.connect(f); f.connect(master);
+        src.connect(hp); hp.connect(sh); sh.connect(an);
+        AX.nodes.push({ el: el, g: g, f: f, an: an, buf: new Float32Array(2048), norm: 1, sum: 0, n: 0, known: true, zero: 0 });
+      });
+      applyVol();
+      setInterval(axMeasure, 100);
+      return true;
+    } catch (e) { console.warn('звук:', e); AX.ctx = null; return false; }
+  }
+  function axLog(msg){ if (A.log) A.log(msg); }
+  function applyVol(){
+    var v = curVol();
+    if (AX.ctx) { AX.master.gain.setTargetAtTime(v, AX.ctx.currentTime, 0.03); allEls().forEach(function (el){ el.volume = 1; }); }
+    else allEls().forEach(function (el){ el.volume = Math.max(0, Math.min(1, v * (el._fade == null ? 1 : el._fade))); });
+  }
+  function axApply(n, tc){
+    var val = AX.norm ? n.norm : 1;
+    n.g.gain.setTargetAtTime(val, AX.ctx.currentTime, tc || 0.05);
+  }
+  // Новый трек на элементе: громкость из данных Яндекса или старт с догадки и подстройка по ходу
+  function axTrackStart(el, v){
+    var n = axNode(el); if (!n) return;
+    n.sum = 0; n.n = 0; n.zero = 0;
+    if (v && typeof v.lufs === 'number') { n.known = true; n.norm = Math.max(dbLin(-15), Math.min(dbLin(8), dbLin(TARGET_LUFS - v.lufs))); }
+    else { n.known = false; n.norm = AX.guess; }
+    axApply(n, 0.01);
+  }
+  function axMeasure(){
+    if (!AX.ctx) return;
+    AX.nodes.forEach(function (n){
+      var el = n.el;
+      if (el.paused || el.muted || !el.getAttribute('src') || el.readyState < 3) return;
+      n.an.getFloatTimeDomainData(n.buf);
+      var ms = 0, peak = 0, b = n.buf;
+      for (var k = 0; k < b.length; k++) { var x = b[k]; ms += x * x; if (x > peak) peak = x; else if (-x > peak) peak = -x; }
+      ms /= b.length;
+      // защита: если звук «не виден» (сайт не разрешил), граф молчит — выключаем ровную громкость
+      if (peak === 0 && el.currentTime > 1) { n.zero += 0.1; if (n.zero > 8) axBroken(); return; }
+      n.zero = 0;
+      var lk = 10 * Math.log10(ms + 1e-12) - 0.691;
+      if (lk < -50) return; // тишину и паузы между песнями не считаем
+      n.sum += ms; n.n++;
+      if (n.known || n.n < 10) return;
+      var est = 10 * Math.log10(n.sum / n.n) - 0.691;
+      n.norm = Math.max(dbLin(-15), Math.min(dbLin(8), dbLin(TARGET_LUFS - est)));
+      if (n.n % 10 === 0) AX.guess = n.norm;
+      axApply(n, n.n < 60 ? 0.6 : 2.5); // первые секунды — быстро, потом плавно
+    });
+  }
+  function axBroken(){
+    if (AX.broken) return;
+    AX.broken = true;
+    axLog('ровная громкость: звук не проходит через анализ — выключаю и перезапускаю окно');
+    if (A.setSetting) A.setSetting('normalize', false).then(function(){ saveToday(); setTimeout(function(){ location.reload(); }, 300); });
+  }
+
+  // Затухание элемента: через граф или (без графа) через громкость элемента
+  function setFade(el, val){
+    var n = axNode(el);
+    if (n) { n.f.gain.cancelScheduledValues(AX.ctx.currentTime); n.f.gain.setValueAtTime(val, AX.ctx.currentTime); }
+    clearInterval(el._fadeT); el._fade = val; if (!n) applyVol();
+  }
+  function fadeEl(el, from, to, sec, done){
+    var n = axNode(el);
+    clearInterval(el._fadeT); clearTimeout(el._fadeDone);
+    if (n) {
+      var t = AX.ctx.currentTime;
+      n.f.gain.cancelScheduledValues(t); n.f.gain.setValueAtTime(from, t);
+      // кривая «равной мощности»: в середине перехода не проваливается громкость
+      var steps = 24, curve = new Float32Array(steps + 1);
+      for (var k = 0; k <= steps; k++) { var p = k / steps; curve[k] = from + (to - from) * (to > from ? Math.sin(p * Math.PI / 2) : 1 - Math.cos(p * Math.PI / 2)); }
+      try { n.f.gain.setValueCurveAtTime(curve, t, Math.max(0.05, sec)); } catch (e) { n.f.gain.linearRampToValueAtTime(to, t + sec); }
+      el._fade = to;
+    } else {
+      var t0 = Date.now();
+      el._fade = from; applyVol();
+      el._fadeT = setInterval(function(){
+        var p = Math.min(1, (Date.now() - t0) / (sec * 1000));
+        el._fade = from + (to - from) * p; applyVol();
+        if (p >= 1) clearInterval(el._fadeT);
+      }, 50);
+    }
+    if (done) el._fadeDone = setTimeout(done, sec * 1000 + 60);
+  }
+  function stopEl(el){ clearInterval(el._fadeT); clearTimeout(el._fadeDone); el.pause(); el.removeAttribute('src'); el.load(); setFade(el, 1); }
+
+  // Плавный переход: текущий трек (только звук) затихает, следующий в это время набирает громкость
+  var xf = { el: null, inSec: 0 };
+  function hasNextTrack(){ return current + 1 < queue.length || bgOn || waveCfg.on || bgPending; }
+  function killXfade(){ if (xf.el) { var e = xf.el; xf.el = null; stopEl(e); } }
+  function maybeCrossfade(el){
+    if (!AX.xfade || xf.el || previewT || mode !== 'audio' || el !== aud || dragging) return;
+    var d = el.duration, c = el.currentTime;
+    if (!isFinite(d) || d < 30 || el.paused) return;
+    var len = AX.xfade, at = d - len, v = queue[current];
+    if (v && typeof v.fadeOut === 'number' && d - v.fadeOut >= 1 && d - v.fadeOut <= 15) { at = v.fadeOut; len = Math.min(12, d - v.fadeOut); }
+    if (c < at || c > d - 0.5 || !hasNextTrack()) return;
+    startCrossfade(len);
+  }
+  function startCrossfade(len){
+    var oldEl = aud;
+    var v = queue[current];
+    if (v && v.bg && bgSel.kind === 'wave' && srcOf(v) === 'ym') A.ymWaveFeedback('trackFinished', ymKey(v), oldEl.duration || 0);
+    xf.el = oldEl;
+    aud = (oldEl === aud2) ? $('aud') : aud2; // новый трек — во второй элемент, старый доигрывает
+    stopEl(aud);
+    xf.inSec = len;
+    fadeEl(oldEl, oldEl._fade == null ? 1 : oldEl._fade, 0, len, function(){ if (xf.el === oldEl) { xf.el = null; stopEl(oldEl); } });
+    advance(true);
+  }
 
   // Название трека: заголовок окна, файл для OBS, подсказка в трее
   var APP_TITLE = 'Тапёр';
@@ -814,15 +982,17 @@
     }, 350);
   }
 
-  [video, aud].forEach(function (el) {
+  allEls().forEach(function (el) {
     el.addEventListener('ended', function(){ if (el === master()) onTrackEnded(); });
     el.addEventListener('play', function(){
+      if (AX.ctx && AX.ctx.state === 'suspended') AX.ctx.resume().catch(noop);
       if (el !== master()) return;
       setPlayIcon('⏸'); busy(true);
       if (mode === 'split') video.play().catch(noop);
     });
     el.addEventListener('pause', function(){
       if (el !== master()) return;
+      if (!el.ended) killXfade(); // пауза посреди перехода — старый трек тоже молчит
       setPlayIcon('▶'); busy(false);
       if (mode === 'split') video.pause();
     });
@@ -832,6 +1002,7 @@
       $('tcur').textContent = fmt(c);
       $('tdur').textContent = fmt(d);
       if (!dragging && d > 0) setBar(c / d);
+      maybeCrossfade(el);
       if (mode === 'split') {
         // плавная подгонка видео под звук: перемотка только при сильном расхождении
         var drift = (video.currentTime || 0) - c;
@@ -859,25 +1030,30 @@
   }
   function fetchStream(v){ return srcOf(v) === 'ym' ? A.ymStream(v.id) : A.ytStream(v.id); }
   function startMedia(v, r){
-    var vol = curVol();
     video.removeAttribute('poster');
     if (r.audioUrl && !r.videoUrl) {
       mode = 'audio'; // только звук: в окне видео — обложка
       video.pause(); video.removeAttribute('src'); video.load();
       if (v.cover || v.thumb) video.setAttribute('poster', v.cover || v.thumb);
-      aud.src = r.audioUrl; aud.volume = vol;
+      aud.src = r.audioUrl;
       aud.play().catch(noop);
     } else if (r.audioUrl) {
       mode = 'split';
       video.muted = true; video.src = r.videoUrl;
-      aud.src = r.audioUrl; aud.volume = vol;
+      aud.src = r.audioUrl;
       aud.play().catch(noop);
     } else {
       mode = 'single';
       aud.pause(); aud.removeAttribute('src'); aud.load();
-      video.muted = false; video.src = r.url; video.volume = vol;
+      video.muted = false; video.src = r.url;
       video.play().catch(noop);
     }
+    var m = master();
+    axTrackStart(m, v);
+    if (xf.inSec && xf.el && !previewT) { fadeEl(m, 0, 1, xf.inSec); } // вход плавного перехода
+    else { if (xf.el) killXfade(); setFade(m, 1); }
+    xf.inSec = 0;
+    applyVol();
   }
   function isIdle(){ var m = master(); return loadingIdx < 0 && (!m.getAttribute('src') || m.ended); }
   function orderActive(){ return current >= 0 && queue[current] && !queue[current].bg && !isIdle(); }
@@ -932,6 +1108,14 @@
     if (isIdle() && !(queue[current] && queue[current].bg && !isIdle())) playIndex(firstPending(first));
     else prefetchNext();
   }
+  // «Играть следующим»: сразу после текущего трека (фон доигрывает свой трек, потом этот)
+  function addNext(v){
+    var at = Math.max(0, current + 1);
+    queue.splice(at, 0, copyTrack(v));
+    renderQueue(); saveToday();
+    if (isIdle() && !(queue[current] && queue[current].bg && !isIdle())) playIndex(at);
+    else { setSub('«' + v.title + '» — следующим'); prefetchNext(); }
+  }
   function firstPending(from){ for (var k = Math.max(0, current + 1); k < queue.length; k++) if (!queue[k].played) return k; return from; }
   function playNow(v){
     var at = current + 1;
@@ -970,7 +1154,7 @@
   function onTrackEnded(){
     if (previewT) { // прослушивание кончилось — тишина, очередь не трогаем; «Играть» продолжит очередь
       previewT = null;
-      [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
+      allEls().forEach(stopEl); xf.el = null;
       video.removeAttribute('poster'); mode = 'single';
       updPreviewBtns(); setNowPlaying(null); busy(false); setSub('Прослушивание закончилось');
       return;
@@ -980,7 +1164,8 @@
     advance(true);
   }
   function stopVideo(){
-    [video, aud].forEach(function (el) { el.pause(); el.removeAttribute('src'); el.load(); });
+    xf.el = null; xf.inSec = 0;
+    allEls().forEach(stopEl);
     video.removeAttribute('poster');
     mode = 'single'; loadingIdx = -1; previewT = null;
     bgOn = false; bgPending = false;
@@ -1029,8 +1214,7 @@
       var pend = i > current && !v.played;
       r.className = 'qrow' + (isCur ? ' playing' : '') + (v.played && !isCur ? ' done' : '') + (pend ? ' pend' : '');
       r.dataset.i = i;
-      if (pend) { r.draggable = true; r.title = 'Перетащи, чтобы поменять порядок. Правая кнопка — меню'; }
-      else r.title = 'Правая кнопка — меню';
+      if (pend) { r.draggable = true; r.title = 'Перетащи, чтобы поменять порядок'; }
       r.innerHTML =
         '<div class="qcov" title="' + (isCur ? 'Играет' : 'Играть') + '">' + (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
           '<span class="qov">' +
@@ -1049,6 +1233,16 @@
         nb.onclick = function(){ moveItem(i, current + 1); };
         r.appendChild(nb);
       }
+      var mb = document.createElement('button'); mb.className = 'x qmore'; mb.title = 'Ещё'; mb.setAttribute('aria-label', 'Ещё действия'); mb.setAttribute('aria-haspopup', 'menu');
+      mb.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg>';
+      mb.onmousedown = function(e){ e.stopPropagation(); mb._skip = !!ctxEl; if (ctxEl) closeCtx(); };
+      mb.onclick = function(e){
+        e.stopPropagation(); if (mb._skip) { mb._skip = false; return; }
+        var rc = mb.getBoundingClientRect();
+        openQueueMenu({ preventDefault: noop, clientX: rc.right, clientY: rc.bottom + 4 }, i);
+        if (ctxEl) ctxEl.style.left = Math.max(8, rc.right - ctxEl.offsetWidth) + 'px';
+      };
+      r.appendChild(mb);
       r.appendChild(x);
       r.querySelector('.qt').onclick = function(){ playQueueItem(i); };
       r.querySelector('.qcov').onclick = function(){ if (i !== current) playQueueItem(i); };
@@ -1136,6 +1330,21 @@
     items.push('-');
     items.push({ label: 'Убрать из очереди', danger: true, act: function(){ removeAt(i); } });
     showCtx(e.clientX, e.clientY, items);
+  }
+
+  // Меню песни в поиске и списках: «⋯» или правая кнопка
+  function openTrackMenu(x, y, v, alignRight){
+    var items = [];
+    items.push({ label: 'Играть сейчас', act: function(){ playNow(v); } });
+    items.push({ label: 'Играть следующим', act: function(){ addNext(v); } });
+    items.push({ label: 'В конец очереди', act: function(){ addToQueue(v); } });
+    items.push('-');
+    if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
+    items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
+    items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на YouTube', act: function(){ A.openExternal(trackUrl(v)); } });
+    if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch(); } });
+    showCtx(x, y, items);
+    if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px';
   }
 
   // Перетаскивание несыгранных песен
@@ -1235,7 +1444,7 @@
   document.addEventListener('mouseup', function(e){ if (dragging) { dragging = false; doSeek(e.clientX); } });
 
   var volEl = $('vol');
-  volEl.addEventListener('input', function(){ var v = curVol(); aud.volume = v; video.volume = v; });
+  volEl.addEventListener('input', applyVol);
 
   // Перетаскиваемая граница между поиском и панелью «видео + очередь»
   var qcol = document.querySelector('.queue-col'), splitter = $('splitter'), splitDrag = false;
@@ -1748,6 +1957,12 @@
     add.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
     add.onclick = function(e){ e.stopPropagation(); addToQueue(v); };
     row.appendChild(add);
+    var more = document.createElement('button'); more.className = 'more'; more.title = 'Ещё'; more.setAttribute('aria-label', 'Ещё действия'); more.setAttribute('aria-haspopup', 'menu');
+    more.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"></circle><circle cx="12" cy="12" r="1.9"></circle><circle cx="19" cy="12" r="1.9"></circle></svg>';
+    more.onclick = function(e){ e.stopPropagation(); if (more._skip) { more._skip = false; return; } var r = more.getBoundingClientRect(); openTrackMenu(r.right - 4, r.bottom + 4, v, true); };
+    more.onmousedown = function(e){ e.stopPropagation(); if (ctxEl) { closeCtx(); more._skip = true; } };
+    row.appendChild(more);
+    row.oncontextmenu = function(e){ e.preventDefault(); openTrackMenu(e.clientX, e.clientY, v); };
     row.onclick = function(){ playNow(v); };
     return row;
   }
@@ -2082,7 +2297,7 @@
     setSub((t.author || '') + ' · прослушивание из «Плейлиста из текста»');
     updPreviewBtns();
   }
-  [video, aud].forEach(function (el){ el.addEventListener('play', updPreviewBtns); el.addEventListener('pause', updPreviewBtns); });
+  allEls().forEach(function (el){ el.addEventListener('play', updPreviewBtns); el.addEventListener('pause', updPreviewBtns); });
 
   async function saveImport(){
     var inc = impIncluded(); if (!inc.length) return;
@@ -2104,6 +2319,21 @@
     setTimeout(function(){ var n = $('myPl').querySelector('.plnote'); if (n) { n.textContent = '✓ ' + msg; n.style.color = '#4ADE9A'; } }, 50);
   }
 
+  // Ровная громкость и переход — читаем до первого трека (граф звука нужно собрать до загрузки потока)
+  function anyMediaLoaded(){ return allEls().some(function (el){ return !!el.getAttribute('src'); }); }
+  function setNormalize(on){
+    AX.norm = on;
+    if (on && !AX.ctx) {
+      if (!anyMediaLoaded()) axInit();
+      else $('setNormNote').textContent = 'Включится после перезапуска программы';
+    }
+    AX.nodes.forEach(function (n){ axApply(n, 0.3); });
+  }
+  if (A.getSetting) {
+    A.getSetting('crossfade').then(function (v){ AX.xfade = v == null ? 6 : (parseInt(v, 10) || 0); showXfade(AX.xfade); });
+    A.getSetting('normalize').then(function (v){ AX.norm = v !== false; if (AX.norm && !anyMediaLoaded()) axInit(); });
+  } else { axInit(); }
+
   // ===== Настройки =====
   function setTg(el, on){ el.classList.toggle('on', !!on); el.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   var tgs = document.querySelectorAll('[data-set-tg]');
@@ -2115,6 +2345,7 @@
       setTg(el, on);
       if (A.setSetting) A.setSetting(key, on);
       if (key === 'prefetch') prefOn = on;
+      if (key === 'normalize') setNormalize(on);
     };
   });
   var qSeg = $('setQuality');
@@ -2129,10 +2360,86 @@
   if (A.getSetting) A.getSetting('startVolume').then(function (v){
     v = v == null ? 80 : v;
     setVol.value = v; $('setVolVal').textContent = v + '%';
-    volEl.value = v; aud.volume = video.volume = v / 100;
+    volEl.value = v; applyVol();
   });
   setVol.addEventListener('input', function(){ $('setVolVal').textContent = setVol.value + '%'; });
   setVol.addEventListener('change', function(){ if (A.setSetting) A.setSetting('startVolume', parseInt(setVol.value, 10)); });
+  // Плавный переход
+  var xSeg = $('setXfade');
+  function showXfade(v){ var bs = xSeg.querySelectorAll('button'); for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', bs[k].dataset.v === String(v)); }
+  xSeg.onclick = function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    AX.xfade = parseInt(b.dataset.v, 10) || 0; showXfade(AX.xfade);
+    if (A.setSetting) A.setSetting('crossfade', AX.xfade);
+  };
+
+  // ===== Горячие клавиши =====
+  var HK_NAMES = { playPause: 'Пауза / играть', next: 'Следующий трек', prev: 'Предыдущий трек', like: 'Лайк в Яндексе', shake: 'Встряхнуть волну', volUp: 'Громче', volDown: 'Тише' };
+  var HK_DEF = { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' };
+  var hk = Object.assign({}, HK_DEF), hkFailed = [], hkRec = null;
+  function hkShow(acc){ return acc ? acc.replace(/\+/g, ' + ').replace(/\bLeft\b/, '←').replace(/\bRight\b/, '→').replace(/\bUp\b/, '↑').replace(/\bDown\b/, '↓') : 'не задано'; }
+  function renderHk(){
+    var box = $('hkList'); box.innerHTML = '';
+    Object.keys(HK_NAMES).forEach(function (a){
+      var row = document.createElement('div'); row.className = 'srow';
+      var bad = hk[a] && hkFailed.indexOf(hk[a]) >= 0;
+      row.innerHTML = '<div class="sl"><div class="st">' + HK_NAMES[a] + '</div>' + (bad ? '<div class="sd" style="color:#FFB4AE">Это сочетание занято другой программой — выбери другое</div>' : '') + '</div>';
+      var b = document.createElement('button');
+      b.className = 'kcap' + (hkRec === a ? ' rec' : (!hk[a] ? ' empty' : '')) + (bad ? ' bad' : '');
+      b.textContent = hkRec === a ? 'Нажми сочетание…' : hkShow(hk[a]);
+      b.onclick = function(){ hkStart(a); };
+      row.appendChild(b); box.appendChild(row);
+    });
+  }
+  async function hkSave(){
+    var r = A.setSetting ? await A.setSetting('hotkeys', hk) : null;
+    hkFailed = (r && r.failed) || [];
+    renderHk();
+  }
+  function hkStart(a){
+    hkRec = a; renderHk();
+    if (A.hotkeysPause) A.hotkeysPause(true); // старые сочетания не срабатывают, пока назначаем
+  }
+  function hkStop(){ hkRec = null; if (A.hotkeysPause) A.hotkeysPause(false).then(function (r){ hkFailed = (r && r.failed) || []; renderHk(); }); renderHk(); }
+  function accFrom(e){
+    var c = e.code || '', k = '';
+    if (/^Key[A-Z]$/.test(c)) k = c.slice(3);
+    else if (/^Digit\d$/.test(c)) k = c.slice(5);
+    else if (/^F\d{1,2}$/.test(c)) k = c;
+    else if (/^Numpad\d$/.test(c)) k = 'num' + c.slice(6);
+    else k = ({ ArrowLeft: 'Left', ArrowRight: 'Right', ArrowUp: 'Up', ArrowDown: 'Down', Space: 'Space', Enter: 'Enter', Tab: 'Tab', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown', Insert: 'Insert', Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']', Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/', Backslash: '\\', Backquote: '`', NumpadAdd: 'numadd', NumpadSubtract: 'numsub', NumpadMultiply: 'nummult', NumpadDivide: 'numdiv' })[c] || '';
+    if (!k) return null;
+    var mods = [];
+    if (e.ctrlKey) mods.push('Ctrl'); if (e.altKey) mods.push('Alt'); if (e.shiftKey) mods.push('Shift'); if (e.metaKey) mods.push('Super');
+    if (!mods.length && !/^F\d/.test(k)) return ''; // одна буква без Ctrl/Alt мешала бы печатать
+    return mods.concat([k]).join('+');
+  }
+  document.addEventListener('keydown', function (e){
+    if (!hkRec) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.key === 'Escape') { hkStop(); return; }
+    if (e.key === 'Backspace' || e.key === 'Delete') { hk[hkRec] = ''; hkRec = null; hkSave().then(function(){ hkStop(); }); return; }
+    var acc = accFrom(e);
+    if (acc === null) return; // нажат только Ctrl/Alt/Shift — ждём клавишу
+    if (acc === '') { $('hkNote').textContent = 'Добавь Ctrl, Alt или Shift — одна клавиша мешала бы печатать'; return; }
+    Object.keys(hk).forEach(function (a){ if (a !== hkRec && hk[a] === acc) hk[a] = ''; }); // одно сочетание — одно действие
+    hk[hkRec] = acc; hkRec = null;
+    $('hkNote').textContent = 'Нажми на сочетание, чтобы назначить новое. Esc — отмена, Backspace — без сочетания';
+    hkSave().then(function(){ hkStop(); });
+  }, true);
+  $('hkReset').onclick = function(){ hk = Object.assign({}, HK_DEF); hkSave(); };
+  if (A.getSetting) A.getSetting('hotkeys').then(function (v){ hk = Object.assign({}, HK_DEF, v || {}); renderHk(); if (A.hotkeysStatus) A.hotkeysStatus().then(function (r){ hkFailed = (r && r.failed) || []; renderHk(); }); });
+  else renderHk();
+  function stepVol(d){ volEl.value = Math.max(0, Math.min(100, (parseInt(volEl.value, 10) || 0) + d)); applyVol(); }
+  if (A.onHotkey) A.onHotkey(function (a){
+    if (a === 'playPause') $('playpause').click();
+    else if (a === 'next') next();
+    else if (a === 'prev') prev();
+    else if (a === 'like') { if (curTrack && srcOf(curTrack) === 'ym' && ymLoggedIn) toggleLike(curTrack); }
+    else if (a === 'shake') $('waveShake').onclick();
+    else if (a === 'volUp') stepVol(5);
+    else if (a === 'volDown') stepVol(-5);
+  });
   // Файл для OBS
   var fmtIn = $('setNpFmt'), idleIn = $('setNpIdle'), fmtTimer = null, idleTimer = null;
   function fmtNp(f, i){

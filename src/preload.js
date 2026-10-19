@@ -44,6 +44,10 @@ contextBridge.exposeInMainWorld('app', {
   logCopy: () => ipcRenderer.invoke('log-copy'),
   logOpen: () => ipcRenderer.invoke('log-open'),
   playerBusy: (busy) => ipcRenderer.send('player-busy', busy),
+  log: (msg) => ipcRenderer.send('log', msg),
+  onHotkey: (cb) => ipcRenderer.on('hotkey', (e, action) => cb(action)),
+  hotkeysPause: (paused) => ipcRenderer.invoke('hotkeys-pause', paused),
+  hotkeysStatus: () => ipcRenderer.invoke('hotkeys-status'),
   getSetting: (key) => ipcRenderer.invoke('get-setting', key),
   setSetting: (key, value) => ipcRenderer.invoke('set-setting', key, value)
 });

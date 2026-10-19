@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard, globalShortcut, session } = require('electron');
 const ym = require('./yandex');
 const match = require('./match');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
@@ -35,7 +35,10 @@ function readSettingsFile() { try { return JSON.parse(fs.readFileSync(settingsFi
 const DEFAULTS = {
   npEnabled: true, nowPlayingFormat: '{artist} — {title}', npIdle: '',
   videoQuality: '720', startVolume: 80, prefetch: true,
-  autoUpdate: true, autoStart: false, closeToTray: true
+  autoUpdate: true, autoStart: false, closeToTray: true,
+  normalize: true, crossfade: 6,
+  mediaKeys: true,
+  hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
 function cfg(key) { const s = readSettingsFile(); return s[key] !== undefined ? s[key] : DEFAULTS[key]; }
 function npFilePath() {
@@ -238,6 +241,45 @@ function streamViaYtDlp(videoUrl) {
       }
     });
   });
+}
+
+
+// --- Глобальные горячие клавиши: работают, даже когда в фокусе игра ---
+const HOTKEY_ACTIONS = ['playPause', 'next', 'prev', 'like', 'shake', 'volUp', 'volDown'];
+function sendHotkey(action) {
+  try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('hotkey', action); } catch (e) {}
+}
+function applyHotkeys() {
+  const failed = [];
+  try { globalShortcut.unregisterAll(); } catch (e) {}
+  const reg = (acc, action) => {
+    if (!acc) return;
+    let ok = false;
+    try { ok = globalShortcut.register(acc, () => sendHotkey(action)); } catch (e) { ok = false; }
+    if (!ok) { failed.push(acc); log('горячие клавиши: занято или неверно — ' + acc); }
+  };
+  if (cfg('mediaKeys')) {
+    reg('MediaPlayPause', 'playPause');
+    reg('MediaNextTrack', 'next');
+    reg('MediaPreviousTrack', 'prev');
+  }
+  const hk = Object.assign({}, DEFAULTS.hotkeys, cfg('hotkeys') || {});
+  HOTKEY_ACTIONS.forEach((a) => reg(hk[a], a));
+  return { failed };
+}
+
+// Ровная громкость: окну нужно «видеть» звук, а потоки Яндекса и YouTube приходят с чужих сайтов.
+// Разрешаем окну программы анализировать звук (добавляем заголовок CORS к медиа-ответам).
+function allowMediaAnalysis() {
+  try {
+    session.defaultSession.webRequest.onHeadersReceived({ urls: ['https://*/*'] }, (d, cb) => {
+      if (d.resourceType !== 'media') { cb({}); return; }
+      const h = Object.assign({}, d.responseHeaders);
+      const has = Object.keys(h).some((k) => k.toLowerCase() === 'access-control-allow-origin');
+      if (!has) h['Access-Control-Allow-Origin'] = ['*'];
+      cb({ responseHeaders: h });
+    });
+  } catch (e) { log('ровная громкость: не удалось разрешить анализ звука ' + e.message); }
 }
 
 let mainWindow = null;
@@ -509,6 +551,7 @@ app.whenReady().then(async () => {
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
     if (key === 'autoStart') applyAutoStart();
+    if (key === 'mediaKeys' || key === 'hotkeys') return applyHotkeys();
     if (key === 'npEnabled' || key === 'nowPlayingFormat' || key === 'npIdle' || key === 'nowPlayingPath') writeNowPlaying(lastNpInfo, true);
     return true;
   });
@@ -804,13 +847,21 @@ app.whenReady().then(async () => {
     autoUpdater.downloadUpdate().catch((e) => sendUpdateState({ state: 'error', message: String(e && e.message || e).slice(0, 300) }));
     return true;
   });
+  ipcMain.on('log', (e, msg) => log('окно: ' + String(msg).slice(0, 500)));
   ipcMain.on('player-busy', (e, busy) => { playerBusy = !!busy; });
+  ipcMain.handle('hotkeys-pause', (e, paused) => { // пока назначаем новое сочетание — старые не мешают
+    if (paused) { try { globalShortcut.unregisterAll(); } catch (err) {} return { failed: [] }; }
+    return applyHotkeys();
+  });
+  ipcMain.handle('hotkeys-status', () => applyHotkeys());
 
   ipcMain.handle('get-log', () => { try { return fs.readFileSync(logPath(), 'utf8').slice(-6000); } catch (e) { return 'лог пуст'; } });
   log('=== приложение запущено, версия ' + app.getVersion() + ' ===');
 
+  allowMediaAnalysis();
   createWindow();
   createTray();
+  applyHotkeys();
 
   // Проверяем обновления при запуске (тихо)
   initUpdater();
@@ -822,6 +873,7 @@ app.whenReady().then(async () => {
 });
 
 // Не выходим при закрытии всех окон — живём в трее
+app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (e) {} });
 app.on('window-all-closed', (e) => {
   // на Windows держим процесс ради трея
 });

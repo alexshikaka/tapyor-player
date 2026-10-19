@@ -56,7 +56,10 @@ function mapTrack(t) {
     thumb: cover(cu, '200x200'),
     cover: cover(cu, '600x600'),
     album: album.title || '',
-    available: t.available !== false
+    available: t.available !== false,
+    // громкость трека (EBU R128) и точки затухания — для ровной громкости и плавных переходов
+    lufs: t.r128 && typeof t.r128.i === 'number' ? t.r128.i : undefined,
+    fadeOut: t.fade && typeof t.fade.outStart === 'number' ? t.fade.outStart : undefined
   };
 }
 
