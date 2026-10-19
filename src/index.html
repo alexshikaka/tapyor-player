@@ -101,6 +101,8 @@
 
   .nowcard { flex: 0 0 auto; border-radius: 12px; background: transparent; border: 0; overflow: hidden; }
   .video { position: relative; aspect-ratio: 16 / 9; background: transparent; border-radius: 12px; overflow: hidden; }
+  #ytFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  #ytFrame iframe { width: 100%; height: 100%; border: 0; display: block; }
   #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; object-fit: contain; }
   .vmeta { padding: 12px 4px 2px; display: flex; flex-direction: column; gap: 4px; }
   .nplabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9B87FF; }
@@ -661,7 +663,7 @@
       </div>
 
       <div class="nowcard">
-        <div class="video"><video id="player" playsinline></video><audio id="aud"></audio><audio id="aud2"></audio></div>
+        <div class="video"><video id="player" playsinline></video><audio id="aud"></audio><audio id="aud2"></audio><div id="ytFrame" hidden></div></div>
         <div class="vmeta">
           <div class="nplabel" id="nplabel">Сейчас играет</div>
           <div class="t" id="card-title">Ничего не играет</div>
@@ -799,7 +801,7 @@
   var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
   function setPlayIcon(sym){ $('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; }
   setPlayIcon('▶');
-  function master(){ return (mode === 'split' || mode === 'audio') ? aud : video; }
+  function master(){ return mode === 'iframe' ? ytx : ((mode === 'split' || mode === 'audio') ? aud : video); }
 
   function srcOf(v){ return v && v.src === 'ym' ? 'ym' : 'yt'; }
   function srcName(v){ return v && v.src === 'tap' ? 'Тапёр' : (srcOf(v) === 'ym' ? 'Яндекс' : 'YouTube'); }
@@ -813,6 +815,85 @@
   }
   function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
   function allEls(){ return [video, aud, aud2]; }
+
+  // ===== Запасной YouTube: официальный встроенный плеер =====
+  // Если наша библиотека не смогла достать поток, ролик играет через плеер YouTube.
+  // Снаружи он выглядит как обычный <video>: те же свойства и события, чтобы очередь работала как всегда.
+  var ytx = new EventTarget();
+  var YX = { player: null, ready: null, vid: '', st: -1, timer: null, fade: 1 };
+  Object.defineProperties(ytx, {
+    paused: { get: function(){ return YX.st !== 1 && YX.st !== 3; } },
+    ended: { get: function(){ return YX.st === 0; } },
+    muted: { get: function(){ return false; } },
+    readyState: { get: function(){ return YX.vid ? 4 : 0; } },
+    duration: { get: function(){ try { return YX.player ? (YX.player.getDuration() || 0) : 0; } catch (e) { return 0; } } },
+    currentTime: {
+      get: function(){ try { return YX.player ? (YX.player.getCurrentTime() || 0) : 0; } catch (e) { return 0; } },
+      set: function(t){ try { if (YX.player) YX.player.seekTo(t, true); } catch (e) {} }
+    },
+    id: { value: 'ytx' }
+  });
+  ytx.getAttribute = function(n){ return n === 'src' ? (YX.vid || null) : null; };
+  ytx.play = function(){ try { YX.player && YX.player.playVideo(); } catch (e) {} return Promise.resolve(); };
+  ytx.pause = function(){ try { YX.player && YX.player.pauseVideo(); } catch (e) {} };
+  function ytxEmit(type){ ytx.dispatchEvent(new Event(type)); }
+  function ytApiLoad(){
+    if (YX.ready) return YX.ready;
+    YX.ready = new Promise(function (resolve, reject){
+      if (window.YT && window.YT.Player) { resolve(); return; }
+      var prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function(){ if (prev) try { prev(); } catch (e) {} resolve(); };
+      var sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api';
+      sc.onerror = function(){ YX.ready = null; reject(new Error('плеер YouTube не загрузился')); };
+      document.head.appendChild(sc);
+      setTimeout(function(){ if (!(window.YT && window.YT.Player)) { YX.ready = null; reject(new Error('плеер YouTube не ответил')); } }, 15000);
+    });
+    return YX.ready;
+  }
+  function ytxVolume(){ try { if (YX.player && YX.player.setVolume) YX.player.setVolume(Math.round(curVol() * YX.fade * 100)); } catch (e) {} }
+  function ytxTick(){
+    clearInterval(YX.timer);
+    YX.timer = setInterval(function(){ if (YX.st === 1) ytxEmit('timeupdate'); }, 250);
+  }
+  var YT_ERR = { 2: 'неверный адрес ролика', 5: 'ролик не воспроизводится во встроенном плеере', 100: 'ролик удалён или скрыт', 101: 'автор запретил показ вне YouTube', 150: 'автор запретил показ вне YouTube', 153: 'YouTube не принял запрос плеера' };
+  async function ytxLoad(id){
+    await ytApiLoad();
+    YX.vid = id; YX.st = -1;
+    $('ytFrame').hidden = false; video.style.visibility = 'hidden';
+    if (!YX.player) {
+      var holder = document.createElement('div'); $('ytFrame').innerHTML = ''; $('ytFrame').appendChild(holder);
+      await new Promise(function (resolve){
+        YX.player = new YT.Player(holder, {
+          videoId: id, width: '100%', height: '100%',
+          playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, rel: 0, playsinline: 1, iv_load_policy: 3, origin: location.origin },
+          events: {
+            onReady: function(){ ytxVolume(); resolve(); },
+            onStateChange: function(e){
+              var was = YX.st; YX.st = e.data;
+              if (e.data === 1) { ytxTick(); if (was !== 1) ytxEmit('play'); }
+              else if (e.data === 2) ytxEmit('pause');
+              else if (e.data === 0) { ytxEmit('timeupdate'); ytxEmit('ended'); }
+            },
+            onError: function(e){ YX.errText = YT_ERR[e.data] || ('ошибка плеера ' + e.data); axLog('YouTube (встроенный плеер): ' + YX.errText + ' — ' + YX.vid); ytxEmit('error'); }
+          }
+        });
+      });
+    } else {
+      YX.player.loadVideoById(id);
+    }
+    ytxVolume();
+  }
+  function ytxStop(){
+    clearInterval(YX.timer);
+    if (YX.player) { try { YX.player.stopVideo(); } catch (e) {} }
+    YX.vid = ''; YX.st = -1;
+    $('ytFrame').hidden = true; video.style.visibility = '';
+  }
+  // Поток не получен нашим способом — для YouTube переходим на официальный плеер
+  function withYtFallback(v, r){
+    if (srcOf(v) === 'yt' && (!r || r.error)) { axLog('YouTube: наш способ не сработал (' + ((r && r.error) || 'нет ответа').slice(0, 120) + ') — играю через плеер YouTube'); return { iframe: true }; }
+    return r;
+  }
 
   // ===== Звук: ровная громкость и плавные переходы =====
   // Граф: элемент → норм. громкость (подгонка трека) → затухание (кроссфейд) → общая громкость → ограничитель → колонки.
@@ -852,6 +933,7 @@
     var v = curVol();
     if (AX.ctx) { AX.master.gain.setTargetAtTime(v, AX.ctx.currentTime, 0.03); allEls().forEach(function (el){ el.volume = 1; }); }
     else allEls().forEach(function (el){ el.volume = Math.max(0, Math.min(1, v * (el._fade == null ? 1 : el._fade))); });
+    ytxVolume();
   }
   function axApply(n, tc){
     var val = AX.norm ? n.norm : 1;
@@ -982,7 +1064,7 @@
     }, 350);
   }
 
-  allEls().forEach(function (el) {
+  allEls().concat([ytx]).forEach(function (el) {
     el.addEventListener('ended', function(){ if (el === master()) onTrackEnded(); });
     el.addEventListener('play', function(){
       if (AX.ctx && AX.ctx.state === 'suspended') AX.ctx.resume().catch(noop);
@@ -1013,7 +1095,7 @@
     });
     el.addEventListener('error', function(){
       if (el === master() && el.getAttribute('src')) {
-        setErr('⚠ не удалось воспроизвести поток');
+        setErr('⚠ ' + (el === ytx ? 'YouTube: ' + (YX.errText || 'не воспроизводится') : 'не удалось воспроизвести поток'));
         if (queue[current] && queue[current].bg) setTimeout(function(){ advance(true); }, 1500);
       }
     });
@@ -1031,6 +1113,15 @@
   function fetchStream(v){ return srcOf(v) === 'ym' ? A.ymStream(v.id) : A.ytStream(v.id); }
   function startMedia(v, r){
     video.removeAttribute('poster');
+    if (r.iframe) {
+      if (xf.el) killXfade();
+      [video, aud, aud2].forEach(function (el){ el.pause(); el.removeAttribute('src'); el.load(); });
+      mode = 'iframe';
+      YX.fade = 1;
+      ytxLoad(v.id).catch(function (e){ setErr('⚠ ' + e.message); axLog('YouTube (встроенный плеер): ' + e.message); if (v.bg) setTimeout(function(){ advance(true); }, 1500); });
+      return;
+    }
+    if (mode === 'iframe' || YX.vid) ytxStop();
     if (r.audioUrl && !r.videoUrl) {
       mode = 'audio'; // только звук: в окне видео — обложка
       video.pause(); video.removeAttribute('src'); video.load();
@@ -1076,7 +1167,7 @@
     setNowPlaying(v); showTrack(v);
     renderQueue(true); renderWaveUi(); saveToday();
     setSub('Загружаю…');
-    var r = await fetchStream(v);
+    var r = withYtFallback(v, await fetchStream(v));
     if (i !== current) return; // переключили, пока грузилось
     loadingIdx = -1;
     if (!r || r.error) {
@@ -1154,7 +1245,7 @@
   function onTrackEnded(){
     if (previewT) { // прослушивание кончилось — тишина, очередь не трогаем; «Играть» продолжит очередь
       previewT = null;
-      allEls().forEach(stopEl); xf.el = null;
+      allEls().forEach(stopEl); ytxStop(); xf.el = null;
       video.removeAttribute('poster'); mode = 'single';
       updPreviewBtns(); setNowPlaying(null); busy(false); setSub('Прослушивание закончилось');
       return;
@@ -1165,7 +1256,7 @@
   }
   function stopVideo(){
     xf.el = null; xf.inSec = 0;
-    allEls().forEach(stopEl);
+    allEls().forEach(stopEl); ytxStop();
     video.removeAttribute('poster');
     mode = 'single'; loadingIdx = -1; previewT = null;
     bgOn = false; bgPending = false;
@@ -2290,14 +2381,14 @@
     if (pvActive(t)) { master().pause(); updPreviewBtns(); return; }
     previewT = t;
     showTrack(t); setNowPlaying(t); setSub('Прослушивание…');
-    var r = await fetchStream(t);
+    var r = withYtFallback(t, await fetchStream(t));
     if (previewT !== t) return;
     if (!r || r.error) { setErr('⚠ ' + ((r && r.error) || 'поток не получен')); previewT = null; return; }
     startMedia(t, r);
     setSub((t.author || '') + ' · прослушивание из «Плейлиста из текста»');
     updPreviewBtns();
   }
-  allEls().forEach(function (el){ el.addEventListener('play', updPreviewBtns); el.addEventListener('pause', updPreviewBtns); });
+  allEls().concat([ytx]).forEach(function (el){ el.addEventListener('play', updPreviewBtns); el.addEventListener('pause', updPreviewBtns); });
 
   async function saveImport(){
     var inc = impIncluded(); if (!inc.length) return;
