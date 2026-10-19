@@ -1583,7 +1583,7 @@
     var ytVideos = (yt.videos || []).map(function (v){ v.src = 'yt'; return v; });
     var pls = (ym.playlists || []).slice(0, 5).concat((yt.playlists || []).slice(0, 4));
     var artist = matchArtist(q, ym.artists || []);
-    var waves = ymLoggedIn ? computeWaves(q, artist ? [] : (ym.artists || [])) : [];
+    var waves = ymLoggedIn ? computeWaves(q, ym.artists || []) : [];
     if (!ymTracks.length && !ytVideos.length && !pls.length) {
       results.innerHTML = '<div class="muted">' + (yt.error ? 'Ошибка поиска: ' + esc(yt.error) : 'Ничего не нашлось.') + '</div>';
       $('hint').textContent = ''; return;
