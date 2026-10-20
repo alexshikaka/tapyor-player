@@ -366,7 +366,13 @@
   .seek-fill { position: absolute; left: 0; top: 0; height: 8px; border-radius: 4px; background: var(--ac); width: 0%; }
   .seek-knob { position: absolute; top: 50%; left: 0%; width: 16px; height: 16px; border-radius: 8px; background: #fff; transform: translate(-50%, -50%); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
   .f-right { flex: 1 1 200px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; color: var(--tx3); }
-  .f-right input { width: 110px; accent-color: var(--ac); cursor: pointer; }
+  /* Громкость — рядом с кнопками управления; колёсико мыши меняет плавно */
+  .controls { position: relative; }
+  .volc { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; margin-left: 18px; color: var(--tx3); }
+  .volc input { width: 110px; accent-color: var(--ac); cursor: pointer; }
+  .volc .vbtn { width: 34px; height: 34px; }
+  .volc .vbtn.muted { color: var(--tx5); }
+  .volv { width: 26px; font-size: 11px; color: var(--tx4); text-align: right; }
 
   /* Аккаунт Яндекса */
   .acct { flex: 0 0 auto; height: 24px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--ln); background: var(--bg2); color: var(--tx); font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
@@ -1070,9 +1076,11 @@
           <button class="toggle on" id="waveToggle" title="Автоматически включать фон, когда очередь пуста" aria-pressed="true"><span></span></button>
         </div>
         <div class="wsettings" id="waveSettings" hidden>
-          <button class="wshake" id="waveShake"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12c2-4 4 4 6 0s4 4 6 0 3-2 4-2"></path><path d="m17 5 3 3-3 3"></path></svg>Встряхнуть (со следующего трека)</button>
+          <button class="wshake" id="waveShake"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12c2-4 4 4 6 0s4 4 6 0 3-2 4-2"></path><path d="m17 5 3 3-3 3"></path></svg><span id="waveShakeT">Встряхнуть (со следующего трека)</span></button>
           <div class="wsub">Варианты от Яндекса</div>
           <div class="wvlist" id="waveVariants"></div>
+          <div class="wsub">Плейлисты фоном — вперемешку</div>
+          <div class="wvlist" id="wavePls"></div>
           <div class="wrow" id="waveDiv">
             <span class="wlabel">Характер</span>
             <button class="wchip active" data-v="default">Любое</button>
@@ -1147,6 +1155,11 @@
         <button class="cbtn side" id="prev" title="Назад (больше 3 секунд — в начало трека)" aria-label="Предыдущий"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6v12l-9-6z"></path></svg></button>
         <button class="cbtn play" id="playpause" title="Пауза / играть" aria-label="Пауза / играть"></button>
         <button class="cbtn side" id="next" title="Следующий" aria-label="Следующий"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6v12l9-6z"></path></svg></button>
+        <div class="volc" id="volBox" title="Громкость — можно крутить колёсиком мыши">
+          <button class="cbtn side vbtn" id="muteBtn" aria-label="Выключить звук" title="Выключить / включить звук"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 010 7"></path></svg></button>
+          <input id="vol" type="range" min="0" max="100" step="any" value="80" aria-label="Громкость">
+          <span class="volv mono" id="volVal">80</span>
+        </div>
       </div>
       <div class="progress">
         <span class="tm mono" id="tcur">0:00</span>
@@ -1154,10 +1167,7 @@
         <span class="tm mono r" id="tdur">0:00</span>
       </div>
     </div>
-    <div class="f-right">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 010 7"></path></svg>
-      <input id="vol" type="range" min="0" max="100" value="80" aria-label="Громкость">
-    </div>
+    <div class="f-right"></div>
   </footer>
 <script src="rank.js"></script>
 <script src="theme.js"></script>
@@ -1276,7 +1286,7 @@
     if (!name) return;
     openArtistPage(name);
   }
-  function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
+  function curVol(){ var n = parseFloat($('vol').value); return (isNaN(n) ? 80 : n) / 100; }
   function allEls(){ return [video, aud, aud2]; }
 
   // ===== Запасной YouTube: официальный встроенный плеер =====
@@ -2106,7 +2116,30 @@
   document.addEventListener('mouseup', function(e){ if (dragging) { dragging = false; doSeek(e.clientX); } });
 
   var volEl = $('vol');
-  volEl.addEventListener('input', applyVol);
+  function showVolVal(){ var n = Math.round(parseFloat(volEl.value) || 0); $('volVal').textContent = n; var mb = $('muteBtn'); mb.classList.toggle('muted', n === 0); mb.setAttribute('aria-label', n === 0 ? 'Включить звук' : 'Выключить звук'); }
+  volEl.addEventListener('input', function(){ volAnim.target = null; applyVol(); showVolVal(); });
+  // Колёсико мыши над громкостью: очень плавно — один щелчок колёсика = 2%, значение «доезжает» за ~0,3 с
+  var volAnim = { target: null, raf: 0 };
+  function volStep(){
+    var cur = parseFloat(volEl.value) || 0, t = volAnim.target;
+    if (t == null) { volAnim.raf = 0; return; }
+    var nv = Math.abs(t - cur) < 0.05 ? t : cur + (t - cur) * 0.18;
+    volEl.value = nv; applyVol(); showVolVal();
+    if (nv === t) { volAnim.target = null; volAnim.raf = 0; return; }
+    volAnim.raf = requestAnimationFrame(volStep);
+  }
+  function volTo(t){ volAnim.target = Math.max(0, Math.min(100, t)); if (!volAnim.raf) volAnim.raf = requestAnimationFrame(volStep); }
+  $('volBox').addEventListener('wheel', function(e){
+    e.preventDefault();
+    var px = e.deltaMode === 1 ? e.deltaY * 33 : (e.deltaMode === 2 ? e.deltaY * 300 : e.deltaY); // строки/страницы → пиксели
+    var d = -px / 100 * 2; // 100 px (один щелчок обычной мыши) = 2%
+    d = Math.max(-4, Math.min(4, d));
+    var base = volAnim.target != null ? volAnim.target : (parseFloat(volEl.value) || 0);
+    volTo(base + d);
+  }, { passive: false });
+  var volBeforeMute = 80;
+  $('muteBtn').onclick = function(){ var n = parseFloat(volEl.value) || 0; if (n > 0) { volBeforeMute = n; volTo(0); } else volTo(volBeforeMute || 50); };
+  showVolVal();
 
   // Перетаскиваемая граница между поиском и панелью «видео + очередь»
   var qcol = document.querySelector('.queue-col'), splitter = $('splitter'), splitDrag = false;
@@ -2184,7 +2217,9 @@
   function listOrder(){ var t = (bgSel.list && bgSel.list.tracks) || []; return bgSel.shuffle ? shuffled(t) : t.slice(); }
 
   // Выбрать фон. now=true — включить сразу, если не играет заказ (иначе — после заказов)
+  var lastWave = MY_WAVE; // какая волна была до плейлиста — к ней вернёмся, если трогают настройки волны
   function setBg(b, now){
+    if (b.kind === 'wave') lastWave = b;
     var changed = bgId(b) !== bgId(bgSel) || (b.kind === 'list' && b.shuffle !== bgSel.shuffle);
     bgSel = b;
     if (changed) { waveBuf = []; bgToken++; bgNeedStart = true; }
@@ -2264,6 +2299,7 @@
     g.classList.toggle('open', open);
     g.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open && ymLoggedIn && !variants.loaded) loadVariants();
+    if (open) renderWavePls();
   }
   // Нажатие на строку волны (кроме кнопок ▶ и переключателя) раскрывает/сворачивает настройки
   document.querySelector('#wavecard .whead').addEventListener('click', function(e){
@@ -2295,13 +2331,15 @@
     else sub.textContent = (waveCfg.on ? 'После заказов · ' : 'Авто выкл. · ') + cfgText;
     sub.title = sub.textContent;
     $('wavePlay').textContent = onAir ? '■ Стоп' : '▶ ' + (bgSel.kind === 'list' ? 'Фон' : 'Волна');
+    var sk = $('waveShakeT'); if (sk) sk.textContent = bgSel.kind === 'list' ? 'Перемешать плейлист заново (со следующего трека)' : 'Встряхнуть волну (со следующего трека)';
+    if (!$('waveSettings').hidden) renderWavePls();
     $('nplabel').textContent = (queue[current] && queue[current].bg) ? bgLabel() : 'Сейчас играет';
     var gb = document.querySelectorAll('#waveGenres .wchip[data-st]');
     for (var k = 0; k < gb.length; k++) gb[k].classList.toggle('on-bg', bgSel.kind === 'wave' && !bgSel.seeds && bgSel.station === gb[k].dataset.st);
   }
   if (A.getSetting) {
     A.getSetting('wave').then(function (c){ if (c) waveCfg = Object.assign(waveCfg, c); renderWaveUi(); });
-    A.getSetting('bgWave').then(function (b){ if (b && (b.station || b.seeds)) { bgSel = { kind: 'wave', station: b.station || 'user:onyourwave', seeds: b.seeds || undefined, name: b.name || 'Волна' }; renderWaveUi(); } });
+    A.getSetting('bgWave').then(function (b){ if (b && (b.station || b.seeds)) { bgSel = lastWave = { kind: 'wave', station: b.station || 'user:onyourwave', seeds: b.seeds || undefined, name: b.name || 'Волна' }; renderWaveUi(); } });
   }
   function toggleAuto(){ waveCfg.on = !waveCfg.on; saveWaveCfg(); renderWaveUi(); }
   $('waveToggle').onclick = toggleAuto;
@@ -2309,8 +2347,11 @@
   function bindWaveChips(id, key){
     $(id).addEventListener('click', function(e){
       var b = e.target.closest('.wchip'); if (!b) return;
-      waveCfg[key] = b.dataset.v; saveWaveCfg(); renderWaveUi();
-      if (bgSel.kind === 'wave' && bgOn) refreshWave(); // следующий трек — уже по новым настройкам
+      waveCfg[key] = b.dataset.v; saveWaveCfg();
+      // фоном шёл плейлист — настройки волны значат «хочу волну»: переключаемся на неё
+      if (bgSel.kind === 'list') { var air = !!(queue[current] && queue[current].bg); setBg(lastWave, air); return; }
+      renderWaveUi();
+      if (bgOn) refreshWave(); // следующий трек — уже по новым настройкам
     });
   }
   bindWaveChips('waveDiv', 'diversity'); bindWaveChips('waveMood', 'mood'); bindWaveChips('waveLang', 'language');
@@ -2331,6 +2372,40 @@
     setSub('Встряхнул — новое пойдёт со следующего трека');
     prefetchNext();
   };
+
+  // Плейлисты фоном (вперемешку): свои, с компьютера, Яндекс, YouTube
+  function wavePlsList(){
+    var out = [];
+    if (typeof LIB !== 'undefined' && LIB.count) out.push({ m: LIBALL, n: 'Вся музыка с компьютера', c: '#4ADE9A' });
+    localLists().forEach(function (m){ out.push({ m: m, n: m.title, c: '#9B87FF' }); });
+    if (ymLoggedIn) { out.push({ m: LIKED, n: 'Мне нравится', c: '#FF3D6E' }); (myPls || []).filter(function (p){ return p.own; }).forEach(function (p){ out.push({ m: p, n: p.title, c: '#FFD43B' }); }); }
+    if (typeof ytLogged === 'function' && ytLogged()) { out.push({ m: YT_LIKED, n: 'Понравившиеся на YouTube', c: '#FF5A52' }); (ytPls || []).forEach(function (p){ out.push({ m: p, n: p.title, c: '#FF5A52' }); }); }
+    savedLists.filter(function (x){ return x.src !== 'tap'; }).forEach(function (p){ out.push({ m: p, n: p.title, c: srcColor(p) }); });
+    return out.slice(0, 40);
+  }
+  function renderWavePls(){
+    var box = $('wavePls'); if (!box) return;
+    var list = wavePlsList(), cur = bgSel.kind === 'list' ? listId(bgSel.list) : '';
+    box.innerHTML = '';
+    if (!list.length) { box.innerHTML = '<span class="s" style="font-size:12px;color:var(--tx4)">Пока нет плейлистов — создай во вкладке «Плейлисты»</span>'; return; }
+    if (!myLoaded && (ymLoggedIn || (typeof ytLogged === 'function' && ytLogged()))) loadMy(false).then(function(){ if (!$('waveSettings').hidden) renderWavePls(); }).catch(noop);
+    list.forEach(function (x){
+      var b = document.createElement('button'); b.className = 'wv' + (listId(x.m) === cur ? ' on' : '');
+      b.innerHTML = '<i style="background:' + x.c + '"></i>' + esc(x.n);
+      b.title = 'Играть фоном вперемешку';
+      b.onclick = async function(){
+        var m = x.m, L;
+        b.disabled = true;
+        if (m.src === 'lc') { var all = await libTracks(); L = { src: 'tap', type: 'tap', listId: 'lib-play', title: 'Вся музыка с компьютера', tracks: all }; }
+        else if (m.src === 'tap') L = m;
+        else { var r = await loadList(m).catch(function(){ return null; }); if (!r || r.error) { b.disabled = false; setErr('⚠ не удалось загрузить «' + m.title + '»'); return; } L = Object.assign({}, m, r, { title: m.title }); }
+        b.disabled = false;
+        if (!L.tracks || !L.tracks.length) { setErr('⚠ «' + m.title + '» пустой'); return; }
+        setBg({ kind: 'list', list: L, shuffle: true }, true);
+      };
+      box.appendChild(b);
+    });
+  }
 
   // Варианты от Яндекса и волны по жанрам
   async function loadVariants(){
@@ -4421,7 +4496,7 @@
   if (A.getSetting) A.getSetting('startVolume').then(function (v){
     v = v == null ? 80 : v;
     setVol.value = v; $('setVolVal').textContent = v + '%';
-    volEl.value = v; applyVol();
+    volEl.value = v; applyVol(); showVolVal();
   });
   setVol.addEventListener('input', function(){ $('setVolVal').textContent = setVol.value + '%'; });
   setVol.addEventListener('change', function(){ if (A.setSetting) A.setSetting('startVolume', parseInt(setVol.value, 10)); });
@@ -4797,7 +4872,7 @@
   $('hkReset').onclick = function(){ hk = Object.assign({}, HK_DEF); hkSave(); };
   if (A.getSetting) A.getSetting('hotkeys').then(function (v){ hk = Object.assign({}, HK_DEF, v || {}); renderHk(); if (A.hotkeysStatus) A.hotkeysStatus().then(function (r){ hkFailed = (r && r.failed) || []; renderHk(); }); });
   else renderHk();
-  function stepVol(d){ volEl.value = Math.max(0, Math.min(100, (parseInt(volEl.value, 10) || 0) + d)); applyVol(); }
+  function stepVol(d){ volTo((volAnim.target != null ? volAnim.target : (parseFloat(volEl.value) || 0)) + d); }
   if (A.onHotkey) A.onHotkey(function (a){
     if (a === 'playPause') $('playpause').click();
     else if (a === 'next') next();
