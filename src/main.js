@@ -7,6 +7,9 @@ const ymweb = require('./ymweb');
 const ytauth = require('./ytauth');
 const ytoauth = require('./ytoauth');
 const recipes = require('./recipes');
+const library = require('./library');
+const importers = require('./importers');
+const crypto = require('crypto');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
@@ -45,6 +48,7 @@ const DEFAULTS = {
   theme: 'violet', reportsEnabled: true,
   normalize: true, crossfade: 6,
   ytEnabled: true, ymWebFallback: true, ytUseCookies: false, scEnabled: true, auEnabled: true,
+  preferLocal: true, libInSearch: true,
   mediaKeys: true,
   hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
@@ -412,6 +416,38 @@ let tray = null;
 const startHidden = process.argv.includes('--hidden'); // запуск вместе с Windows — сразу в трей
 let appUrl = null;
 
+// Музыка с компьютера через тот же сервер: перемотка (Range), обложки. Чужие сайты из вкладки «Браузер»
+// не получат файлы: нужна метка из cookie окна Тапёра (SameSite=Strict) и id файла из списка.
+const LOCAL_KEY = crypto.randomBytes(18).toString('hex');
+const MIME = { mp3: 'audio/mpeg', m4a: 'audio/mp4', m4b: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav', webm: 'audio/webm', weba: 'audio/webm' };
+function cookieKey(req) { const m = /(?:^|;\s*)tapk=([0-9a-f]+)/.exec(req.headers.cookie || ''); return m ? m[1] : ''; }
+async function serveLocal(req, res, p) {
+  const bad = (code) => { res.writeHead(code); res.end(); };
+  if (cookieKey(req) !== LOCAL_KEY) return bad(403);
+  const id = p.split('/')[2] || '';
+  if (p.startsWith('/lcover/')) {
+    const c = await library.cover(id).catch(() => null);
+    if (!c) return bad(404);
+    res.writeHead(200, { 'Content-Type': c.mime, 'Cache-Control': 'max-age=3600' }); res.end(c.data); return;
+  }
+  const file = library.pathOf(id);
+  if (!file) return bad(404);
+  let st; try { st = fs.statSync(file); } catch (e) { return bad(404); }
+  const type = MIME[path.extname(file).slice(1).toLowerCase()] || 'application/octet-stream';
+  const m = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
+  if (m) {
+    let a = m[1] ? +m[1] : 0, b = m[2] ? +m[2] : st.size - 1;
+    if (!m[1] && m[2]) { a = Math.max(0, st.size - +m[2]); b = st.size - 1; }
+    if (a >= st.size || b < a) { res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); res.end(); return; }
+    b = Math.min(b, st.size - 1);
+    res.writeHead(206, { 'Content-Type': type, 'Content-Range': 'bytes ' + a + '-' + b + '/' + st.size, 'Content-Length': b - a + 1, 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(file, { start: a, end: b }).on('error', () => res.destroy()).pipe(res);
+  } else {
+    res.writeHead(200, { 'Content-Type': type, 'Content-Length': st.size, 'Accept-Ranges': 'bytes' });
+    fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);
+  }
+}
+
 // Крошечный локальный веб-сервер — отдаёт страницу приложения по http,
 // чтобы встроенный плеер YouTube работал (из file:// он не запускается).
 function startServer() {
@@ -420,11 +456,15 @@ function startServer() {
   const server = http.createServer((req, res) => {
     let p = decodeURIComponent((req.url || '/').split('?')[0]);
     if (p === '/') p = '/index.html';
+    // Свои файлы с компьютера: только из списка Тапёра и только для окна Тапёра (метка в cookie)
+    if (p.startsWith('/lfile/') || p.startsWith('/lcover/')) { serveLocal(req, res, p); return; }
     const file = path.normalize(path.join(root, p));
     if (!file.startsWith(root)) { res.writeHead(403); res.end('forbidden'); return; }
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404); res.end('not found'); return; }
-      res.writeHead(200, { 'Content-Type': types[path.extname(file).toLowerCase()] || 'application/octet-stream' });
+      const hd = { 'Content-Type': types[path.extname(file).toLowerCase()] || 'application/octet-stream' };
+      if (p === '/index.html') hd['Set-Cookie'] = 'tapk=' + LOCAL_KEY + '; Path=/; HttpOnly; SameSite=Strict';
+      res.writeHead(200, hd);
       res.end(data);
     });
   });
@@ -867,22 +907,242 @@ app.whenReady().then(async () => {
     try { await ym.setLike(tok, await ymUidGet(), trackKey, !!on); log('Яндекс: ' + (on ? 'лайк ' : 'снят лайк ') + trackKey); return { ok: true }; }
     catch (err) { log('Яндекс: лайк — ' + err.message); return { error: err.message }; }
   });
-  // Плейлист из текста: найти одну строку (Яндекс, если не точно — ещё YouTube)
-  ipcMain.handle('match-line', async (e, line) => {
+  // Поиск одной песни по строке «Исполнитель — Название» (Плейлист из текста, импорт, перенос).
+  // opts: { seconds — длительность-подсказка, only: 'ym'|'yt' — искать только там, noLocal }
+  const MEM_MAX = 3000;
+  const memKey = (line, only) => (only ? only + ':' : '') + match.norm(match.clean(line).query || line);
+  function memGet(line, only) { const m = settingsStore.get('matchMemory') || {}; return m[memKey(line, only)] || null; }
+  function memSet(line, only, track) {
+    const m = settingsStore.get('matchMemory') || {};
+    const k = memKey(line, only); if (!k) return;
+    delete m[k]; m[k] = track;
+    const keys = Object.keys(m); if (keys.length > MEM_MAX) keys.slice(0, keys.length - MEM_MAX).forEach((x) => delete m[x]);
+    settingsStore.set('matchMemory', m);
+  }
+  async function matchOne(line, opts) {
+    opts = opts || {};
     const q = match.clean(line);
     if (!q.query) return { status: 'skip' };
+    const only = opts.only || '';
+    const remembered = memGet(line, only);
+    if (remembered && remembered.src && remembered.id && (!only || remembered.src === only)) return { query: q.query, status: 'exact', track: remembered, alts: [], remembered: true };
+    // Свои файлы: если песня есть на компьютере — она и играет
+    let local = null;
+    if (!only && !opts.noLocal && cfg('preferLocal') !== false) { try { local = match.exactLocal(q, library.search(q.query, 6)); } catch (e) {} }
+    if (local) return { query: q.query, status: 'exact', track: local, alts: [], local: true };
     let ymList = [], ytList = [];
-    try { ymList = (await ym.searchTracksPage(q.query, 0, getYmToken())).slice(0, 6); } catch (err) { log('из текста: Яндекс — ' + err.message); }
-    let r = match.decide(q, ymList, []);
-    if (r.status !== 'exact' && cfg('ytEnabled') !== false) {
+    const getYt = async () => {
       try {
         const y = await ytsT(q.query, 8000);
-        ytList = (y.videos || []).slice(0, 5).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail }));
-      } catch (err) { log('из текста: YouTube — ' + err.message); }
-      r = match.decide(q, ymList, ytList);
+        return (y.videos || []).slice(0, 6).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail }));
+      } catch (err) { log('поиск песни: YouTube — ' + err.message); return []; }
+    };
+    if (only !== 'yt') { try { ymList = (await ym.searchTracksPage(q.query, 0, getYmToken())).slice(0, 6); } catch (err) { log('поиск песни: Яндекс — ' + err.message); } }
+    let r;
+    if (only === 'ym') r = match.decideOnly(q, ymList, 'ym');
+    else if (only === 'yt') { ytList = await getYt(); r = match.decideOnly(q, ytList, 'yt'); }
+    else {
+      r = match.decide(q, ymList, []);
+      if (r.status !== 'exact' && cfg('ytEnabled') !== false) { ytList = await getYt(); r = match.decide(q, ymList, ytList); }
     }
+    r = match.preferDuration(r, opts.seconds || 0);
     return Object.assign({ query: q.query }, r);
+  }
+  ipcMain.handle('match-line', (e, line, opts) => matchOne(line, opts));
+  ipcMain.handle('match-remember', (e, line, only, track) => { if (track && track.id) memSet(line, only || '', track); return true; });
+
+  // --- Музыка с компьютера ---
+  library.setup({ log, dataDir: app.getPath('userData') });
+  const libSend = (ch, d) => { try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(ch, d); } catch (e) {} };
+  const libScan = () => library.scan((pr) => libSend('lib-progress', pr)).then((r) => { libSend('lib-changed', library.status()); return r; });
+  setTimeout(() => { if (library.status().folders.length || library.status().extras) libScan().catch((e) => log('музыка с компьютера: ' + e.message)); }, 4000);
+  ipcMain.handle('lib-status', () => library.status());
+  ipcMain.handle('lib-all', () => library.all());
+  ipcMain.handle('lib-search', (e, q, n) => (cfg('libInSearch') === false ? [] : library.search(q, n || 30)));
+  ipcMain.handle('lib-stream', (e, id) => (library.pathOf(id) ? { audioUrl: '/lfile/' + id } : { error: 'файл не найден на компьютере (переместили или удалили?)' }));
+  ipcMain.handle('lib-add-folder', async (e, dir) => {
+    if (!dir) {
+      const r = await dialog.showOpenDialog(mainWindow, { title: 'Папка с музыкой', properties: ['openDirectory', 'multiSelections'] });
+      if (r.canceled || !r.filePaths.length) return { cancelled: true };
+      r.filePaths.forEach((d) => library.addFolder(d));
+    } else library.addFolder(dir);
+    const s0 = await libScan();
+    return Object.assign({ ok: true }, s0, { status: library.status() });
   });
+  ipcMain.handle('lib-remove-folder', (e, dir) => { library.removeFolder(dir); libSend('lib-changed', library.status()); return library.status(); });
+  ipcMain.handle('lib-rescan', async () => { await libScan(); return library.status(); });
+  ipcMain.handle('lib-reveal', (e, id) => { const f = library.pathOf(id); if (f) shell.showItemInFolder(f); return !!f; });
+  ipcMain.handle('lib-open-files', async () => {
+    const r = await dialog.showOpenDialog(mainWindow, { title: 'Музыка или плейлист', properties: ['openFile', 'multiSelections'], filters: [{ name: 'Музыка и плейлисты', extensions: ['mp3', 'm4a', 'aac', 'flac', 'ogg', 'opus', 'wav', 'webm', 'm3u', 'm3u8', 'pls'] }] });
+    if (r.canceled) return { cancelled: true };
+    return dropPaths(r.filePaths);
+  });
+  async function dropPaths(paths) {
+    const c = await library.classify(paths || []);
+    const tracks = await library.addFiles(c.audio);
+    const playlists = [];
+    for (const p0 of c.playlists) { try { playlists.push(await library.readPlaylistFile(p0)); } catch (err) { log('плейлист ' + path.basename(p0) + ': ' + err.message); } }
+    return { tracks, folders: c.folders, playlists, other: c.other };
+  }
+  ipcMain.handle('lib-drop', (e, paths) => dropPaths(paths));
+  ipcMain.handle('lib-folder-tracks', (e, dir) => library.folderTracks(dir));
+  ipcMain.handle('m3u-export', async (e, title, tracks) => {
+    const safe = String(title || 'Плейлист').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'Плейлист';
+    const r = await dialog.showSaveDialog(mainWindow, { title: 'Сохранить плейлист', defaultPath: path.join(app.getPath('music'), safe + '.m3u8'), filters: [{ name: 'Плейлист M3U', extensions: ['m3u8', 'm3u'] }] });
+    if (r.canceled || !r.filePath) return { cancelled: true };
+    try { fs.writeFileSync(r.filePath, '﻿' + library.m3uText(title, tracks), 'utf8'); log('плейлист сохранён в файл ' + path.basename(r.filePath)); return { ok: true, file: path.basename(r.filePath) }; }
+    catch (err) { return { error: err.message }; }
+  });
+
+  // --- Мастер «Импорт»: откуда взять список песен ---
+  const UA = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36', 'Accept-Language': 'ru,en;q=0.8' };
+  async function fetchText(u, ms) { const r = await fetch(u, { headers: UA, signal: AbortSignal.timeout(ms || 15000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }
+  async function importFile(f) {
+    const ext = path.extname(f).toLowerCase();
+    if (library.isPlaylistFile(f)) { const pl = await library.readPlaylistFile(f); return { title: pl.title, source: 'm3u', items: pl.items.map((x) => ({ line: x.line, seconds: x.seconds, url: x.track ? '' : x.url, track: x.track || null })) }; }
+    const buf = fs.readFileSync(f);
+    let text = buf.toString('utf8');
+    if (text.includes('�')) { try { text = new TextDecoder('windows-1251').decode(buf); } catch (e) {} }
+    let r = null, source = 'text';
+    if (ext === '.json') { r = importers.fromTelegramJson(text); source = 'telegram'; }
+    else if (ext === '.html' || ext === '.htm') { r = importers.fromTelegramHtml(text); source = 'telegram'; }
+    else if (ext === '.csv' || ext === '.tsv') { r = importers.fromCsv(text); source = 'csv'; }
+    if (!r) { r = importers.fromText(text); source = 'text'; }
+    return { title: r.title || path.basename(f, ext), source, items: r.items };
+  }
+  ipcMain.handle('import-file', async (e, f) => {
+    let files0 = f ? [f] : null;
+    if (!files0) {
+      const d = await dialog.showOpenDialog(mainWindow, { title: 'Файл со списком песен', properties: ['openFile', 'multiSelections'], filters: [{ name: 'Списки песен', extensions: ['json', 'html', 'htm', 'csv', 'tsv', 'txt', 'm3u', 'm3u8', 'pls'] }, { name: 'Все файлы', extensions: ['*'] }] });
+      if (d.canceled || !d.filePaths.length) return { cancelled: true };
+      files0 = d.filePaths;
+    }
+    const out = { title: '', source: '', items: [] };
+    for (const x of files0) {
+      try { const r = await importFile(x); out.title = out.title || r.title; out.source = out.source || r.source; out.items = out.items.concat(r.items); }
+      catch (err) { log('импорт файла ' + path.basename(x) + ': ' + err.message); out.error = 'не удалось прочитать «' + path.basename(x) + '»'; }
+    }
+    out.items = importers.dedupeItems(out.items);
+    log('импорт: файл, строк ' + out.items.length + ' (' + out.source + ')');
+    return out;
+  });
+  ipcMain.handle('import-url', async (e, raw, opts) => {
+    opts = opts || {};
+    const t = String(raw || '').trim();
+    let u; try { u = new URL(/^https?:\/\//i.test(t) ? t : 'https://' + t); } catch (err) { return { error: 'это не ссылка' }; }
+    const host = u.hostname.replace(/^www\.|^m\./, '').toLowerCase(), p = u.pathname;
+    try {
+      // Видео YouTube: главы и описание (список песен в длинных видео и миксах)
+      if (/^(youtube\.com|music\.youtube\.com|youtu\.be)$/.test(host)) {
+        const vid = host === 'youtu.be' ? p.slice(1).split('/')[0] : (u.searchParams.get('v') || ((/^\/(shorts|live|embed)\/([\w-]{6,})/.exec(p) || [])[2]));
+        const list = u.searchParams.get('list');
+        if (vid && !(list && opts.preferList)) {
+          const j = await ydlJson(['https://www.youtube.com/watch?v=' + vid, '--no-playlist', '--skip-download', ...ytCookieArgs(false)], 60000);
+          if (j.error) return { error: 'YouTube: ' + j.error };
+          const r = importers.fromYoutubeInfo(j);
+          const self = { src: 'yt', id: vid, title: j.title || '', author: j.channel || j.uploader || '', seconds: j.duration || 0, duration: fmtDur(j.duration), thumb: 'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg' };
+          log('импорт: видео YouTube, ' + r.kind + ', строк ' + r.items.length);
+          return { title: r.title, source: 'youtube-' + r.kind, items: r.items, video: self, hasList: !!list, note: r.note };
+        }
+      }
+      // Ссылки площадок, которые Тапёр открывает сам: треки уже найдены
+      if (/^music\.yandex\./.test(host) || /^(youtube\.com|music\.youtube\.com|youtu\.be|soundcloud\.com|on\.soundcloud\.com)$/.test(host) || /(^|\.)bandcamp\.com$/.test(host)) {
+        const r = await resolveLinkFn(u.toString());
+        if (!r || r.error) return { error: (r && r.error) || 'не понял ссылку' };
+        const L = r.list || { title: (r.tracks && r.tracks[0] && r.tracks[0].title) || 'По ссылке', tracks: r.tracks || [] };
+        return { title: L.title, source: 'platform', items: (L.tracks || []).map((tr) => ({ line: (tr.author ? tr.author + ' — ' : '') + tr.title, seconds: tr.seconds || 0, track: tr })) };
+      }
+      if (host === 'open.spotify.com') {
+        const m = /\/(playlist|album|track)\/([A-Za-z0-9]+)/.exec(p);
+        if (!m) return { error: 'такую ссылку Spotify не понимаю' };
+        const r = importers.fromSpotifyEmbed(await fetchText('https://open.spotify.com/embed/' + m[1] + '/' + m[2]));
+        if (!r || !r.items.length) return { error: 'Spotify не отдал список — скопируй названия текстом' };
+        log('импорт: Spotify ' + m[1] + ', строк ' + r.items.length);
+        return { title: r.title, source: 'spotify', items: r.items, note: r.items.length >= 100 && m[1] === 'playlist' ? 'Spotify показывает без входа только первые 100 песен — для больших плейлистов лучше выгрузка CSV (Exportify).' : '' };
+      }
+      if (/^deezer\.com$/.test(host) || host === 'deezer.page.link' || host === 'link.deezer.com') {
+        let m = /\/(playlist|album)\/(\d+)/.exec(p);
+        if (!m) { try { const r0 = await fetch(u.toString(), { headers: UA, redirect: 'follow', signal: AbortSignal.timeout(12000) }); m = /\/(playlist|album)\/(\d+)/.exec(r0.url); } catch (err) {} }
+        if (!m) return { error: 'такую ссылку Deezer не понимаю' };
+        const j = await (await fetch('https://api.deezer.com/' + m[1] + '/' + m[2] + '?limit=2000', { signal: AbortSignal.timeout(15000) })).json();
+        if (j.error) return { error: 'Deezer: ' + (j.error.message || 'ошибка') };
+        const r = importers.fromDeezerJson(j);
+        return { title: r.title, source: 'deezer', items: r.items };
+      }
+      if (host === 'music.apple.com') {
+        const r = importers.fromAppleHtml(await fetchText(u.toString()));
+        if (!r.items.length) return { error: 'Apple Music не отдал список — скопируй названия текстом' };
+        return { title: r.title, source: 'apple', items: r.items };
+      }
+      if (host === 't.me' || host === 'telegram.me') {
+        const parts = p.split('/').filter(Boolean);
+        if (!parts.length || /^(\+|joinchat)/.test(parts[0])) return { error: 'это закрытый чат — сделай «Экспорт истории» в Telegram Desktop и выбери файл' };
+        const chan = parts[0] === 's' ? parts[1] : parts[0];
+        let before = 0, items = [], title = '';
+        const pages = Math.max(1, Math.min(30, opts.pages || 8));
+        for (let k = 0; k < pages; k++) {
+          const html = await fetchText('https://t.me/s/' + encodeURIComponent(chan) + (before ? '?before=' + before : ''));
+          const r = importers.fromTmeChannel(html);
+          title = title || r.title; items = items.concat(r.items);
+          if (!r.oldest || r.oldest <= 1 || r.oldest === before) break;
+          before = r.oldest;
+        }
+        if (!items.length) return { error: 'в открытой части канала не нашлось песен (закрытый канал? — тогда «Экспорт истории» в Telegram Desktop)' };
+        log('импорт: канал Telegram ' + chan + ', строк ' + items.length);
+        return { title, source: 'telegram', items: importers.dedupeItems(items) };
+      }
+      if (/^(vk\.com|vk\.ru|m\.vk\.com)$/.test(host)) return { error: 'ВКонтакте не даёт программам свою музыку. Открой страницу с аудио во вкладке «Браузер» и нажми «Собрать песни»', vk: true };
+      return { error: 'с этого сайта пока не умею — скопируй список текстом' };
+    } catch (err) { log('импорт по ссылке: ' + err.message); return { error: err.message }; }
+  });
+
+  // --- Свои плейлисты на площадках: Яндекс ---
+  const ymNeed = async () => { const tok = getYmToken(); if (!tok) throw new Error('нет входа в Яндекс'); return { tok, uid: await ymUidGet() }; };
+  const ymWrap = (name, fn) => async (...a) => { try { return Object.assign({ ok: true }, await fn(...a)); } catch (err) { log('Яндекс: ' + name + ' — ' + err.message); return { error: err.message }; } };
+  ipcMain.handle('ym-pl-rename', ymWrap('переименование плейлиста', async (e, kind, title) => { const { tok, uid } = await ymNeed(); await ym.renamePlaylist(tok, uid, kind, title); log('Яндекс: плейлист переименован'); return {}; }));
+  ipcMain.handle('ym-pl-delete', ymWrap('удаление плейлиста', async (e, kind) => { const { tok, uid } = await ymNeed(); await ym.deletePlaylist(tok, uid, kind); log('Яндекс: плейлист удалён'); return {}; }));
+  ipcMain.handle('ym-pl-remove', ymWrap('удаление треков', async (e, kind, ids) => { const { tok, uid } = await ymNeed(); return ym.removeTracks(tok, uid, kind, ids); }));
+  ipcMain.handle('ym-pl-add', ymWrap('добавление треков', async (e, kind, tracks) => { const { tok, uid } = await ymNeed(); return ym.appendTracks(tok, uid, kind, tracks || []); }));
+  ipcMain.handle('ym-pl-create', ymWrap('создание плейлиста', async (e, title, tracks) => {
+    const { tok, uid } = await ymNeed();
+    const pl = await ym.createPlaylist(tok, uid, String(title || 'Плейлист из Тапёра').slice(0, 100));
+    const r = (tracks && tracks.length) ? await ym.addToPlaylist(tok, uid, pl.kind, pl.revision, tracks) : { count: 0 };
+    log('Яндекс: создан плейлист, треков ' + r.count);
+    return { uid, kind: String(pl.kind), count: r.count };
+  }));
+  // Содержимое для синхронизации: id треков на площадке
+  ipcMain.handle('pl-remote', async (e, target, link) => {
+    try {
+      if (target === 'ym') { const { tok, uid } = await ymNeed(); const i = await ym.playlistInfo(tok, link.uid || uid, link.kind); return { ok: true, ids: i.items.map((x) => x.id), title: i.title }; }
+      if (target === 'yt') { const items = await ytoauth.playlistItems(link.listId); return { ok: true, items }; }
+    } catch (err) { log('синхронизация: ' + err.message); return { error: err.message, gone: /404|not ?found|playlistNotFound/i.test(err.message) }; }
+    return { error: 'нет такой площадки' };
+  });
+  // --- YouTube (официальный API, вход через браузер с разрешением на изменения) ---
+  const ytWrap = (name, fn) => async (...a) => {
+    if (!ytoauth.loggedIn()) return { error: 'нужен вход в YouTube через браузер', needLogin: true };
+    if (!ytoauth.canWrite()) return { error: 'нужен повторный вход в YouTube — разрешить Тапёру менять плейлисты', needLogin: true };
+    try { return Object.assign({ ok: true }, await fn(...a)); } catch (err) { log('YouTube API: ' + name + ' — ' + err.message); return { error: err.message, added: err.added, needLogin: /повторный вход/.test(err.message), quota: err.reason === 'quotaExceeded' }; }
+  };
+  ipcMain.handle('yt-pl-create', ytWrap('создание плейлиста', async (e, title, ids) => {
+    const pl = await ytoauth.createPlaylist(title);
+    let n = 0;
+    try { n = (await ytoauth.addVideos(pl.listId, ids || [], (k) => libSend('push-progress', { done: k, total: (ids || []).length }))).count; }
+    catch (err) { err.listId = pl.listId; return { listId: pl.listId, count: err.added || 0, partial: true, error: err.message, quota: err.reason === 'quotaExceeded' }; }
+    log('YouTube API: создан плейлист, видео ' + n);
+    return { listId: pl.listId, count: n };
+  }));
+  ipcMain.handle('yt-pl-add', ytWrap('добавление видео', async (e, listId, ids) => {
+    try { return await ytoauth.addVideos(listId, ids || [], (k) => libSend('push-progress', { done: k, total: (ids || []).length })); }
+    catch (err) { return { count: err.added || 0, partial: true, error: err.message, quota: err.reason === 'quotaExceeded' }; }
+  }));
+  ipcMain.handle('yt-pl-rename', ytWrap('переименование', async (e, listId, title) => { await ytoauth.renamePlaylist(listId, title); return {}; }));
+  ipcMain.handle('yt-pl-delete', ytWrap('удаление', async (e, listId) => { await ytoauth.deletePlaylist(listId); return {}; }));
+  ipcMain.handle('yt-pl-remove', ytWrap('удаление видео', async (e, listId, videoIds) => {
+    const want = new Set(videoIds || []);
+    const items = (await ytoauth.playlistItems(listId)).filter((x) => want.has(x.videoId));
+    return ytoauth.removeItems(items.map((x) => x.itemId));
+  }));
   ipcMain.handle('ym-create-playlist', async (e, title, tracks) => {
     const tok = getYmToken();
     if (!tok) return { error: 'нет входа в Яндекс' };
@@ -956,7 +1216,8 @@ app.whenReady().then(async () => {
   });
 
   // Ссылка в строке поиска: Яндекс Музыка или YouTube
-  ipcMain.handle('resolve-link', async (e, text) => {
+  ipcMain.handle('resolve-link', (e, text) => resolveLinkFn(text));
+  async function resolveLinkFn(text) {
     const t = String(text || '').trim();
     let u;
     try { u = new URL(/^https?:\/\//i.test(t) ? t : 'https://' + t); } catch (err) { return null; }
@@ -997,7 +1258,7 @@ app.whenReady().then(async () => {
       }
     } catch (err) { log('ссылка: ошибка ' + err.message); return { error: err.message }; }
     return null; // не ссылка на музыку — обычный поиск
-  });
+  }
   const ymCache = new Map();
   ipcMain.handle('ym-stream', async (e, id) => {
     const tok = getYmToken();
@@ -1042,7 +1303,7 @@ app.whenReady().then(async () => {
   ytauth.restore().catch((e) => log('YouTube: восстановление входа — ' + e.message));
   const ytAuthStatus = () => ({
     cookies: settingsStore.get('ytAccount') || null,
-    oauth: { configured: ytoauth.configured(), account: ytoauth.loggedIn() ? (settingsStore.get('ytOauthAccount') || { name: 'аккаунт Google' }) : null },
+    oauth: { configured: ytoauth.configured(), account: ytoauth.loggedIn() ? (settingsStore.get('ytOauthAccount') || { name: 'аккаунт Google' }) : null, canWrite: ytoauth.canWrite() },
     useCookies: !!cfg('ytUseCookies')
   });
   ipcMain.handle('yt-auth-status', () => ytAuthStatus());

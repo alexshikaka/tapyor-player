@@ -1,5 +1,5 @@
 // Мост между окном и системной частью приложения.
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('app', {
   chromeUA: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
@@ -48,7 +48,39 @@ contextBridge.exposeInMainWorld('app', {
   ymLike: (trackKey, on) => ipcRenderer.invoke('ym-like', trackKey, on),
   ytPlaylist: (listId, title) => ipcRenderer.invoke('yt-playlist', listId, title),
   resolveLink: (text) => ipcRenderer.invoke('resolve-link', text),
-  matchLine: (line) => ipcRenderer.invoke('match-line', line),
+  matchLine: (line, opts) => ipcRenderer.invoke('match-line', line, opts),
+  matchRemember: (line, only, track) => ipcRenderer.invoke('match-remember', line, only, track),
+  // Музыка с компьютера
+  libStatus: () => ipcRenderer.invoke('lib-status'),
+  libAll: () => ipcRenderer.invoke('lib-all'),
+  libSearch: (q, n) => ipcRenderer.invoke('lib-search', q, n),
+  libStream: (id) => ipcRenderer.invoke('lib-stream', id),
+  libAddFolder: (dir) => ipcRenderer.invoke('lib-add-folder', dir),
+  libRemoveFolder: (dir) => ipcRenderer.invoke('lib-remove-folder', dir),
+  libRescan: () => ipcRenderer.invoke('lib-rescan'),
+  libReveal: (id) => ipcRenderer.invoke('lib-reveal', id),
+  libOpenFiles: () => ipcRenderer.invoke('lib-open-files'),
+  libDrop: (paths) => ipcRenderer.invoke('lib-drop', paths),
+  libFolderTracks: (dir) => ipcRenderer.invoke('lib-folder-tracks', dir),
+  pathsOf: (files) => Array.from(files || []).map((f) => { try { return webUtils.getPathForFile(f); } catch (e) { return ''; } }).filter(Boolean),
+  onLibProgress: (fn) => ipcRenderer.on('lib-progress', (e, d) => fn(d)),
+  onLibChanged: (fn) => ipcRenderer.on('lib-changed', (e, d) => fn(d)),
+  m3uExport: (title, tracks) => ipcRenderer.invoke('m3u-export', title, tracks),
+  // Импорт и плейлисты на площадках
+  importFile: (f) => ipcRenderer.invoke('import-file', f),
+  importUrl: (url, opts) => ipcRenderer.invoke('import-url', url, opts),
+  ymPlCreate: (title, tracks) => ipcRenderer.invoke('ym-pl-create', title, tracks),
+  ymPlRename: (kind, title) => ipcRenderer.invoke('ym-pl-rename', kind, title),
+  ymPlDelete: (kind) => ipcRenderer.invoke('ym-pl-delete', kind),
+  ymPlRemove: (kind, ids) => ipcRenderer.invoke('ym-pl-remove', kind, ids),
+  ymPlAdd: (kind, tracks) => ipcRenderer.invoke('ym-pl-add', kind, tracks),
+  ytPlCreate: (title, ids) => ipcRenderer.invoke('yt-pl-create', title, ids),
+  ytPlAdd: (listId, ids) => ipcRenderer.invoke('yt-pl-add', listId, ids),
+  ytPlRename: (listId, title) => ipcRenderer.invoke('yt-pl-rename', listId, title),
+  ytPlDelete: (listId) => ipcRenderer.invoke('yt-pl-delete', listId),
+  ytPlRemove: (listId, ids) => ipcRenderer.invoke('yt-pl-remove', listId, ids),
+  plRemote: (target, link) => ipcRenderer.invoke('pl-remote', target, link),
+  onPushProgress: (fn) => ipcRenderer.on('push-progress', (e, d) => fn(d)),
   coverColor: (url) => ipcRenderer.invoke('cover-color', url),
   ymCreatePlaylist: (title, tracks) => ipcRenderer.invoke('ym-create-playlist', title, tracks),
   npChooseFolder: () => ipcRenderer.invoke('np-choose-folder'),

@@ -52,6 +52,7 @@ function login() {
         if (!j.access_token) throw new Error(j.error_description || j.error || 'нет токена');
         access = { token: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000 };
         if (j.refresh_token) store.set('ytOauth', enc(j.refresh_token));
+        store.set('ytOauthScope', String(j.scope || ''));
         const me = await channel().catch(() => null);
         store.set('ytOauthAccount', me ? { name: me.name, photo: me.photo } : { name: 'аккаунт Google' });
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -72,7 +73,7 @@ function login() {
     server.listen(0, '127.0.0.1', () => {
       redirect = 'http://127.0.0.1:' + server.address().port + '/cb';
       const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
-        client_id: cfg.clientId, redirect_uri: redirect, response_type: 'code', scope: 'https://www.googleapis.com/auth/youtube.readonly',
+        client_id: cfg.clientId, redirect_uri: redirect, response_type: 'code', scope: 'https://www.googleapis.com/auth/youtube',
         code_challenge: challenge, code_challenge_method: 'S256', access_type: 'offline', prompt: 'consent', state
       }).toString();
       shell.openExternal(url);
@@ -151,6 +152,47 @@ async function liked() {
   return { src: 'yt', type: 'liked', title: 'Понравившиеся на YouTube', count: out.length, thumb: out[0] ? out[0].thumb : '', tracks: out };
 }
 function loggedIn() { return !!store.get('ytOauth'); }
-function logout() { store.set('ytOauth', null); store.set('ytOauthAccount', null); access = null; log('YouTube (через браузер): выход'); return { ok: true }; }
+function logout() { store.set('ytOauth', null); store.set('ytOauthAccount', null); store.set('ytOauthScope', null); access = null; log('YouTube (через браузер): выход'); return { ok: true }; }
 
-module.exports = { setup, configured, login, cancel, loggedIn, logout, myPlaylists, playlistTracks, liked, channel };
+
+// --- Запись: свои плейлисты на YouTube (официальный YouTube Data API, только по нажатию пользователя) ---
+// Старый вход был «только чтение»: тогда просим войти заново
+function canWrite() { return loggedIn() && /auth\/youtube(\s|$)|auth\/youtube\.force-ssl/.test(String(store.get('ytOauthScope') || '')); }
+async function send(method, pathq, body) {
+  const t = await token(); if (!t) throw new Error('нет входа');
+  const r = await net.fetch('https://www.googleapis.com/youtube/v3/' + pathq, { method, headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 204) return {};
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const reason = j.error && j.error.errors && j.error.errors[0] && j.error.errors[0].reason;
+    const e = new Error(reason === 'quotaExceeded' ? 'дневной лимит YouTube на изменения исчерпан — продолжим завтра' : (reason === 'insufficientPermissions' || r.status === 403 && /scope|permission/i.test((j.error && j.error.message) || '') ? 'нужен повторный вход в YouTube (разрешить изменения)' : ((j.error && j.error.message) || ('HTTP ' + r.status))));
+    e.reason = reason || ''; e.status = r.status; throw e;
+  }
+  return j;
+}
+async function createPlaylist(title, privacy) {
+  const j = await send('POST', 'playlists?part=snippet,status', { snippet: { title: String(title || 'Плейлист из Тапёра').slice(0, 150), description: 'Собрано в Тапёре' }, status: { privacyStatus: privacy || 'private' } });
+  return { listId: j.id, title: j.snippet && j.snippet.title };
+}
+async function renamePlaylist(listId, title) { return send('PUT', 'playlists?part=snippet', { id: listId, snippet: { title: String(title).slice(0, 150) } }); }
+async function deletePlaylist(listId) { return send('DELETE', 'playlists?id=' + encodeURIComponent(listId)); }
+async function addVideos(listId, ids, onStep) {
+  let n = 0;
+  for (const id of ids) {
+    try { await send('POST', 'playlistItems?part=snippet', { snippet: { playlistId: listId, resourceId: { kind: 'youtube#video', videoId: id } } }); n++; if (onStep) onStep(n); }
+    catch (e) { if (e.reason === 'quotaExceeded' || e.status === 401 || /повторный вход/.test(e.message)) { e.added = n; throw e; } log('YouTube API: видео ' + id + ' не добавилось — ' + e.message); }
+  }
+  return { count: n };
+}
+async function playlistItems(listId) {
+  const out = []; let page = '';
+  for (let k = 0; k < 20; k++) {
+    const j = await api('playlistItems?part=contentDetails&maxResults=50&playlistId=' + encodeURIComponent(listId) + (page ? '&pageToken=' + page : ''));
+    (j.items || []).forEach((it) => out.push({ itemId: it.id, videoId: it.contentDetails && it.contentDetails.videoId }));
+    if (!j.nextPageToken) break; page = j.nextPageToken;
+  }
+  return out;
+}
+async function removeItems(itemIds) { let n = 0; for (const id of itemIds) { await send('DELETE', 'playlistItems?id=' + encodeURIComponent(id)); n++; } return { count: n }; }
+
+module.exports = { setup, configured, login, cancel, loggedIn, logout, myPlaylists, playlistTracks, liked, channel, canWrite, createPlaylist, renamePlaylist, deletePlaylist, addVideos, playlistItems, removeItems };

@@ -62,4 +62,25 @@ function decide(q, ym, yt) {
   return { status, track, alts };
 }
 
-module.exports = { clean, decide, tokens, norm };
+// Подсказка по длительности (из глав видео, M3U, CSV): берём версию той же длины, а не 10-минутный лайв
+function preferDuration(r, sec) {
+  if (!sec || sec < 20 || !r || !r.track) return r;
+  const tol = (s) => Math.max(12, s * 0.12);
+  const off = (t) => (t && t.seconds ? Math.abs(t.seconds - sec) : 0);
+  if (!r.track.seconds || off(r.track) <= tol(sec)) return r;
+  const tt = tokens(r.track.title);
+  const same = (t) => { const x = tokens(t.title); return frac(tt, x) >= 0.99 || frac(x, tt) >= 0.99; };
+  const alt = (r.alts || []).find((t) => t.seconds && off(t) <= tol(sec) && same(t));
+  if (alt) return Object.assign({}, r, { track: alt, alts: [r.track].concat(r.alts.filter((t) => t !== alt)), durFixed: true });
+  if (r.status === 'exact' && off(r.track) > Math.max(40, sec * 0.35)) return Object.assign({}, r, { status: 'close', durWarn: true });
+  return r;
+}
+// Свои файлы: та же проверка, что для Яндекса (название и исполнитель совпали)
+function exactLocal(q, list) {
+  const s = (list || []).map((c) => scoreYm(q, c)).sort((a, b) => b.s - a.s);
+  return s[0] && s[0].exact ? s[0].t : null;
+}
+// Только одна площадка (для переноса плейлиста на неё)
+function decideOnly(q, list, kind) { return kind === 'yt' ? decide(q, [], list) : decide(q, list, []); }
+
+module.exports = { clean, decide, decideOnly, tokens, norm, preferDuration, exactLocal };

@@ -344,8 +344,8 @@ async function setLike(token, uid, trackKey, on) {
 async function createPlaylist(token, uid, title) {
   return apiForm('/users/' + encodeURIComponent(uid) + '/playlists/create', token, { title: title, visibility: 'private' });
 }
-async function addToPlaylist(token, uid, kind, revision, tracks) {
-  let rev = revision || 1, at = 0;
+async function addToPlaylist(token, uid, kind, revision, tracks, startAt) {
+  let rev = revision || 1, at = startAt || 0;
   const list = tracks.filter((t) => t && t.id && t.albumId);
   for (let i = 0; i < list.length; i += 100) {
     const chunk = list.slice(i, i + 100).map((t) => ({ id: String(t.id), albumId: String(t.albumId) }));
@@ -354,11 +354,41 @@ async function addToPlaylist(token, uid, kind, revision, tracks) {
     rev = (r && r.revision) || rev + 1;
     at += chunk.length;
   }
-  return { kind: String(kind), revision: rev, count: at };
+  return { kind: String(kind), revision: rev, count: at - (startAt || 0) };
 }
 async function trackById(token, id) {
   const list = await tracksByIds(token, [String(id)]);
   return list[0] || null;
+}
+
+
+// Управление своими плейлистами: сведения, название, удаление, треки
+async function playlistInfo(token, uid, kind) {
+  const r = await api('/users/' + encodeURIComponent(uid) + '/playlists/' + encodeURIComponent(kind), token);
+  return { revision: r.revision || 1, count: r.trackCount || 0, title: r.title || '', items: ((r && r.tracks) || []).map((x) => ({ id: String(x.id), albumId: x.albumId ? String(x.albumId) : '' })) };
+}
+async function appendTracks(token, uid, kind, tracks) {
+  const info = await playlistInfo(token, uid, kind);
+  return addToPlaylist(token, uid, kind, info.revision, tracks, info.count);
+}
+async function renamePlaylist(token, uid, kind, title) {
+  return apiForm('/users/' + encodeURIComponent(uid) + '/playlists/' + encodeURIComponent(kind) + '/name', token, { value: String(title).slice(0, 100) });
+}
+async function deletePlaylist(token, uid, kind) {
+  return apiForm('/users/' + encodeURIComponent(uid) + '/playlists/' + encodeURIComponent(kind) + '/delete', token, {});
+}
+// Убрать треки по id (все вхождения). Удаляем с конца, чтобы номера не сдвигались
+async function removeTracks(token, uid, kind, ids) {
+  const want = new Set((ids || []).map(String));
+  const info = await playlistInfo(token, uid, kind);
+  let rev = info.revision, n = 0;
+  for (let i = info.items.length - 1; i >= 0; i--) {
+    if (!want.has(info.items[i].id)) continue;
+    const r = await apiForm('/users/' + encodeURIComponent(uid) + '/playlists/' + encodeURIComponent(kind) + '/change-relative', token,
+      { diff: JSON.stringify([{ op: 'delete', from: i, to: i + 1 }]), revision: String(rev) });
+    rev = (r && r.revision) || rev + 1; n++;
+  }
+  return { count: n, revision: rev };
 }
 
 // Прямая ссылка на mp3 трека
@@ -388,4 +418,4 @@ async function streamUrl(trackId, token) {
   return { audioUrl: 'https://' + host + '/get-mp3/' + sign + '/' + ts + path, preview: preview, bitrate: pick.bitrateInKbps };
 }
 
-module.exports = { artistInfo, CLIENT_ID, setLogger, search, searchTracksPage, suggest, accountStatus, streamUrl, waveStart, waveTracks, waveFeedback, stationsList, stationsDashboard, wavePresets, likedTracks, userPlaylists, playlistTracks, albumTracks, artistTracks, trackById, likedIds, setLike, createPlaylist, addToPlaylist };
+module.exports = { artistInfo, CLIENT_ID, setLogger, search, searchTracksPage, suggest, accountStatus, streamUrl, waveStart, waveTracks, waveFeedback, stationsList, stationsDashboard, wavePresets, likedTracks, userPlaylists, playlistTracks, albumTracks, artistTracks, trackById, likedIds, setLike, createPlaylist, addToPlaylist, playlistInfo, appendTracks, renamePlaylist, deletePlaylist, removeTracks };

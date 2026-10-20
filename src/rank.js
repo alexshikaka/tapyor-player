@@ -82,11 +82,12 @@
     if (s === 'yt') return ctx.ytOn ? 'full' : 'off';
     if (s === 'sc') return !ctx.scOn ? 'off' : (v.preview ? 'preview' : 'full');
     if (s === 'au') return ctx.auOn ? 'full' : 'off';
+    if (s === 'lc') return ctx.lcOn === false ? 'off' : 'full'; // свой файл с компьютера
     return 'full';
   }
-  function isPaid(v, ctx) { var s = v.src || 'yt'; return (s === 'ym' && ctx.ymFull) || (s === 'yt' && ctx.ytLogged); }
-  function isFree(v) { var s = v.src || 'yt'; return s === 'sc' || s === 'au' || s === 'yt'; }
-  function orderPos(v, ctx) { var o = ctx.order || ['ym', 'yt', 'sc', 'au']; var i = o.indexOf(v.src || 'yt'); return i < 0 ? o.length : i; }
+  function isPaid(v, ctx) { var s = v.src || 'yt'; return (s === 'ym' && ctx.ymFull) || (s === 'yt' && ctx.ytLogged) || s === 'lc'; }
+  function isFree(v) { var s = v.src || 'yt'; return s === 'sc' || s === 'au' || s === 'yt' || s === 'lc'; }
+  function orderPos(v, ctx) { var o = ctx.order || ['lc', 'ym', 'yt', 'sc', 'au']; var i = o.indexOf(v.src || 'yt'); return i < 0 ? o.length : i; }
   function airPenalty(v) {
     var raw = norm(v.title), sec = Number(v.seconds || 0), p = 0;
     if (sec > 600) p += 30; else if (sec > 0 && sec < 60) p += 25;
@@ -99,7 +100,7 @@
     var r = relevance(q, v), acc = access(v, ctx), pos = orderPos(v, ctx);
     var tie = popularity(v) - pos * 0.4;
     if (acc === 'off') return -1000 + r;
-    var accB = acc === 'preview' ? -30 : ({ ym: 12, yt: 6, sc: 3, au: 3 }[v.src || 'yt'] || 0);
+    var accB = acc === 'preview' ? -30 : ({ lc: 14, ym: 12, yt: 6, sc: 3, au: 3 }[v.src || 'yt'] || 0);
     switch (mode) {
       case 'exact': return r + tie + (acc === 'preview' ? -5 : 0);
       case 'subs': return (acc === 'preview' ? -200 : (isPaid(v, ctx) ? 200 : 0)) + r + tie;
