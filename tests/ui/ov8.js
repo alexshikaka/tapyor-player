@@ -5,7 +5,7 @@
   a.ytSearch = function(q){ return P({ videos: [{ id:'y1', title:'Кино - Группа крови (кавер на гитаре)', author:'Vasya', duration:'3:20', seconds:200, thumb:'' }, { id:'y2', title:'Группа крови', author:'Кино - Topic', duration:'4:46', seconds:286, thumb:'' }, { id:'y3', title:'КИНО — Группа крови (Official Video)', author:'KINO', duration:'4:50', seconds:290, thumb:'' }], playlists: [] }); };
   a.scSearch = function(){ return new Promise(function(r){ setTimeout(function(){ r([T('sc','https://soundcloud.com/x/gk','Группа крови','Кино фан', 280), T('sc','https://soundcloud.com/x/rmx','Группа крови (remix)','dj', 200)]); }, 300); }); };
   a.auSearch = function(){ return new Promise(function(r){ setTimeout(function(){ r([T('au','a1','Группа крови','Indie', 250)]); }, 400); }); };
-  a.ymArtist = function(){ return P({ tracks: [T('ym',1,'Группа крови','Кино')] }); };
+  a.ymArtist = function(){ var l=[T('ym',1,'Группа крови','Кино')]; for (var i=0;i<30;i++) l.push(T('ym','x'+i,'Песня '+i,'Кино')); return P({ tracks: l }); };
 })();
 (function(){
   var a = window.app; var P = function(x){ return Promise.resolve(x); };
