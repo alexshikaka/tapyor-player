@@ -463,7 +463,7 @@ function createWindow() {
 }
 
 // Цвета системной полосы окна под тему оформления
-function themeColors() { return cfg('theme') === 'mono' ? { bg: '#0B0B0B', sym: '#CFCFCF' } : { bg: '#15161C', sym: '#C9CBD4' }; }
+function themeColors() { return cfg('theme') === 'mono' ? { bg: '#161616', sym: '#CBCBCB' } : { bg: '#15161C', sym: '#C9CBD4' }; }
 function applyThemeWindow() {
   try { if (mainWindow && !mainWindow.isDestroyed()) { const c = themeColors(); mainWindow.setBackgroundColor(c.bg); mainWindow.setTitleBarOverlay({ color: c.bg, symbolColor: c.sym, height: 36 }); } } catch (e) { log('тема: ' + e.message); }
 }

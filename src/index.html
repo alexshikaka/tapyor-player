@@ -10,8 +10,7 @@
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
     --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; }
   /* Тема «Монохром»: чёрный, белый и серые — под чёрно-белый логотип. Обложки остаются цветными */
-  html.theme-mono { --bg00: #000000; --bg0: #050505; --bg1: #0B0B0B; --bg2: #121212; --bg3: #181818; --bg4: #222222; --ln: #2B2B2B; --ln2: #1E1E1E; --ln3: #3D3D3D;
-    --tx: #F5F5F5; --tx2: #CFCFCF; --tx3: #A0A0A0; --tx4: #858585; --tx5: #6B6B6B; --ac: #FFFFFF; --ac2: #FFFFFF; --acr: 255,255,255; --acbg: #1F1F1F; --pri: #FFFFFF; --prit: #000000; }
+  html.theme-mono { --bg00: #070707; --bg0: #0F0F0F; --bg1: #161616; --bg2: #1A1A1A; --bg3: #202020; --bg4: #2D2D2D; --ln: #2F2F2F; --ln2: #262626; --ln3: #3E3E3E; --tx: #EDEDED; --tx2: #CBCBCB; --tx3: #A2A2A2; --tx4: #8E8E8E; --tx5: #818181; --ac: #D4D4D4; --ac2: #E6E6E6; --acr: 212,212,212; --acbg: #262626; --pri: #E8E8E8; --prit: #121212; }
 
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -476,7 +475,7 @@
   .pbtn:hover { background: var(--bg4); }
   .pbtn.y { background: var(--pri); color: var(--prit); border-color: transparent; }
   .pbtn.y:hover { background: #FFE070; }
-  html.theme-mono .pbtn.y:hover { background: #DDDDDD; }
+  html.theme-mono .pbtn.y:hover { background: #F5F5F5; }
   .pbtn.g { background: transparent; color: var(--tx2); }
   .plnote { font-size: 13px; color: var(--tx3); background: var(--bg2); border: 1px solid var(--ln2); border-radius: 10px; padding: 10px 14px; flex: 0 0 auto; }
   .plrows { display: flex; flex-direction: column; gap: 4px; }
@@ -604,12 +603,12 @@
   .set .npprev .k { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); }
   .set .npprev .v { font-size: 20px; font-weight: 700; color: #fff; min-height: 26px; overflow-wrap: anywhere; }
   html.theme-mono .dot, html.theme-mono .wpill i, html.theme-mono .wv i, html.theme-mono .qglow, html.theme-mono .wicon, html.theme-mono .ico { filter: grayscale(1); }
-  html.theme-mono .wicon { background: #FFFFFF !important; }
-  html.theme-mono .chip.active { background: #FFFFFF; color: #000000; }
-  html.theme-mono .badge { color: #FFFFFF; border-color: #5A5A5A; }
+  html.theme-mono .wicon { background: var(--pri) !important; }
+  html.theme-mono .chip.active { background: var(--tx); color: var(--bg0); }
+  html.theme-mono .badge { color: var(--tx2); border-color: var(--ln3); }
   html.theme-mono .nplabel { color: #A0A0A0; }
-  html.theme-mono .al:hover, html.theme-mono .art-n.art-go:hover { color: #FFFFFF; }
-  html.theme-mono .upd-go { background: #FFFFFF; color: #000000; }
+  html.theme-mono .al:hover, html.theme-mono .art-n.art-go:hover { color: var(--ac2); }
+  html.theme-mono .upd-go { background: var(--pri); color: var(--prit); }
   /* Выбор темы в настройках */
   .themes { display: flex; gap: 12px; flex-wrap: wrap; }
   .thc { width: 200px; border: 2px solid var(--ln); border-radius: 14px; background: transparent; padding: 8px; cursor: pointer; color: var(--tx); font: 600 13px Onest, sans-serif; text-align: left; }
@@ -798,7 +797,7 @@
                 <div class="sl"><div class="st">Тема</div><div class="sd">Меняется сразу. Обложки треков остаются цветными в любой теме</div></div>
                 <div class="themes" id="setTheme">
                   <button class="thc" data-v="violet"><div class="thp"><i style="flex:2;background:#15161C"></i><i style="flex:1;background:#0E0F13;position:relative"><b style="position:absolute;left:10px;top:12px;width:40px;height:8px;border-radius:4px;background:#9B87FF"></b><b style="position:absolute;left:10px;top:28px;width:28px;height:8px;border-radius:4px;background:#FFD43B"></b></i></div>Фиолетовая<small>Тёмная с фиолетовым и жёлтым</small></button>
-                  <button class="thc" data-v="mono"><div class="thp"><i style="flex:2;background:#0B0B0B"></i><i style="flex:1;background:#000;position:relative"><b style="position:absolute;left:10px;top:12px;width:40px;height:8px;border-radius:4px;background:#FFFFFF"></b><b style="position:absolute;left:10px;top:28px;width:28px;height:8px;border-radius:4px;background:#6B6B6B"></b></i></div>Монохром<small>Чёрно-белая, под логотип</small></button>
+                  <button class="thc" data-v="mono"><div class="thp"><i style="flex:2;background:#161616"></i><i style="flex:1;background:#0F0F0F;position:relative"><b style="position:absolute;left:10px;top:12px;width:40px;height:8px;border-radius:4px;background:#D4D4D4"></b><b style="position:absolute;left:10px;top:28px;width:28px;height:8px;border-radius:4px;background:#E8E8E8"></b></i></div>Монохром<small>Мягкая серая, под логотип</small></button>
                 </div>
               </div>
             </div>
