@@ -14,7 +14,7 @@ async def main():
         await pg.screenshot(path='h_head.png', clip={'x':0,'y':0,'width':1440,'height':130})
         await pg.fill('#search','Кино'); await pg.press('#search','Enter'); await pg.wait_for_timeout(700)
         await pg.click('.art-n'); await pg.wait_for_timeout(500)
-        print('клик по имени → открыт список:', await E("!$('searchPl').hidden"), '|', await E("(document.querySelector('#searchPl h3')||{}).textContent"))
+        print('клик по имени → страница исполнителя:', await E("!!document.querySelector('#searchPl .arh')"), '|', await E("(document.querySelector('#searchPl h3')||{}).textContent"))
         await E("openYtDlg()"); await pg.wait_for_timeout(300)
         await E("ytPaste(\"curl 'https://www.youtube.com/' -H 'cookie: SAPISID=1; x=2'\")"); await pg.wait_for_timeout(500)
         print('итог вставки:', await E("(document.querySelector('#ytDlg .yl-pres')||{}).innerText"))

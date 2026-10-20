@@ -1068,7 +1068,7 @@
   function artistLinks(author){
     if (!window.TapRank) return esc(author);
     return TapRank.splitArtists(author).map(function (p){
-      return p.sep ? esc(p.sep) : '<span class="al" data-artist="' + esc(p.name) + '" title="Найти исполнителя «' + esc(p.name) + '»">' + esc(p.name) + '</span>';
+      return p.sep ? esc(p.sep) : '<span class="al" data-artist="' + esc(p.name) + '" title="Страница исполнителя «' + esc(p.name) + '»">' + esc(p.name) + '</span>';
     }).join('');
   }
   document.addEventListener('click', function(e){
@@ -1077,13 +1077,11 @@
     searchArtist(a.dataset.artist);
   }, true);
   document.addEventListener('mousedown', function(e){ if (e.target.closest && e.target.closest('.al[data-artist]')) e.stopPropagation(); }, true);
+  // Нажатие на исполнителя где угодно — страница исполнителя (там всё: популярное, все треки, альбомы, похожие)
   function searchArtist(name){
     name = window.TapRank ? TapRank.cleanChannel(name) : name;
     if (!name) return;
-    closeCtx();
-    setTab('search');
-    search.value = name;
-    doSearch();
+    openArtistPage(name);
   }
   function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
   function allEls(){ return [video, aud, aud2]; }
@@ -2432,8 +2430,7 @@
         '<div class="art-b">' +
           '<button class="pbtn y" data-art="bg"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button>' +
           '<button class="pbtn" data-art="shuffle">Фоном вперемешку</button>' +
-          '<button class="pbtn g" data-art="open">Все треки</button>' +
-          '<button class="pbtn g" data-art="page">Об исполнителе</button>' +
+          '<button class="pbtn g" data-art="page">Все треки и альбомы</button>' +
           (ymLoggedIn ? '<button class="pbtn g" data-art="wave">Волна в стиле</button>' : '') +
         '</div></div>';
     var cache = null;
@@ -2447,11 +2444,10 @@
       return cache;
     }
     // Иконка и имя в карточке — как «Все треки»
-    [sec.querySelector('.art-ph'), sec.querySelector('.art-n')].forEach(function (el){ if (!el) return; el.classList.add('art-go'); el.title = 'Все треки исполнителя'; el.onclick = function(){ openSearchList(meta); }; });
+    [sec.querySelector('.art-ph'), sec.querySelector('.art-n')].forEach(function (el){ if (!el) return; el.classList.add('art-go'); el.title = 'Страница исполнителя: все треки, альбомы, похожие'; el.onclick = function(){ openArtistPage(a.name, a.id); }; });
     sec.querySelector('.art-b').onclick = async function(e){
       var b = e.target.closest('button'); if (!b) return;
       var k = b.dataset.art;
-      if (k === 'open') { openSearchList(meta); return; }
       if (k === 'page') { openArtistPage(a.name, a.id); return; }
       if (k === 'wave') { setBg({ kind: 'wave', station: 'artist:' + a.id, name: 'В стиле ' + a.name }, true); return; }
       var L = await tracks(b); if (!L) return;
@@ -2691,7 +2687,7 @@
     return window.TapRank ? TapRank.cleanChannel(a ? a.name : (v.author || '')) : (a ? a.name : v.author);
   }
   var AP = null; // открытая страница: { name, data, tab }
-  var AP_TABS = [{ id: 'pop', n: 'Популярное' }, { id: 'album', n: 'Альбомы' }, { id: 'single', n: 'Синглы и EP' }, { id: 'compilation', n: 'Сборники' }, { id: 'similar', n: 'Похожие' }];
+  var AP_TABS = [{ id: 'pop', n: 'Популярное' }, { id: 'all', n: 'Все треки' }, { id: 'album', n: 'Альбомы' }, { id: 'single', n: 'Синглы и EP' }, { id: 'compilation', n: 'Сборники' }, { id: 'similar', n: 'Похожие' }];
   function apNorm(x){ return String(x || '').toLowerCase().replace(/ё/g, 'е').replace(/[([{][^)\]}]*[)\]}]/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
   function fansText(n){ if (!n) return ''; if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' млн поклонников'; if (n >= 1e3) return Math.round(n / 1e3) + ' тыс. поклонников'; return n + ' поклонников'; }
   async function openArtistPage(name, ymId){
@@ -2713,6 +2709,8 @@
     AP = { name: (y && y.name) || (d && d.name) || name, ymId: y && y.id, photo: (y && y.photo) || (d && d.photo) || '', about: (y && y.about) || '', fans: d && d.fans, albums: albums,
       popular: y && y.popular.length ? y.popular : null, dzTop: d ? d.top : [], similar: (y && y.similar.length ? y.similar.map(function (x){ return { name: x.name, thumb: x.thumb, ymId: x.id }; }) : (d ? d.similar : [])), tab: 'pop', srcs: [y ? 'Яндекс' : '', d ? 'Deezer' : ''].filter(Boolean) };
     renderArtistPage(host);
+    // Все треки — подгружаем сразу, чтобы на вкладке было видно их число
+    if (AP.ymId && A.ymArtist) { var P0 = AP; A.ymArtist(P0.ymId).then(function (r){ if (P0.allTracks) return; P0.allTracks = (r && r.tracks) || []; if (AP !== P0) return; if (P0.tab === 'all') renderArtistPage(host); else { var sm = host.querySelector('.ar-tabs [data-apt=all] small'); if (sm) sm.textContent = P0.allTracks.length; } }); }
   }
   function renderArtistPage(host){
     var P = AP; host._backFn = null;
@@ -2725,12 +2723,11 @@
         (P.about ? '<div class="ar-about">' + esc(P.about) + '</div>' : '') +
         '<div class="plbtns">' +
           (P.popular ? '<button class="pbtn y" data-ap="bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button><button class="pbtn" data-ap="shuffle">Фоном вперемешку</button>' : '') +
-          (P.ymId ? '<button class="pbtn g" data-ap="all">Все треки</button>' : '') +
           (P.ymId && ymLoggedIn ? '<button class="pbtn g" data-ap="wave">Волна в стиле</button>' : '') +
           '<button class="pbtn g" data-ap="search">Искать везде</button>' +
         '</div></div></div>' +
       '<div class="ar-tabs" role="tablist">' + AP_TABS.map(function (t){
-        var n = t.id === 'pop' ? (P.popular || P.dzTop || []).length : (t.id === 'similar' ? P.similar.length : cnt(t.id));
+        var n = t.id === 'pop' ? (P.popular || P.dzTop || []).length : (t.id === 'similar' ? P.similar.length : (t.id === 'all' ? (P.ymId ? (P.allTracks ? P.allTracks.length : '…') : 0) : cnt(t.id)));
         return n ? '<button role="tab" data-apt="' + t.id + '"' + (P.tab === t.id ? ' class="on"' : '') + '>' + t.n + ' <small>' + n + '</small></button>' : '';
       }).join('') + '</div><div class="ar-body"></div>';
     bindBack(host);
@@ -2738,7 +2735,6 @@
       var b = e.target.closest('button'); if (!b) return; var k = b.dataset.ap;
       var L = { src: 'ym', type: 'artist', artistId: P.ymId, title: P.name, author: 'Популярные треки', thumb: P.photo, tracks: P.popular || [] };
       if (k === 'bg' || k === 'shuffle') setBg({ kind: 'list', list: L, shuffle: k === 'shuffle' }, true);
-      else if (k === 'all') renderListView(host, { src: 'ym', type: 'artist', artistId: P.ymId, title: P.name, thumb: P.photo }, true, function(){ renderArtistPage(host); }, '← К исполнителю');
       else if (k === 'wave') setBg({ kind: 'wave', station: 'artist:' + P.ymId, name: 'В стиле ' + P.name }, true);
       else if (k === 'search') { search.value = P.name; doSearch(); }
     };
@@ -2746,7 +2742,22 @@
     host.querySelector('.ar-tabs').onclick = function(e){ var b = e.target.closest('[data-apt]'); if (!b) return; P.tab = b.dataset.apt; renderArtistPage(host); };
     if (!host.querySelector('.ar-tabs [data-apt="' + P.tab + '"]')) { var f = host.querySelector('.ar-tabs [data-apt]'); if (f) P.tab = f.dataset.apt; host.querySelectorAll('.ar-tabs [data-apt]').forEach(function (b){ b.classList.toggle('on', b.dataset.apt === P.tab); }); }
     var body = host.querySelector('.ar-body');
-    if (P.tab === 'pop') {
+    if (P.tab === 'all') {
+      if (P.allTracks) {
+        var tb = document.createElement('div'); tb.className = 'plbtns'; tb.style.padding = '4px';
+        tb.innerHTML = '<button class="pbtn y" data-at="bg">Все треки фоном</button><button class="pbtn" data-at="shuffle">Вперемешку</button><button class="pbtn g" data-at="queue">Всё в очередь</button><button class="pbtn g" data-at="save">Сохранить как плейлист</button>';
+        tb.onclick = function(e){ var b = e.target.closest('button'); if (!b || !P.allTracks.length) return; var L = { src: 'ym', type: 'artist', artistId: P.ymId, title: P.name, author: 'Все треки', thumb: P.photo, tracks: P.allTracks };
+          if (b.dataset.at === 'bg' || b.dataset.at === 'shuffle') setBg({ kind: 'list', list: L, shuffle: b.dataset.at === 'shuffle' }, true);
+          else if (b.dataset.at === 'queue') addMany(P.allTracks, true);
+          else askDlg({ title: 'Сохранить как плейлист', label: 'Название', value: P.name + ' — все треки' }).then(function (r){ if (!r) return; var m = localCreate(r.value, P.allTracks); toast('Создан «' + m.title + '» · ' + m.tracks.length + ' ' + plural(m.tracks.length)); }); };
+        body.appendChild(tb);
+        if (P.allTracks.length) appendResults(P.allTracks, body); else body.insertAdjacentHTML('beforeend', '<div class="muted">Треков не нашлось.</div>');
+      } else {
+        body.innerHTML = '<div class="muted">Загружаю все треки…</div>';
+        var tk = host._tok;
+        A.ymArtist(P.ymId).then(function (r){ if (!P.allTracks) P.allTracks = (r && r.tracks) || []; if (host._tok === tk && AP === P && P.tab === 'all') renderArtistPage(host); });
+      }
+    } else if (P.tab === 'pop') {
       if (P.popular) appendResults(P.popular, body);
       else renderFindRows(body, P.dzTop, 'Популярное по данным Deezer — Тапёр ищет каждую песню на площадках');
     } else if (P.tab === 'similar') {

@@ -305,7 +305,7 @@ async function albumTracks(token, albumId) {
   return { src: 'ym', type: 'album', title: (r && r.title) || 'Альбом', author: ((r && r.artists) || []).map((a) => a.name).join(', '), count: tracks.length, thumb: cover(r && r.coverUri, '200x200'), tracks: tracks };
 }
 async function artistTracks(token, artistId) {
-  const r = await api('/artists/' + encodeURIComponent(artistId) + '/tracks?page=0&page-size=50', token);
+  const r = await api('/artists/' + encodeURIComponent(artistId) + '/tracks?page=0&page-size=200', token);
   const tracks = ((r && r.tracks) || []).map(mapTrack).filter((t) => t.available);
   let name = '';
   try { const b = await api('/artists/' + encodeURIComponent(artistId) + '/brief-info', token, 8000); name = b && b.artist && b.artist.name; } catch (e) {}

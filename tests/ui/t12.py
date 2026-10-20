@@ -31,9 +31,11 @@ async def main():
         # клик по артисту в строке (не должен запускать трек)
         await E("window.__played=null; var _pn=playNow; playNow=function(v){window.__played=v?v.id:'null'; return v?_pn(v):undefined;}")
         await pg.click('#results .tarea .row .al >> nth=0'); await pg.wait_for_timeout(600)
-        print('после клика по артисту: запрос =', await E("search.value"), '| playNow:', await E("String(window.__played)"), '| кнопка назад:', await E("(document.querySelector('.sback')||{}).textContent"))
-        await pg.click('.sback'); await pg.wait_for_timeout(500)
-        print('назад → запрос:', await E("search.value"))
+        print('клик по артисту → страница исполнителя:', await E("(document.querySelector('#searchPl .arh h3')||{}).textContent"), '| playNow:', await E("String(window.__played)"))
+        print('вкладки страницы:', await E("Array.from(document.querySelectorAll('.ar-tabs button')).map(b=>b.innerText.replace(/\\s+/g,' '))"))
+        await pg.click('.ar-tabs [data-apt=all]'); await pg.wait_for_timeout(400)
+        print('все треки на странице:', await E("document.querySelectorAll('.ar-body .row').length"))
+        await pg.click('#searchPl [data-back]'); await pg.wait_for_timeout(300)
         # несколько артистов
         print('Би-2, Кино → ссылки:', await E("Array.from(document.querySelectorAll('.row')).map(r=>Array.from(r.querySelectorAll('.al')).map(a=>a.dataset.artist).join('+')).filter(x=>x.includes('+'))[0]"))
         # Плейлисты: создать через меню трека
