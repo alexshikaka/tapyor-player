@@ -664,7 +664,7 @@
                 <div style="display:flex;align-items:center;gap:12px"><input id="setVol" type="range" min="0" max="100" style="width:180px;accent-color:#9B87FF"><span class="mono" id="setVolVal" style="font-size:13px;color:#C9CBD4;width:40px">80%</span></div>
               </div>
               <div class="srow">
-                <div class="sl"><div class="st">Ровная громкость</div><div class="sd" id="setNormNote">YouTube и Яндекс звучат одинаково громко, резкие пики приглушаются</div></div>
+                <div class="sl"><div class="st">Ровная громкость</div><div class="sd" id="setNormNote">Слишком громкие треки Яндекса приглушаются до общего уровня (по данным о громкости трека)</div></div>
                 <button class="toggle" data-set-tg="normalize" aria-label="Ровная громкость"><span></span></button>
               </div>
               <div class="srow">
@@ -1135,106 +1135,43 @@
   var TARGET_LUFS = -14;
   function dbLin(db){ return Math.pow(10, db / 20); }
   function axNode(el){ for (var k = 0; k < AX.nodes.length; k++) if (AX.nodes[k].el === el) return AX.nodes[k]; return null; }
-  function axInit(){
-    if (AX.ctx || AX.broken) return !!AX.ctx;
-    try {
-      var C = window.AudioContext || window.webkitAudioContext; if (!C) return false;
-      var ctx = new C({ latencyHint: 'playback' });
-      var master = ctx.createGain();
-      var lim = ctx.createDynamicsCompressor(); // мягкий ограничитель: громкий трек не «перегрузит» стрим
-      lim.threshold.value = -3; lim.knee.value = 3; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.25;
-      master.connect(lim); lim.connect(ctx.destination);
-      AX.ctx = ctx; AX.master = master;
-      allEls().forEach(function (el){
-        el.crossOrigin = 'anonymous';
-        var src = ctx.createMediaElementSource(el);
-        var g = ctx.createGain(), f = ctx.createGain();
-        var hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 60;
-        var sh = ctx.createBiquadFilter(); sh.type = 'highshelf'; sh.frequency.value = 1500; sh.gain.value = 4;
-        var an = ctx.createAnalyser(); an.fftSize = 2048;
-        src.connect(g); g.connect(f); f.connect(master);
-        src.connect(hp); hp.connect(sh); sh.connect(an);
-        AX.nodes.push({ el: el, g: g, f: f, an: an, buf: new Float32Array(2048), norm: 1, sum: 0, n: 0, known: true, zero: 0 });
-      });
-      applyVol();
-      setInterval(axMeasure, 100);
-      return true;
-    } catch (e) { console.warn('звук:', e); AX.ctx = null; return false; }
-  }
+  // Граф Web Audio больше не используется: он требовал crossOrigin, а потоки Яндекса/YouTube
+  // его не дают — из-за этого звук мог вообще не заиграть. Теперь громкость регулируем прямо
+  // у элемента (el.volume), это надёжно и никогда не ломает воспроизведение.
+  function axInit(){ return false; }
   function axLog(msg){ if (A.log) A.log(msg); }
-  function applyVol(){
+  function elGain(el){
     var v = curVol();
-    if (AX.ctx) { AX.master.gain.setTargetAtTime(v, AX.ctx.currentTime, 0.03); allEls().forEach(function (el){ el.volume = 1; }); }
-    else allEls().forEach(function (el){ el.volume = Math.max(0, Math.min(1, v * (el._fade == null ? 1 : el._fade))); });
+    return Math.max(0, Math.min(1, v * (el._fade == null ? 1 : el._fade) * (el._norm == null ? 1 : el._norm)));
+  }
+  function applyVol(){
+    allEls().forEach(function (el){ el.volume = elGain(el); });
     ytxVolume();
   }
-  function axApply(n, tc){
-    var val = AX.norm ? n.norm : 1;
-    n.g.gain.setTargetAtTime(val, AX.ctx.currentTime, tc || 0.05);
-  }
-  // Новый трек на элементе: громкость из данных Яндекса или старт с догадки и подстройка по ходу
+  // Ровная громкость: для Яндекса берём громкость трека (r128) и приглушаем слишком громкие.
+  // Поднять тихий трек выше 100% нельзя (ограничение элемента), поэтому тихие играют на полной.
   function axTrackStart(el, v){
-    var n = axNode(el); if (!n) return;
-    n.sum = 0; n.n = 0; n.zero = 0;
-    if (v && typeof v.lufs === 'number') { n.known = true; n.norm = Math.max(dbLin(-15), Math.min(dbLin(8), dbLin(TARGET_LUFS - v.lufs))); }
-    else { n.known = false; n.norm = AX.guess; }
-    axApply(n, 0.01);
+    var norm = 1;
+    if (AX.norm && v && typeof v.lufs === 'number') norm = Math.max(dbLin(-14), Math.min(dbLin(6), dbLin(TARGET_LUFS - v.lufs)));
+    el._norm = norm;
+    applyVol();
   }
-  function axMeasure(){
-    if (!AX.ctx) return;
-    AX.nodes.forEach(function (n){
-      var el = n.el;
-      if (el.paused || el.muted || !el.getAttribute('src') || el.readyState < 3) return;
-      n.an.getFloatTimeDomainData(n.buf);
-      var ms = 0, peak = 0, b = n.buf;
-      for (var k = 0; k < b.length; k++) { var x = b[k]; ms += x * x; if (x > peak) peak = x; else if (-x > peak) peak = -x; }
-      ms /= b.length;
-      // защита: если звук «не виден» (сайт не разрешил), граф молчит — выключаем ровную громкость
-      if (peak === 0 && el.currentTime > 1) { n.zero += 0.1; if (n.zero > 8) axBroken(); return; }
-      n.zero = 0;
-      var lk = 10 * Math.log10(ms + 1e-12) - 0.691;
-      if (lk < -50) return; // тишину и паузы между песнями не считаем
-      n.sum += ms; n.n++;
-      if (n.known || n.n < 10) return;
-      var est = 10 * Math.log10(n.sum / n.n) - 0.691;
-      n.norm = Math.max(dbLin(-15), Math.min(dbLin(8), dbLin(TARGET_LUFS - est)));
-      if (n.n % 10 === 0) AX.guess = n.norm;
-      axApply(n, n.n < 60 ? 0.6 : 2.5); // первые секунды — быстро, потом плавно
-    });
-  }
-  function axBroken(){
-    if (AX.broken) return;
-    AX.broken = true;
-    axLog('ровная громкость: звук не проходит через анализ — выключаю и перезапускаю окно');
-    if (A.setSetting) A.setSetting('normalize', false).then(function(){ saveToday(); setTimeout(function(){ location.reload(); }, 300); });
-  }
+  function axMeasure(){}
+  function axBroken(){}
 
-  // Затухание элемента: через граф или (без графа) через громкость элемента
-  function setFade(el, val){
-    var n = axNode(el);
-    if (n) { n.f.gain.cancelScheduledValues(AX.ctx.currentTime); n.f.gain.setValueAtTime(val, AX.ctx.currentTime); }
-    clearInterval(el._fadeT); el._fade = val; if (!n) applyVol();
-  }
+  // Затухание элемента для плавного перехода — через его собственную громкость
+  function setFade(el, val){ clearInterval(el._fadeT); el._fade = val; applyVol(); }
   function fadeEl(el, from, to, sec, done){
-    var n = axNode(el);
     clearInterval(el._fadeT); clearTimeout(el._fadeDone);
-    if (n) {
-      var t = AX.ctx.currentTime;
-      n.f.gain.cancelScheduledValues(t); n.f.gain.setValueAtTime(from, t);
-      // кривая «равной мощности»: в середине перехода не проваливается громкость
-      var steps = 24, curve = new Float32Array(steps + 1);
-      for (var k = 0; k <= steps; k++) { var p = k / steps; curve[k] = from + (to - from) * (to > from ? Math.sin(p * Math.PI / 2) : 1 - Math.cos(p * Math.PI / 2)); }
-      try { n.f.gain.setValueCurveAtTime(curve, t, Math.max(0.05, sec)); } catch (e) { n.f.gain.linearRampToValueAtTime(to, t + sec); }
-      el._fade = to;
-    } else {
-      var t0 = Date.now();
-      el._fade = from; applyVol();
-      el._fadeT = setInterval(function(){
-        var p = Math.min(1, (Date.now() - t0) / (sec * 1000));
-        el._fade = from + (to - from) * p; applyVol();
-        if (p >= 1) clearInterval(el._fadeT);
-      }, 50);
-    }
+    var t0 = Date.now();
+    el._fade = from; applyVol();
+    el._fadeT = setInterval(function(){
+      var p = Math.min(1, (Date.now() - t0) / (sec * 1000));
+      // кривая «равной мощности»: в середине перехода громкость не проваливается
+      el._fade = to > from ? from + (to - from) * Math.sin(p * Math.PI / 2) : from + (to - from) * (1 - Math.cos(p * Math.PI / 2));
+      applyVol();
+      if (p >= 1) clearInterval(el._fadeT);
+    }, 50);
     if (done) el._fadeDone = setTimeout(done, sec * 1000 + 60);
   }
   function stopEl(el){ clearInterval(el._fadeT); clearTimeout(el._fadeDone); dropHls(el); el.pause(); el.removeAttribute('src'); el.load(); setFade(el, 1); }
@@ -2727,15 +2664,13 @@
   function anyMediaLoaded(){ return allEls().some(function (el){ return !!el.getAttribute('src'); }); }
   function setNormalize(on){
     AX.norm = on;
-    if (on && !AX.ctx) {
-      if (!anyMediaLoaded()) axInit();
-      else $('setNormNote').textContent = 'Включится после перезапуска программы';
-    }
-    AX.nodes.forEach(function (n){ axApply(n, 0.3); });
+    allEls().forEach(function (el){ if (!on) el._norm = 1; });
+    if (on && curTrack) { var m = master(); if (m === aud || m === aud2 || m === video) axTrackStart(m, curTrack); }
+    applyVol();
   }
   if (A.getSetting) {
     A.getSetting('crossfade').then(function (v){ AX.xfade = v == null ? 6 : (parseInt(v, 10) || 0); showXfade(AX.xfade); });
-    A.getSetting('normalize').then(function (v){ AX.norm = v !== false; if (AX.norm && !anyMediaLoaded()) axInit(); });
+    A.getSetting('normalize').then(function (v){ AX.norm = v !== false; });
     A.getSetting('ytEnabled').then(function (v){ SVC.ytOn = v !== false; renderSvc(); });
     A.getSetting('ymWebFallback').then(function (v){ SVC.ymweb = v !== false; });
     A.getSetting('scEnabled').then(function (v){ SVC.scOn = v !== false; });
