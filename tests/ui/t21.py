@@ -36,6 +36,13 @@ async def main():
         await pg.wait_for_timeout(300)
         await E("document.getElementById('next').click()"); await pg.wait_for_timeout(1500)
         print('после пропуска: запросов waveMore +', len([x for x in await E("window.__log") if x.startswith('waveMore')]) - n0, '| skip:', [x for x in await E("window.__log") if x == 'fb skip'][:1], '| строк:', await E("document.querySelectorAll('.qn-row').length"))
+        # «Волна по треку»: кнопка в нижнем плеере (играет волна — переключается сразу)
+        print('кнопка волны по треку видна:', await E("!document.getElementById('waveTrackBtn').hidden"))
+        await E("document.getElementById('waveTrackBtn').click()"); await pg.wait_for_timeout(900)
+        print('волна по треку:', await E("document.getElementById('waveTitle').textContent"), '|', [x for x in await E("window.__log") if x.startswith('waveStart')][-1:])
+        await E("var r=document.querySelector('#queue .qrow'); r.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,clientX:1200,clientY:600}))"); await pg.wait_for_timeout(150)
+        print('в меню трека:', await E("Array.from(document.querySelectorAll('.ctx button')).map(x=>x.textContent).filter(t=>/Волна/.test(t))"))
+        await E("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))")
         # кнопка «Очистить очередь» — напротив названия трека
         print('очистить рядом с названием:', await E("!!document.querySelector('.vmeta #clearq')"))
         # меню волны: плейлисты фоном

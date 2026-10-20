@@ -1191,6 +1191,7 @@
         <div class="s" id="f-sub">Найди трек и нажми play</div>
       </div>
       <button class="likeb" id="likeBtn" hidden aria-pressed="false" title="В «Мне нравится» Яндекса"></button>
+      <button class="likeb" id="waveTrackBtn" hidden title="Волна по этому треку — похожее после него" aria-label="Волна по этому треку"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path></svg></button>
     </div>
     <div class="f-center">
       <div class="controls">
@@ -1984,6 +1985,7 @@
   var CI = function (d, fill){ return '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (fill ? 'currentColor' : 'none') + '" stroke="' + (fill ? 'none' : 'currentColor') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
   var CTX_ICONS = [
     [/^Играть сейчас|^Начать сначала/, CI('<path d="M7 5v14l12-7z"></path>', true)],
+    [/^Волна по/, CI('<path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path>')],
     [/^Играть следующим/, CI('<path d="M5 4h14M12 20V9M7 13l5-5 5 5"></path>')],
     [/^Сыграть ещё раз/, CI('<path d="M17 2l4 4-4 4"></path><path d="M3 11v-1a4 4 0 014-4h14M7 22l-4-4 4-4"></path><path d="M21 13v1a4 4 0 01-4 4H3"></path>')],
     [/^В конец очереди|^Все версии/, CI('<path d="M3 6h13M3 12h13M3 18h8M18 14v6M15 17h6"></path>')],
@@ -2033,6 +2035,7 @@
     if (!pend && i !== current) items.push({ label: 'Сыграть ещё раз — следующим', act: function(){ queue.splice(current + 1, 0, copyTrack(v)); renderQueue(); saveToday(); prefetchNext(); } });
     if (pend && i !== queue.length - 1) items.push({ label: 'В конец очереди', act: function(){ moveItem(i, queue.length); } });
     items.push({ label: 'В плейлист…', act: function(){ setTimeout(function(){ openAddToListMenu(e.clientX, e.clientY, [v]); }, 0); } });
+    if (ymLoggedIn) items.push({ label: 'Волна по этому треку', act: function(){ waveByTrack(v); } });
     items.push({ label: 'Сохранить всю ленту как плейлист…', act: function(){ askDlg({ title: 'Лента в плейлист', text: 'Все песни из очереди и сыгранные сегодня (' + queue.length + ').', label: 'Название', value: 'Стрим ' + new Date().toLocaleDateString('ru-RU') }).then(function (r){ if (!r) return; var m = localCreate(r.value, dedupeTracks(queue)); toast('Создан «' + m.title + '» · ' + m.tracks.length + ' ' + plural(m.tracks.length)); }); } });
     items.push('-');
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
@@ -2052,6 +2055,7 @@
     items.push({ label: 'Играть следующим', act: function(){ addNext(v); } });
     items.push({ label: 'В конец очереди', act: function(){ addToQueue(v); } });
     items.push({ label: 'В плейлист…', act: function(){ setTimeout(function(){ openAddToListMenu(x, y, [v]); if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px'; }, 0); } });
+    if (ymLoggedIn) items.push({ label: 'Волна по этому треку', act: function(){ waveByTrack(v); } });
     if (v.alts && v.alts.length) items.push({ label: 'Другие версии (' + v.alts.length + ')', act: function(){ setTimeout(function(){ openVersionsMenu(x, y, v); if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px'; }, 0); } });
     items.push('-');
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
@@ -2121,6 +2125,7 @@
   var HEART = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>';
   var HEART_ON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>';
   function renderLike(){
+    var wb = $('waveTrackBtn'); if (wb) wb.hidden = !(curTrack && ymLoggedIn && (srcOf(curTrack) === 'ym' || curTrack.title));
     var b = $('likeBtn'), t = curTrack;
     var show = !!(t && srcOf(t) === 'ym' && ymLoggedIn);
     b.hidden = !show;
@@ -2336,6 +2341,24 @@
     var r = await A.ymWaveStart(waveOpts());
     if (tok === bgToken && r && r.tracks && r.tracks.length) { waveBuf = r.tracks; renderQueue(); topUpWave(); }
   }
+
+  // «Волна по треку»: похожее на этот трек (трек не из Яндекса Тапёр сначала находит в Яндексе)
+  async function waveByTrack(v){
+    if (!v) return;
+    if (!ymLoggedIn) { toast('Для волны нужен вход в Яндекс', 'Войти', browserLogin); return; }
+    var id = srcOf(v) === 'ym' ? v.id : '';
+    if (!id && A.findAlt) {
+      toast('Ищу «' + v.title + '» в Яндексе…');
+      var r = await A.findAlt(slimForWeb(v), 'ym').catch(function(){ return null; });
+      if (r && r.track && (r.status === 'exact' || r.status === 'close')) id = r.track.id;
+    }
+    if (!id) { toast('Этого трека нет в Яндексе — волну по нему не запустить'); return; }
+    var w = { kind: 'wave', station: 'track:' + id, seeds: ['track:' + id], name: 'по треку «' + v.title + '»' };
+    var busy = !isIdle() && !(queue[current] && queue[current].bg);
+    if (busy) { setBg(w, false); bgPending = true; renderWaveUi(); toast('Волна по треку «' + v.title + '» — после того, что сейчас играет'); }
+    else { setBg(w, true); toast('Волна по треку «' + v.title + '»'); }
+  }
+  $('waveTrackBtn').onclick = function(){ waveByTrack(curTrack); };
 
   // ===== Что сыграет фон: показываем в очереди =====
   // Волна: ~10 треков вперёд; после пропуска или лайка первые 3 остаются, остальное Яндекс подбирает заново.
