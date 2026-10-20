@@ -15,19 +15,19 @@
   input::placeholder { color: #7C8090; }
 
   /* Шапка */
-  header { display: flex; flex-direction: column; gap: 10px; padding: 10px 24px 12px; border-bottom: 1px solid #24262F; flex: 0 0 auto; -webkit-app-region: drag; }
+  header { display: flex; flex-direction: column; gap: 10px; padding: 32px 24px 12px; border-bottom: 1px solid #24262F; flex: 0 0 auto; -webkit-app-region: drag; }
   .hrow { display: flex; align-items: center; gap: 14px; min-width: 0; }
-  .hrow1 { padding-right: 130px; min-height: 36px; } /* справа — системные кнопки окна */
+  .hrow1 { padding-right: 130px; min-height: 28px; } /* справа — системные кнопки окна */
   .hspace { flex: 1 1 auto; }
-  .upd { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
-  .upd-area { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #C9CBD4; white-space: nowrap; }
+  .upd { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .upd-area { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #C9CBD4; white-space: nowrap; }
   .upd-area:empty { display: none; }
-  .upd-check { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .upd-check { height: 24px; padding: 0 10px; border-radius: 12px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 5px; cursor: pointer; }
   .upd-check:hover { background: #20222C; color: #ECEDF2; }
   .upd-check:disabled { opacity: .45; cursor: default; }
-  .upd-go { height: 30px; padding: 0 12px; border-radius: 15px; border: 0; background: #9B87FF; color: #0E0F13; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .upd-go { height: 26px; padding: 0 10px; border-radius: 13px; border: 0; background: #9B87FF; color: #0E0F13; font-size: 11px; font-weight: 700; cursor: pointer; }
   .upd-go:hover { background: #B3A3FF; }
-  .upd-bar { width: 120px; height: 6px; border-radius: 3px; background: #2C2F3A; overflow: hidden; }
+  .upd-bar { width: 100px; height: 5px; border-radius: 2.5px; background: #2C2F3A; overflow: hidden; }
   .upd-bar i { display: block; height: 100%; width: 0%; background: #9B87FF; transition: width .25s; }
   .upd-ok { color: #4ADE9A; }
   .upd-err { color: #FF8A7A; cursor: help; }
@@ -46,7 +46,7 @@
   .chip.active { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
   .chip.soon { opacity: .5; cursor: default; }
   /* Состояние сервисов, предупреждение, вкладка «Браузер» */
-  .hwarn { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid rgba(255,212,59,.45); background: rgba(255,212,59,.1); color: #FFD43B; font: 600 12.5px Onest, sans-serif; cursor: pointer; margin-right: 8px; white-space: nowrap; }
+  .hwarn { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid rgba(255,212,59,.45); background: rgba(255,212,59,.1); color: #FFD43B; font: 600 11px Onest, sans-serif; cursor: pointer; margin-right: 6px; white-space: nowrap; }
   .disc { display: flex; gap: 12px; background: #1A1B22; border: 1px solid #2C2F3A; border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; font-size: 13px; color: #B5B8C4; line-height: 1.55; }
   .disc b { color: #ECEDF2; }
   .hs-svc { padding: 14px 16px; border-bottom: 1px solid #23252F; }
@@ -128,8 +128,8 @@
   .yl-safe b { color: #ECEDF2; }
   .chip.down { border-style: dashed; color: #8A8E9C; }
   .chip.down .dot { background: #5A5E6C !important; }
-  .dot { width: 8px; height: 8px; border-radius: 4px; flex: 0 0 auto; display: inline-block; }
-  .badge { font-size: 12px; color: #9B87FF; border: 1px solid #9B87FF; border-radius: 6px; padding: 2px 8px; flex: 0 0 auto; }
+  .dot { width: 7px; height: 7px; border-radius: 4px; flex: 0 0 auto; display: inline-block; }
+  .badge { font-size: 11px; color: #9B87FF; border: 1px solid #9B87FF; border-radius: 5px; padding: 2px 6px; flex: 0 0 auto; }
 
   /* Основная часть */
   main { flex: 1; display: flex; min-height: 0; }
@@ -234,7 +234,7 @@
   #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; object-fit: contain; }
   .vmeta { padding: 12px 4px 2px; display: flex; flex-direction: column; gap: 4px; }
   .nplabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #9B87FF; }
-  .vmeta .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vmeta .t { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vmeta .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .qlist { flex: 1 1 0; min-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; position: relative; }
@@ -280,7 +280,7 @@
   footer { flex: 0 0 auto; display: flex; align-items: center; gap: 28px; padding: 14px 24px; border-top: 1px solid #1B1C22; background: #07070A; }
   .f-now { display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-width: 0; }
   .f-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
-  .f-now .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-now .t { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .f-now .s { font-size: 12px; color: #9EA2B0; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .f-center { flex: 2 1 420px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
   .controls { display: flex; align-items: center; gap: 14px; }
@@ -299,7 +299,7 @@
   .f-right input { width: 110px; accent-color: #9B87FF; cursor: pointer; }
 
   /* Аккаунт Яндекса */
-  .acct { flex: 0 0 auto; height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #2C2F3A; background: #181A21; color: #ECEDF2; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+  .acct { flex: 0 0 auto; height: 24px; padding: 0 10px; border-radius: 12px; border: 1px solid #2C2F3A; background: #181A21; color: #ECEDF2; font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   .acct:hover { background: #20222C; }
 
   /* Подсказки при наборе */
@@ -543,10 +543,11 @@
       <div class="hspace"></div>
       <button class="hwarn" id="healthWarn" hidden></button>
       <button class="acct" id="acct" title="Аккаунт Яндекс Музыки"><span class="dot" style="background:#FFD43B"></span>Войти в Яндекс</button>
+      <button class="acct" id="acctYt" title="Аккаунт YouTube"><span class="dot" style="background:#FF0000"></span>Войти в YouTube</button>
       <div class="upd">
         <span class="badge" id="ver">версия…</span>
         <span class="upd-area" id="updArea" aria-live="polite"></span>
-        <button class="upd-check" id="updCheck" title="Проверить обновления"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.3-5.7L20 8"></path><path d="M20 3v5h-5"></path></svg><span>Проверить обновления</span></button>
+        <button class="upd-check" id="updCheck" title="Проверить обновления"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.3-5.7L20 8"></path><path d="M20 3v5h-5"></path></svg><span>Проверить обновления</span></button>
       </div>
     </div>
     <div class="hrow hrow2" id="hrow2">
@@ -1289,7 +1290,7 @@
   function setNowPlaying(v){
     curTrack = v || null;
     var line = v ? ((v.author ? v.author + ' — ' : '') + v.title) : '';
-    document.title = line ? line + ' · ' + APP_TITLE : APP_TITLE;
+    document.title = line || APP_TITLE;
     if (A.nowPlaying) A.nowPlaying(v ? { artist: v.author || '', title: v.title || '', album: v.album || '', source: srcName(v) } : null);
     renderLike();
     updNpPreview();
@@ -3139,8 +3140,8 @@
     return [
       { t: 'Открой YouTube и проверь, что ты вошёл', d: 'Зайди на ' + ui('youtube.com') + ' в своём обычном браузере. Справа вверху должна быть твоя аватарка, а не кнопка «Войти». Если YouTube открывается только с VPN — включи его.', p: ytPic('avatar') },
       { t: 'Нажми ' + k('F12'), d: 'Сбоку или снизу откроется «панель разработчика». Не пугайся — это просто окно для просмотра, мы ничего в нём не меняем. Если ' + k('F12') + ' не срабатывает: ' + k('Ctrl') + '+' + k('Shift') + '+' + k('I') + (ff ? '' : '. В Яндекс Браузере также: меню ☰ → «Дополнительно» → «Дополнительные инструменты» → «Инструменты разработчика»') + '.', p: ytPic('f12') },
-      ff ? { t: 'Открой вкладку ' + ui('Сеть') + ' <span class="yl-mute">(Network)</span>', d: 'Она в верхнем ряду панели, рядом с «Консоль» и «Отладчик».', p: ytPic('tab')('Сеть', 'Инспектор  Консоль  Отладчик') }
-         : { t: 'Открой вкладку ' + ui('Network') + ' <span class="yl-mute">(или «Сеть»)</span>', d: 'Она в верхнем ряду панели. Не видно — нажми ' + ui('»') + ' в этом ряду и выбери её из списка.', p: ytPic('tab')('Network', 'Elements  Console  Sources') },
+      ff ? { t: 'Открой вкладку ' + ui('Сеть') + ' <span class="yl-mute">(Network)</span>', d: 'Она в верхнем ряду панели, рядом с «Консоль» и «Отладчик». <b>Важно:</b> в выпадающем списке «Throttling» (рядом с поиском) выбери ' + ui('No throttling') + ' вместо «Offline» — иначе ключ не скопируется.', p: ytPic('tab')('Сеть', 'Инспектор  Консоль  Отладчик') }
+         : { t: 'Открой вкладку ' + ui('Network') + ' <span class="yl-mute">(или «Сеть»)</span>', d: 'Она в верхнем ряду панели. Не видно — нажми ' + ui('»') + ' в этом ряду и выбери её из списка. <b>Важно:</b> в выпадающем списке «Throttling» (вверху слева или справа в панели) выбери ' + ui('No throttling') + ' вместо «Offline» — иначе ключ не скопируется.', p: ytPic('tab')('Network', 'Elements  Console  Sources') },
       ff ? { t: 'Обнови страницу ' + k('F5') + ' и нажми фильтр ' + ui('HTML'), d: 'Список заполнится строками. В ряду фильтров над списком нажми ' + ui('HTML') + ' — останется строка ' + ui('www.youtube.com') + ' (в колонке «Файл» будет «/»).', tip: 'Пусто? Нажми ' + k('F5') + ' ещё раз при открытой панели.', p: ytPic('filter')('HTML', 'Все', 'CSS  JS  XHR  Шрифты') }
          : { t: 'Обнови страницу ' + k('F5') + ' и нажми фильтр ' + ui('Doc'), d: 'Список заполнится строками. В ряду фильтров над списком нажми ' + ui('Doc') + ' <span class="yl-mute">(«Документ»)</span> — останется одна строка ' + ui('www.youtube.com') + '.', tip: 'Строк несколько или ни одной? Нажми ' + k('F5') + ' ещё раз при открытой панели.', p: ytPic('filter')('Doc', 'All  Fetch/XHR', 'CSS  JS  Img  Media') },
       ff ? { t: 'Правой кнопкой по строке → ' + ui('Копировать значение') + ' → ' + ui('Копировать как cURL (POSIX)'), d: 'В английской версии: ' + ui('Copy Value') + ' → ' + ui('Copy as cURL (POSIX)') + '. Подойдёт и «как cURL (Windows)» — Тапёр поймёт любой.', p: ytPic('menu')('Копировать значение', 'Копировать как cURL (POSIX)') }
@@ -3462,6 +3463,7 @@
   // ===== Аккаунт Яндекс Музыки =====
   var acctBtn = $('acct');
   var YM_DOT = '<span class="dot" style="background:#FFD43B"></span>';
+  var YT_DOT = '<span class="dot" style="background:#FF0000"></span>';
   async function refreshAcct(){
     if (!A.ymStatus) return;
     var s = await A.ymStatus();
@@ -3486,6 +3488,21 @@
       if (!$('waveSettings').hidden) loadVariants(); else renderVariants();
     } else { likedSet = new Set(); stations = []; renderGenres(); renderVariants(); }
     renderWaveUi(); renderLike();
+  }
+
+  var acctBtnYt = $('acctYt');
+  async function refreshAcctYt() {
+    if (!A.ytStatus) return;
+    var s = await A.ytStatus();
+    if (s && s.loggedIn) {
+      acctBtnYt.innerHTML = YT_DOT + 'YouTube';
+      acctBtnYt.dataset.in = '1';
+      acctBtnYt.title = 'Нажми, чтобы выйти из аккаунта YouTube';
+    } else {
+      acctBtnYt.innerHTML = YT_DOT + 'Войти в YouTube';
+      acctBtnYt.dataset.in = '';
+      acctBtnYt.title = 'Войти в YouTube';
+    }
   }
   // Вход: по умолчанию через обычный браузер по коду; запасной — окно внутри приложения
   var lm = $('loginModal'), lmUrl = '', loginBusy = false;
@@ -3524,7 +3541,18 @@
     }
     browserLogin();
   });
+
+  acctBtnYt.addEventListener('click', async function(){
+    if (acctBtnYt.dataset.in) {
+      if (confirm('Выйти из аккаунта YouTube?')) { await A.ytLogout(); refreshAcctYt(); }
+      return;
+    }
+    if (!A.ytLoginBrowser) { alert('YouTube вход пока не настроен'); return; }
+    // TODO: открыть модалку для YT логина (пока заглушка)
+    alert('Войди в YouTube через настройки (вкладка "Браузер" → YouTube ключ)');
+  });
   refreshAcct();
+  refreshAcctYt();
   renderWaveUi();
 
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
