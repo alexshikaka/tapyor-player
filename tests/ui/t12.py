@@ -64,7 +64,8 @@ async def main():
         await pg.fill('.ask input[type=text]','Сборник'); await pg.click('.ask [data-x="1"]'); await pg.wait_for_timeout(200)
         print('переименован:', await E("localLists()[0].title"), '| заголовок:', await E("document.querySelector('#myPl h3').textContent"))
         # убрать трек и вернуть
-        await pg.click('#myPl .prm >> nth=0'); await pg.wait_for_timeout(150)
+        await pg.click('#myPl .prow .more >> nth=0'); await pg.wait_for_timeout(150)
+        await pg.click('.ctx button:has-text("Убрать из плейлиста")'); await pg.wait_for_timeout(150)
         n1 = await E("localLists()[0].tracks.length"); await pg.click('#toast button'); await pg.wait_for_timeout(150)
         print('убрать/вернуть:', n1, '→', await E("localLists()[0].tracks.length"))
         # удалить и вернуть

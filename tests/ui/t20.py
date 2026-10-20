@@ -115,10 +115,11 @@ async def main():
         # свой плейлист Яндекса: переименовать, убрать песню
         await E("document.querySelector('#mySide [data-mytab=ym]').click()"); await pg.wait_for_timeout(200)
         await E("Array.from(document.querySelectorAll('#mySide .mit')).find(x=>/Мой плейлист/.test(x.textContent)).click()"); await pg.wait_for_timeout(500)
-        print('свой плейлист Яндекса, кнопки:', await E("Array.from(document.querySelectorAll('#myPl .plbtns button')).map(x=>x.textContent).filter(t=>/Переимен|Удалить/.test(t))"), '| × у песен:', await E("document.querySelectorAll('#myPl .plrows .prm').length"))
+        print('свой плейлист Яндекса, кнопки:', await E("Array.from(document.querySelectorAll('#myPl .plbtns button')).map(x=>x.textContent).filter(t=>/Переимен|Удалить/.test(t))"), '| убрать в меню у песен:', await E("document.querySelectorAll('#myPl .plrows .row').length && Array.from(document.querySelectorAll('#myPl .plrows .row')).every(r=>r._rm)"))
         await E("document.querySelector('#myPl [data-a=pren]').click()"); await pg.wait_for_timeout(200)
         await pg.fill('.ask input[type=text]', 'Для стрима'); await pg.keyboard.press('Enter'); await pg.wait_for_timeout(400)
-        await E("document.querySelector('#myPl .plrows .prm').click()"); await pg.wait_for_timeout(400)
+        await E("document.querySelector('#myPl .plrows .row .more').click()"); await pg.wait_for_timeout(200)
+        await E("Array.from(document.querySelectorAll('.ctx button')).find(x=>/Убрать из плейлиста/.test(x.textContent)).click()"); await pg.wait_for_timeout(400)
         print('Яндекс:', [x for x in await E("window.__log") if x.startswith('ymRename') or x.startswith('ymRemove')])
         # В плейлист… → свои плейлисты площадок
         await pg.click('#tabs [data-tab=search]'); await pg.wait_for_timeout(200)

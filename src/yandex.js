@@ -119,11 +119,18 @@ async function suggest(part, token) {
 async function accountStatus(token) {
   const r = await api('/account/status', token);
   const acc = (r && r.account) || {};
+  // аватарка — по возможности (Яндекс ID), без неё кнопка покажет первую букву имени
+  let avatar = '';
+  try {
+    const res = await fetch('https://login.yandex.ru/info?format=json', { headers: { Authorization: 'OAuth ' + token }, signal: AbortSignal.timeout(5000) });
+    if (res.ok) { const j = await res.json(); if (j && j.default_avatar_id && !j.is_avatar_empty) avatar = 'https://avatars.yandex.net/get-yapic/' + j.default_avatar_id + '/islands-middle'; }
+  } catch (e) { /* без аватарки */ }
   return {
     uid: acc.uid ? String(acc.uid) : '',
     login: acc.login || '',
     name: acc.displayName || acc.fullName || acc.login || '',
-    hasPlus: !!(r && r.plus && r.plus.hasPlus)
+    hasPlus: !!(r && r.plus && r.plus.hasPlus),
+    avatar
   };
 }
 
