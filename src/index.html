@@ -227,7 +227,7 @@
   .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 240; background: var(--bg4); color: var(--tx); border: 1px solid var(--ln3); border-radius: 12px; padding: 10px 14px; font-size: 13px; display: flex; gap: 14px; align-items: center; box-shadow: 0 12px 30px rgba(0,0,0,.5); max-width: 80vw; }
   .toast[hidden] { display: none; }
   .toast button { border: 0; background: transparent; color: var(--ac2); font: 600 13px Onest, sans-serif; cursor: pointer; }
-  .mbar { margin: 8px 4px 0; padding: 10px; border: 1px solid var(--ac); border-radius: 12px; background: var(--acbg); display: flex; flex-direction: column; gap: 6px; }
+  .mbar { margin: 10px 0 0; padding: 8px 12px; border: 1px solid var(--ac); border-radius: 12px; background: var(--acbg); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
   .mbar span { font-size: 12px; color: var(--tx3); }
   .mbar div { display: flex; gap: 6px; }
   .mbar .pbtn { height: 32px; padding: 0 12px; font-size: 12px; }
@@ -488,9 +488,32 @@
   .plrows { display: flex; flex-direction: column; gap: 4px; }
 
   /* Вкладка «Моё» */
-  .my-col { flex: 1 1 auto; min-width: 0; display: flex; min-height: 0; }
-  .my-side { flex: 0 0 290px; border-right: 1px solid var(--bg3); padding: 8px 12px 16px; overflow-y: auto; }
-  .my-main { flex: 1; min-width: 0; padding: 18px 24px; display: flex; flex-direction: column; min-height: 0; }
+  .my-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0; padding: 14px 24px 0; }
+  /* Плейлисты сверху: одна панель, подсвеченная акцентом — вкладки, действия, пилюли */
+  .my-side { flex: 0 0 auto; background: var(--bg3); border: 1px solid var(--ln); border-radius: 16px; padding: 0 14px 12px; max-height: 40vh; overflow-y: auto; }
+  .my-main { flex: 1; min-width: 0; padding: 16px 0 18px; display: flex; flex-direction: column; min-height: 0; }
+  .mytabs { display: flex; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--ln); position: sticky; top: 0; z-index: 1; background: inherit; }
+  .myt { height: 44px; padding: 0 4px; margin-right: 18px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--tx3); font: 600 14px Onest, sans-serif; display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .myt small { font-weight: 500; color: var(--tx5); }
+  .myt:hover { color: var(--tx); }
+  .myt.on { color: var(--tx); border-bottom-color: var(--ac); }
+  .myt-sp { flex: 1; }
+  .myact { display: flex; gap: 6px; padding: 6px 0; }
+  .myab { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln3); background: var(--bg4); color: var(--tx); font: 600 12px Onest, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+  .myab:hover { background: var(--hov3); }
+  .myab.on { border-color: var(--ac); }
+  .myab.ghost { background: transparent; }
+  .mypills { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; align-items: center; }
+  .mypills .mnote { padding: 4px 2px; flex: 1 1 100%; }
+  .mysep { font-size: 12px; color: var(--tx4); margin: 0 2px 0 6px; }
+  .mypills .mit { width: auto; max-width: 340px; height: 36px; padding: 0 14px 0 5px; gap: 8px; border-radius: 18px; border: 1px solid var(--ln); background: var(--bg2); }
+  .mypills .mit:hover { background: var(--bg4); }
+  .mypills .mit.on { border-color: var(--ac); background: var(--acbg); }
+  .mypills .mit img, .mypills .mit .ph { width: 26px; height: 26px; border-radius: 13px; }
+  .mypills .mit .mm { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+  .mypills .mit b { font-size: 13px; font-weight: 600; }
+  .mypills .mit small { margin: 0; flex: 0 0 auto; color: var(--tx4); }
+  .mypills .mit .mchk { width: 18px; height: 18px; margin-left: 4px; }
   .mgrp { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 16px 10px 6px; display: flex; justify-content: space-between; align-items: center; }
   .mgrp button { border: 0; background: transparent; color: var(--ac); font: 500 12px Onest, sans-serif; cursor: pointer; text-transform: none; letter-spacing: 0; }
   .mit { display: flex; align-items: center; gap: 12px; width: 100%; padding: 6px 8px; border-radius: 10px; border: 0; background: transparent; color: var(--tx); text-align: left; font-family: inherit; cursor: pointer; }
@@ -3883,7 +3906,7 @@
       ytPls = (y && y.playlists) || []; ytMyErr = (y && y.error) || '';
     }
     renderMySide();
-    if (!mySel && !imp && !impHost().querySelector('.imp')) selectMy(ymLoggedIn ? LIKED : (savedLists[0] || null));
+    if (!mySel && !imp && !impHost().querySelector('.imp')) selectMy(localLists()[0] || (ymLoggedIn ? LIKED : (savedLists[0] || null)));
   }
   function myItem(m, sub){
     var i = myItems.push(m) - 1;
@@ -3891,53 +3914,77 @@
     var ph = m.type === 'liked' ? '<span class="ph" style="background:linear-gradient(135deg,' + (m.src === 'yt' ? '#FF4E45,#FF8A3D' : '#FF3D6E,#9B87FF') + ')"></span>' : (m.thumb ? '<img src="' + esc(m.thumb) + '" alt="">' : '<span class="ph"></span>');
     return '<button class="mit' + (on ? ' on' : '') + (mergeSel ? ' msel' : '') + '" data-i="' + i + '">' + (mergeSel ? '<span class="mchk" aria-hidden="true">' + (on ? '✓' : '') + '</span>' : '') + ph + '<span class="mm"><b>' + esc(m.title) + '</b><small>' + sub + '</small></span></button>';
   }
+  // Плейлисты сверху (вариант 2А): вкладки площадок + «Новый / Импорт / Объединить» справа, ниже — плейлисты-пилюли
+  var mySrc = 'tap';
+  var MY_TABS = [{ id: 'tap', n: 'Мои плейлисты', c: '#9B87FF' }, { id: 'lc', n: 'На компьютере', c: '#4ADE9A' }, { id: 'ym', n: 'Яндекс', c: '#FFD43B' }, { id: 'yt', n: 'YouTube', c: '#FF5A52' }, { id: 'links', n: 'Ссылки', c: '' }];
+  function myTabOf(m){
+    if (!m) return mySrc;
+    if (m.src === 'tap') return 'tap';
+    if (m.src === 'lc') return 'lc';
+    if (savedLists.some(function (x){ return x.src !== 'tap' && listId(x) === listId(m); })) return 'links';
+    if (m.src === 'ym') return 'ym';
+    if (m.src === 'yt') return 'yt';
+    return 'links';
+  }
+  function linkMark(p){ return p.links ? ' · ⟳ ' + Object.keys(p.links).map(function (k){ return k === 'yt' ? 'YouTube' : 'Яндекс'; }).join(', ') : ''; }
   function renderMySide(loading){
     var side = $('mySide'); myItems = [];
-    var h = mergeSel ? '<div class="mbar"><b>Объединить плейлисты</b><span>Отметь 2 или больше · выбрано ' + mergeSel.size + '</span><div><button class="pbtn y" data-mgo="1"' + (mergeSel.size < 2 ? ' disabled' : '') + '>Объединить</button><button class="pbtn g" data-mcancel="1">Отмена</button></div></div>' : '';
-    h += '<div style="padding:8px 4px 0;display:flex;gap:6px"><button class="pbtn" data-new="1" style="flex:1;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Новый плейлист</button></div>';
-    h += '<div style="padding:6px 4px 0"><button class="pbtn" data-import="1" style="width:100%;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Импорт: текст, ссылка, файл</button></div>';
     var mine = localLists(), links = savedLists.filter(function (x){ return x.src !== 'tap'; });
-    h += '<div class="mgrp">Мои плейлисты' + (mergeSel ? '' : '<button data-merge="1" title="Собрать несколько плейлистов в один">Объединить</button>') + '</div>';
-    if (!mine.length) h += '<div class="mnote">«Новый плейлист» — и добавляй песни через «⋯» → «В плейлист…».</div>';
-    mine.forEach(function (p){ h += myItem(p, srcDot(p) + (p.type === 'text' ? 'Из текста' : 'Тапёр') + ' · ' + ((p.tracks || []).length) + ' ' + plural((p.tracks || []).length) + (p.links ? ' · ' + Object.keys(p.links).map(function (k){ return k === 'yt' ? 'YouTube' : 'Яндекс'; }).join(' + ') : '')); });
-    h += '<div class="mgrp">На компьютере' + (LIB.folders.length ? '<button data-libadd="1">＋ Папка</button>' : '') + '</div>';
-    if (!LIB.count && !LIB.folders.length) h += '<div class="mnote">Свои MP3, FLAC и другие файлы.</div><div style="padding:0 10px"><button class="pbtn" data-libadd="1">Добавить папку с музыкой</button></div>';
-    else {
-      h += myItem(LIBALL, srcDot({ src: 'lc' }) + LIB.count + ' ' + plural(LIB.count) + (LIB.scanning ? ' · читаю…' : ''));
-      if (LIB.folders.length > 1) LIB.folders.forEach(function (f){ h += myItem({ src: 'lc', type: 'folder', listId: 'fd:' + f.path, path: f.path, title: f.path.split(/[\\/]/).filter(Boolean).pop() || f.path }, 'Папка · ' + f.count + ' ' + plural(f.count)); });
+    var own = myPls.filter(function (p){ return p.own; }), saved = myPls.filter(function (p){ return !p.own; });
+    var cnt = { tap: mine.length, lc: LIB.count, ym: ymLoggedIn ? 1 + myPls.length : 0, yt: ytLogged() ? 1 + ytPls.length : 0, links: links.length };
+    var h = '<div class="mytabs" role="tablist">' + MY_TABS.map(function (t){
+      return '<button role="tab" class="myt' + (mySrc === t.id ? ' on' : '') + '" data-mytab="' + t.id + '">' + (t.c ? '<span class="dot" style="background:' + t.c + '"></span>' : '') + t.n + (cnt[t.id] ? ' <small>' + (t.id === 'lc' ? cnt[t.id].toLocaleString('ru-RU') : cnt[t.id]) + '</small>' : '') + '</button>';
+    }).join('') + '<span class="myt-sp"></span><div class="myact">' +
+      '<button class="myab" data-new="1">＋ Новый</button>' +
+      '<button class="myab" data-import="1" title="Плейлист из текста, ссылки (видео YouTube, Spotify, Telegram…) или файла">⇣ Импорт</button>' +
+      '<button class="myab' + (mergeSel ? ' on' : '') + '" data-merge="1" title="Собрать несколько плейлистов в один">⧉ Объединить</button></div></div>';
+    if (mergeSel) h += '<div class="mbar"><b>Объединить плейлисты</b><span>Отметь 2 или больше — можно на разных вкладках · выбрано ' + mergeSel.size + '</span><div><button class="pbtn y" data-mgo="1"' + (mergeSel.size < 2 ? ' disabled' : '') + '>Объединить</button><button class="pbtn g" data-mcancel="1">Отмена</button></div></div>';
+    h += '<div class="mypills">';
+    var note = function (t, btn){ h += '<div class="mnote">' + t + '</div>' + (btn || ''); };
+    if (mySrc === 'tap') {
+      if (!mine.length) note('Пока пусто. «＋ Новый» — и добавляй песни через «⋯» → «В плейлист…», или «⇣ Импорт».');
+      mine.forEach(function (p){ h += myItem(p, ((p.tracks || []).length) + linkMark(p)); });
+    } else if (mySrc === 'lc') {
+      if (!LIB.count && !LIB.folders.length) note('Свои MP3, FLAC и другие файлы с компьютера.', '<button class="myab" data-libadd="1">＋ Добавить папку с музыкой</button>');
+      else {
+        h += myItem(LIBALL, LIB.count.toLocaleString('ru-RU') + ' ' + plural(LIB.count) + (LIB.scanning ? ' · читаю…' : ''));
+        LIB.folders.forEach(function (f){ h += myItem({ src: 'lc', type: 'folder', listId: 'fd:' + f.path, path: f.path, title: f.path.split(/[\\/]/).filter(Boolean).pop() || f.path }, 'папка · ' + f.count); });
+        h += '<button class="myab" data-libadd="1">＋ Папка</button>';
+      }
+    } else if (mySrc === 'ym') {
+      if (!ymLoggedIn) note('Войди в Яндекс, чтобы видеть «Мне нравится» и свои плейлисты.', '<button class="myab" data-login="1">Войти в Яндекс</button>');
+      else {
+        h += myItem(LIKED, 'лайки');
+        own.forEach(function (p){ h += myItem(p, countText(p).replace(/ .*/, '')); });
+        if (saved.length) { h += '<span class="mysep">Сохранённые:</span>'; saved.forEach(function (p){ h += myItem(p, countText(p).replace(/ .*/, '')); }); }
+        if (loading) note('Загружаю плейлисты…'); else if (myErr) note('⚠ ' + esc(myErr));
+        h += '<button class="myab ghost" data-refresh="1">Обновить</button>';
+      }
+    } else if (mySrc === 'yt') {
+      if (!ytLogged()) note('Войди в YouTube, чтобы видеть свои плейлисты и лайки.', '<button class="myab" data-ytlogin="1">Войти в YouTube</button>');
+      else {
+        h += myItem(YT_LIKED, 'лайки');
+        ytPls.forEach(function (p){ h += myItem(p, countText(p).replace(/ .*/, '')); });
+        if (loading) note('Загружаю плейлисты…'); else if (ytMyErr) note('⚠ ' + esc(ytMyErr));
+      }
+    } else {
+      if (!links.length) note('Открой плейлист в поиске и нажми «Сохранить в Тапёр» — он появится здесь.');
+      links.forEach(function (p){ h += myItem(p, srcName(p) + (countText(p) ? ' · ' + countText(p).replace(/ .*/, '') : '')); });
     }
-    h += '<div class="mgrp">Яндекс Музыка' + (ymLoggedIn ? '<button data-refresh="1">Обновить</button>' : '') + '</div>';
-    if (!ymLoggedIn) h += '<div class="mnote">Войди в Яндекс, чтобы видеть «Мне нравится» и свои плейлисты.</div><div style="padding:0 10px"><button class="pbtn" data-login="1">Войти в Яндекс</button></div>';
-    else {
-      h += myItem(LIKED, 'Твои лайки');
-      if (loading) h += '<div class="mnote">Загружаю плейлисты…</div>';
-      else if (myErr) h += '<div class="mnote">⚠ ' + esc(myErr) + '</div>';
-      var own = myPls.filter(function (p){ return p.own; }), saved = myPls.filter(function (p){ return !p.own; });
-      own.forEach(function (p){ h += myItem(p, 'Плейлист · ' + countText(p)); });
-      if (saved.length) { h += '<div class="mgrp">Сохранённые в Яндексе</div>'; saved.forEach(function (p){ h += myItem(p, esc(p.author || '') + (countText(p) ? ' · ' + countText(p) : '')); }); }
-    }
-    h += '<div class="mgrp">YouTube</div>';
-    if (!ytLogged()) h += '<div class="mnote">Войди в YouTube, чтобы видеть свои плейлисты и лайки.</div><div style="padding:0 10px"><button class="pbtn" data-ytlogin="1">Войти в YouTube</button></div>';
-    else {
-      h += myItem(YT_LIKED, 'Твои лайки');
-      if (loading) h += '<div class="mnote">Загружаю плейлисты…</div>';
-      else if (ytMyErr) h += '<div class="mnote">⚠ ' + esc(ytMyErr) + '</div>';
-      ytPls.forEach(function (p){ h += myItem(p, 'Плейлист' + (countText(p) ? ' · ' + countText(p) : '')); });
-    }
-    h += '<div class="mgrp">Сохранённые ссылки</div>';
-    if (!links.length) h += '<div class="mnote">Открой плейлист в поиске и нажми «Сохранить в Тапёр».</div>';
-    links.forEach(function (p){ h += myItem(p, srcDot(p) + srcName(p) + (countText(p) ? ' · ' + countText(p) : '')); });
+    h += '</div>';
     side.innerHTML = h;
   }
+
   $('mySide').addEventListener('click', function(e){
     var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.mytab) { mySrc = b.dataset.mytab; renderMySide(); return; }
     if (b.dataset.refresh) { loadMy(true); return; }
     if (b.dataset.login) { browserLogin(); return; }
     if (b.dataset.ytlogin) { openYtDlg(); return; }
     if (b.dataset.import) { impSrc = null; openImport(); return; }
     if (b.dataset.libadd) { libAddFolder(); return; }
     if (b.dataset.new) { askDlg({ title: 'Новый плейлист', label: 'Название', value: 'Мой плейлист' }).then(function (r){ if (!r) return; var m = localCreate(r.value, []); selectMy(m); }); return; }
-    if (b.dataset.merge) { mergeSel = new Set(); mergeMap = {}; renderMySide(); return; }
+    if (b.dataset.merge) { if (mergeSel) mergeSel = null; else { mergeSel = new Set(); mergeMap = {}; } renderMySide(); return; }
     if (b.dataset.mcancel) { mergeSel = null; renderMySide(); return; }
     if (b.dataset.mgo) { doMerge(); return; }
     if (b.dataset.i != null) {
@@ -3971,6 +4018,7 @@
   function selectMy(m){
     var prevSel = mySel;
     mySel = m;
+    if (m && myTabOf(m) !== mySrc) { mySrc = myTabOf(m); renderMySide(); }
     var bs = document.querySelectorAll('#mySide .mit');
     for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', !!m && listId(myItems[parseInt(bs[k].dataset.i, 10)]) === listId(m));
     if (!m) { $('myPl').innerHTML = '<div class="muted">Выбери плейлист слева.</div>'; return; }

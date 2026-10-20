@@ -50,8 +50,10 @@ async def main():
         print('играет файл:', [x for x in await E("window.__log") if x.startswith('libStream')][:1])
         # вкладка Плейлисты → На компьютере
         await pg.click('#tabs [data-tab=my]'); await pg.wait_for_timeout(600)
-        grp = await E("Array.from(document.querySelectorAll('#mySide .mgrp')).map(x=>x.firstChild.textContent)")
-        print('группы:', grp)
+        grp = await E("Array.from(document.querySelectorAll('#mySide .myt')).map(x=>x.textContent)")
+        print('вкладки:', grp)
+        await pg.screenshot(path='l_top.png')
+        await E("document.querySelector('#mySide [data-mytab=lc]').click()"); await pg.wait_for_timeout(200)
         await E("Array.from(document.querySelectorAll('#mySide .mit')).find(x=>/компьютера/.test(x.textContent)).click()"); await pg.wait_for_timeout(500)
         print('песен:', await E("document.querySelectorAll('#myPl .lib-body .row').length"), '| вкладки:', await E("Array.from(document.querySelectorAll('#myPl .ar-tabs button')).map(x=>x.textContent).join(' | ')"))
         await pg.screenshot(path='l_lib.png')
@@ -111,6 +113,7 @@ async def main():
         print('файл → строк:', await E("document.getElementById('impCount').textContent"), '| ссылка открыта:', [x for x in await E("window.__log") if 'spotify' in x])
         await E("document.getElementById('impBack').click()"); await pg.wait_for_timeout(200)
         # свой плейлист Яндекса: переименовать, убрать песню
+        await E("document.querySelector('#mySide [data-mytab=ym]').click()"); await pg.wait_for_timeout(200)
         await E("Array.from(document.querySelectorAll('#mySide .mit')).find(x=>/Мой плейлист/.test(x.textContent)).click()"); await pg.wait_for_timeout(500)
         print('свой плейлист Яндекса, кнопки:', await E("Array.from(document.querySelectorAll('#myPl .plbtns button')).map(x=>x.textContent).filter(t=>/Переимен|Удалить/.test(t))"), '| × у песен:', await E("document.querySelectorAll('#myPl .plrows .prm').length"))
         await E("document.querySelector('#myPl [data-a=pren]').click()"); await pg.wait_for_timeout(200)

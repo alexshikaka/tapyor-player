@@ -58,7 +58,7 @@
 
 Сделано по плану «Плейлисты» (подробно — TODO.md, раздел 0.16.0): музыка с компьютера (src/tags.js, src/library.js, сервер /lfile и /lcover с меткой в cookie), мастер «Импорт» (src/importers.js: главы YouTube, Telegram JSON/HTML и t.me/s, CSV, M3U, Spotify embed, Deezer, Apple), перенос и синхронизация с Яндексом/YouTube (yandex.js: playlistInfo/appendTracks/rename/delete/removeTracks; ytoauth.js: scope youtube + запись), «Собрать песни» во вкладке «Браузер», громкость рядом с кнопками + колёсико, плейлисты фоном в меню волны. Тесты t20, t21.
 Владельцу проверить на Windows: настоящие файлы (теги cp1251, обложки, перемотка FLAC), перетаскивание файлов/папок, вход в YouTube заново (новое разрешение — Google покажет предупреждение «приложение не проверено», т.к. проект в режиме Testing), создание плейлиста на Яндексе, импорт Spotify/Deezer/t.me (в облаке сеть закрыта — не проверялось вживую).
-Ждёт решения: раскладка вкладки «Плейлисты» — макет с 5 вариантами https://claude.ai/artifact/WP2u7oLuCw9yebph4QSCA7
+Раскладка «Плейлистов» выбрана — вариант 2А (макет: https://claude.ai/artifact/WP2u7oLuCw9yebph4QSCA7), сделано: renderMySide рисует верхнюю панель (#mySide, вкладки mySrc).
 
 ## Что дальше (план, по порядку)
 
