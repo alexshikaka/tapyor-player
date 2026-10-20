@@ -1,6 +1,6 @@
 {
   "name": "stream-player",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Тапёр — музыка и заказы для стрима из нескольких сервисов",
   "main": "src/main.js",
   "scripts": {
@@ -34,8 +34,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "shikaka068091",
-        "repo": "stream-player",
+        "owner": "alexshikaka",
+        "repo": "tapyor-player",
         "releaseType": "release"
       }
     ]

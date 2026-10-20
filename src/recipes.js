@@ -4,7 +4,7 @@ const { net } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
-const REMOTE = 'https://raw.githubusercontent.com/shikaka068091/stream-player/main/src/recipes.json';
+const REMOTE = 'https://raw.githubusercontent.com/alexshikaka/tapyor-player/main/src/recipes.json';
 let log = () => {};
 let cacheFile = '';
 let appVersion = '0.0.0';
