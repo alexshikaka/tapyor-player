@@ -23,6 +23,11 @@ async def main():
         await pg.fill('#search','рок'); await pg.press('#search','Enter'); await pg.wait_for_timeout(700)
         await E("document.querySelector('#results .row').click()"); await pg.wait_for_timeout(700)
         print('волна по треку:', await E("(function(){var w=document.getElementById('waveTrackBtn').getBoundingClientRect(),p=document.getElementById('prev').getBoundingClientRect();return [!document.getElementById('waveTrackBtn').hidden, w.right<=p.left, document.getElementById('waveTrackBtn').textContent.trim()];})()"))
+        st = lambda: E("(function(){var r=document.querySelector('#queue .qrow.playing .eq rect');return r?getComputedStyle(r).animationPlayState+' '+getComputedStyle(r).animationName:'нет'})()")
+        print('эквалайзер играет:', await st())
+        await E("master().pause()"); await pg.wait_for_timeout(300)
+        print('эквалайзер на паузе:', await st())
+        await E("master().play()"); await pg.wait_for_timeout(300)
         # очередь: повторы в сыгранном и перелёт
         await E("addMany([{src:'ym',id:'501',albumId:'9',title:'Раз',author:'A',duration:'0:40',seconds:40,thumb:''},{src:'ym',id:'502',albumId:'9',title:'Два',author:'B',duration:'0:40',seconds:40,thumb:''},{src:'ym',id:'503',albumId:'9',title:'Три',author:'C',duration:'0:40',seconds:40,thumb:''}])"); await pg.wait_for_timeout(300)
         n0 = await E("queue.length")

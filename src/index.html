@@ -337,6 +337,13 @@
   .qrow.playing .qov { opacity: 1; background: rgba(var(--acr),.6); }
   .qrow.playing .qov .pl, .qrow.playing:hover .qov .pl { display: none; }
   .qrow.playing .qov .eq { display: block; }
+  /* Эквалайзер на обложке играющего трека: столбики прыгают, на паузе замирают */
+  .qov .eq rect { transform-box: fill-box; transform-origin: 50% 100%; animation: eqb .8s ease-in-out infinite alternate; }
+  .qov .eq rect:nth-child(2) { animation-duration: .62s; animation-delay: -.3s; }
+  .qov .eq rect:nth-child(3) { animation-duration: .95s; animation-delay: -.5s; }
+  @keyframes eqb { 0% { transform: scaleY(.3); } 50% { transform: scaleY(1); } 100% { transform: scaleY(.55); } }
+  body.is-paused .qov .eq rect { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .qov .eq rect { animation: none; } }
   .qrow.pend { cursor: grab; }
   .qrow.pend:active { cursor: grabbing; }
   .qrow.dragging { opacity: .35; }
@@ -1320,7 +1327,7 @@
 
   var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
   var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
-  function setPlayIcon(sym){ $('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; }
+  function setPlayIcon(sym){ $('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; document.body.classList.toggle('is-paused', sym !== '⏸'); }
   setPlayIcon('▶');
   function master(){ return mode === 'iframe' ? ytx : (mode === 'ymweb' ? ymx : ((mode === 'split' || mode === 'audio') ? aud : video)); }
 
