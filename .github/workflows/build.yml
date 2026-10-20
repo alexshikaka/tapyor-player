@@ -29,6 +29,13 @@ jobs:
           New-Item -ItemType Directory -Force -Path resources | Out-Null
           Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "resources/yt-dlp.exe"
 
+      - name: Ключи входа Google (из секретов репозитория)
+        shell: pwsh
+        env:
+          GOOGLE_OAUTH_JSON: ${{ secrets.GOOGLE_OAUTH_JSON }}
+        run: |
+          if ($env:GOOGLE_OAUTH_JSON) { Set-Content -Path src/google-oauth.json -Value $env:GOOGLE_OAUTH_JSON -Encoding utf8NoBOM; Write-Host "google-oauth.json: есть" } else { Write-Host "google-oauth.json: секрет не задан — вход через браузер будет выключен" }
+
       - name: Собрать установщик и выложить в Releases
         run: npm run dist
         env:
