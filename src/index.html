@@ -609,6 +609,33 @@
   html.theme-mono .nplabel { color: #A0A0A0; }
   html.theme-mono .al:hover, html.theme-mono .art-n.art-go:hover { color: var(--ac2); }
   html.theme-mono .upd-go { background: var(--pri); color: var(--prit); }
+  /* Стартовый чеклист сервисов */
+  .ck { max-width: 560px; width: 100%; box-sizing: border-box; margin: 22px auto 10px; padding: 20px 22px 16px; border: 1px solid var(--ln2); border-radius: 18px; background: linear-gradient(180deg, var(--bg2), var(--bg1)); }
+  .ck-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 3px; }
+  .ck-h b { font-size: 15px; font-weight: 700; }
+  .ck-h span { font: 11px 'JetBrains Mono', Consolas, monospace; color: var(--tx5); white-space: nowrap; }
+  .ck-sub { font-size: 12px; color: var(--tx4); margin-bottom: 10px; }
+  .ck-g { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--tx5); margin: 12px 0 3px; }
+  .ck-r { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 5px 2px; font-size: 12.5px; border-bottom: 1px dashed var(--ln2); }
+  .ck-r .n { color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ck-r .v { font: 11px 'JetBrains Mono', Consolas, monospace; color: var(--tx4); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+  .ck-r .v button { border: 0; background: transparent; padding: 0; margin-left: 8px; color: var(--ac2); font: inherit; border-bottom: 1px dotted; cursor: pointer; }
+  .ck-r.bad .n { color: var(--tx); } .ck-r.bad .v { color: #FF8A7A; } .ck-r.warn .v { color: #FFB86B; }
+  .lamp { width: 9px; height: 9px; border-radius: 50%; background: var(--ln3); margin-left: 3px; transition: background .25s, box-shadow .25s; }
+  .lamp.ok { background: #4ADE9A; box-shadow: 0 0 8px 1px rgba(74,222,154,.55); }
+  .lamp.warn { background: #FFB84D; box-shadow: 0 0 8px 1px rgba(255,184,77,.55); }
+  .lamp.bad { background: #FF6B5E; box-shadow: 0 0 8px 1px rgba(255,107,94,.6); }
+  .lamp.run { background: var(--ac); box-shadow: 0 0 8px 1px rgba(var(--acr),.6); animation: lamp 1s ease-in-out infinite; }
+  @keyframes lamp { 50% { opacity: .35; } }
+  .ck-f { display: flex; gap: 8px; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--ln2); flex-wrap: wrap; }
+  .ck-f .pbtn { height: 34px; font-size: 12.5px; }
+  .ck-f .pbtn:disabled { opacity: .45; cursor: default; }
+  .ck-f small { margin-left: auto; font-size: 11px; color: var(--tx5); }
+  .ck-note { margin-top: 10px; font-size: 11.5px; color: var(--tx4); line-height: 1.5; background: var(--bg0); border: 1px solid var(--ln2); border-radius: 10px; padding: 9px 12px; }
+  .ck-note b { color: var(--tx2); } .ck-note p { margin: 0 0 4px; } .ck-note p:last-child { margin: 0; }
+  .ck-mini { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border: 1px solid var(--ln); border-radius: 15px; font-size: 12px; color: var(--tx3); background: var(--bg2); cursor: pointer; font-family: inherit; }
+  .ck-mini:hover { border-color: var(--ac); color: var(--tx); }
+  .ck-wrap { display: flex; flex-direction: column; align-items: center; }
   /* Выбор темы в настройках */
   .themes { display: flex; gap: 12px; flex-wrap: wrap; }
   .thc { width: 200px; border: 2px solid var(--ln); border-radius: 14px; background: transparent; padding: 8px; cursor: pointer; color: var(--tx); font: 600 13px Onest, sans-serif; text-align: left; }
@@ -667,7 +694,8 @@
         <span style="display:flex;gap:10px;align-items:center;min-width:0"><span class="hint" id="hint">Введи название и нажми Enter</span><button class="smode" id="smode" aria-haspopup="menu" title="Как упорядочивать найденное">Выдача: <b>Умный</b> ▾</button></span>
       </div>
       <div class="results" id="results">
-        <div class="muted">Здесь появятся найденные треки, волны и плейлисты.</div>
+        <div class="ck-wrap" id="qcBox"></div>
+        <div class="muted" id="resEmpty">Здесь появятся найденные треки, волны и плейлисты.</div>
       </div>
       <div class="plview" id="searchPl" hidden></div>
     </section>
@@ -754,6 +782,10 @@
             <div class="card">
               <div id="healthBox"></div>
               <div class="srow"><div class="sl"><div class="sd">Если что-то сломалось, обычно хватает подождать: правила для сайтов Тапёр берёт свежие с GitHub, а исправление прилетает без переустановки.</div></div><button class="btn" id="hsRun">Проверить сейчас</button></div>
+              <div class="srow">
+                <div class="sl"><div class="st">Отправлять отчёты об ошибках</div><div class="sd">Анонимно: площадка, этап, код ошибки, версии Тапёра и Windows. Без входов, ключей, имён и путей к папкам. Одинаковые ошибки собираются в одну задачу на GitHub — разработчик видит, что сломалось и у скольких людей</div><div class="sd" id="repNote" style="margin-top:6px"></div></div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" id="repPreview">Что отправляется</button><button class="btn ghost" id="repTest">Проверить отправку</button><button class="toggle" data-set-tg="reportsEnabled" aria-label="Отправлять отчёты об ошибках"><span></span></button></div>
+              </div>
             </div>
           </section>
 
@@ -2336,6 +2368,118 @@
     if (curQuery && !results.hidden) rerenderTracks(true);
   });
   renderSmodeSet(); renderSrcOrder();
+
+  // ===== Стартовый чеклист сервисов (быстрая проверка при каждом запуске) =====
+  var QC_GROUPS = [
+    ['Основа', [['net', 'Интернет'], ['app', 'Тапёр'], ['recipes', 'Рецепты сайтов']]],
+    ['Яндекс Музыка', [['ym.svc', 'Сервис'], ['ym.acc', 'Аккаунт'], ['ym.play', 'Воспроизведение'], ['ym.site', 'Запасной путь (сайт)']]],
+    ['YouTube', [['yt.svc', 'Сервис'], ['yt.login', 'Вход'], ['yt.dlp', 'Движок yt-dlp']]],
+    ['Другие площадки', [['sc', 'SoundCloud · Audius'], ['refs', 'Справочники · Deezer · Last.fm'], ['tg', 'Telegram (браузер)']]]
+  ];
+  var QC_ACT = { 'ym-login': 'войти', 'yt-login': 'войти', update: 'обновить', vpn: 'что делать', fix: 'починить', retry: 'ещё раз' };
+  var QC_HELP = {
+    net: 'Нет интернета. Проверю ещё раз через 30 секунд.',
+    'ym.acc': 'Вход в Яндекс устарел или его нет — нажми «войти». Без входа Яндекс даёт только отрывки.',
+    'ym.play': 'Яндекс не отдаёт поток. Нажми «Починить автоматически»; если не поможет — отчёт уже у разработчика, Тапёр пока будет играть через сайт Яндекса или YouTube.',
+    'ym.site': 'Сайт Яндекса поменялся. «Починить автоматически» скачает свежие рецепты с GitHub.',
+    'ym.svc': 'Яндекс Музыка не отвечает. Скорее всего, это у них — подожди немного.',
+    'yt.svc': 'YouTube не отвечает. Часто так бывает без VPN. Поиск и очередь работают без него: заказы с YouTube Тапёр найдёт в Яндексе и SoundCloud.',
+    'yt.dlp': 'Движок YouTube устарел — «Починить автоматически» обновит его.',
+    app: 'Вышла новая версия Тапёра — нажми «обновить».'
+  };
+  var QC = { items: {}, running: false, t0: 0, open: true, fixing: false, fixLog: [], help: {}, at: 0 };
+  var QC_ALL = []; QC_GROUPS.forEach(function (g){ g[1].forEach(function (it){ QC_ALL.push(it[0]); }); });
+  function qcProblems(){ return QC_ALL.filter(function (id){ var x = QC.items[id]; return x && (x.state === 'bad' || x.state === 'warn'); }); }
+  function qcVisible(){ return !curQuery && !results.hidden; }
+  function renderQC(){
+    var box = $('qcBox'); if (!box) return;
+    if (!qcVisible()) return;
+    var done = QC_ALL.filter(function (id){ var x = QC.items[id]; return x && x.state !== 'run'; }).length;
+    var probs = qcProblems(), bad = probs.filter(function (id){ return QC.items[id].state === 'bad'; });
+    var sec = ((QC.running ? Date.now() : (QC.at || Date.now())) - QC.t0) / 1000;
+    if (!QC.open && !QC.running && !QC.fixing) {
+      box.innerHTML = '<button class="ck-mini" id="qcMini"><i class="lamp ' + (bad.length ? 'bad' : (probs.length ? 'warn' : 'ok')) + '"></i>' + (probs.length ? 'Проблем: ' + probs.length + ' · подробнее' : 'Все сервисы работают · ' + done + '/' + QC_ALL.length) + (QC.at ? ' · проверено в ' + new Date(QC.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '') + '</button>';
+      $('qcMini').onclick = function(){ QC.open = true; renderQC(); };
+      return;
+    }
+    var title = QC.fixing ? 'Чиню…' : (QC.running ? 'Проверяю сервисы' : (probs.length ? (bad.length ? 'Есть ' + probs.length + ' ' + qcWord(probs.length) : 'Работает, но есть замечания: ' + probs.length) : 'Все сервисы работают'));
+    var sub = QC.running ? 'Каждый запуск — быстро и тихо. Можно сразу искать музыку.' : (probs.length ? 'Остальное работает. Слушать можно уже сейчас.' : 'Всё на месте. Тапёр проверяет это при каждом запуске.');
+    var h = '<div class="ck"><div class="ck-h"><b>' + esc(title) + '</b><span>' + done + ' из ' + QC_ALL.length + ' · ' + sec.toFixed(1).replace('.', ',') + ' с</span></div><div class="ck-sub">' + sub + '</div>';
+    QC_GROUPS.forEach(function (g){
+      h += '<div class="ck-g">' + esc(g[0]) + '</div>';
+      g[1].forEach(function (it){
+        var x = QC.items[it[0]] || { state: QC.running ? 'run' : '', text: 'ждёт' };
+        var st = x.state === 'off' ? '' : x.state;
+        h += '<div class="ck-r ' + st + '"><i class="lamp ' + st + '"></i><span class="n">' + esc(it[1]) + '</span><span class="v" title="' + esc(x.details || x.text || '') + '">' + esc(x.text || '') + (x.action && QC_ACT[x.action] && (x.state === 'bad' || x.state === 'warn' || x.state === 'off') ? '<button data-qa="' + x.action + '" data-qid="' + it[0] + '">' + QC_ACT[x.action] + '</button>' : '') + '</span></div>';
+      });
+    });
+    var notes = [];
+    if (QC.fixLog.length) notes.push('<p><b>Автопочинка:</b></p>' + QC.fixLog.map(function (f){ return '<p>' + (f.ok ? '✓ ' : '✗ ') + esc(f.t) + '</p>'; }).join(''));
+    probs.forEach(function (id){ if (QC_HELP[id] && (QC.items[id].state === 'bad' || QC.help[id])) notes.push('<p>' + esc(QC_HELP[id]) + '</p>'); });
+    if (notes.length) h += '<div class="ck-note">' + notes.join('') + '</div>';
+    h += '<div class="ck-f"><button class="pbtn ' + (probs.length ? 'y' : 'g') + '" id="qcFix"' + (QC.running || QC.fixing || !probs.length ? ' disabled' : '') + '>Починить автоматически</button><button class="pbtn g" id="qcMore">Подробности</button>' + (!QC.running && !probs.length ? '<button class="pbtn g" id="qcHide">Свернуть</button>' : '') + '<small>' + (QC.at && !QC.running ? 'проверено в ' + new Date(QC.at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'проверка не мешает поиску') + '</small></div></div>';
+    box.innerHTML = h;
+    $('qcFix').onclick = runFix;
+    $('qcMore').onclick = function(){ setTab('settings'); setTimeout(function(){ var e = $('sHealth'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50); };
+    var hb = $('qcHide'); if (hb) hb.onclick = function(){ QC.open = false; renderQC(); };
+    box.querySelectorAll('[data-qa]').forEach(function (b){ b.onclick = function(){ qcAction(b.dataset.qa, b.dataset.qid); }; });
+  }
+  function qcWord(n){ n = n % 100; if (n >= 11 && n <= 14) return 'проблем'; n = n % 10; if (n === 1) return 'проблема'; if (n >= 2 && n <= 4) return 'проблемы'; return 'проблем'; }
+  function qcAction(a, id){
+    if (a === 'ym-login') browserLogin();
+    else if (a === 'yt-login') openYtDlg();
+    else if (a === 'update') { if (A.updateCheck) A.updateCheck(); toast('Проверяю обновление — кнопка «Обновить» появится в шапке'); }
+    else if (a === 'vpn') { QC.help[id] = !QC.help[id]; renderQC(); }
+    else if (a === 'fix') runFix();
+    else if (a === 'retry') runQC();
+  }
+  var qcTick = null, qcRetry = null;
+  async function runQC(){
+    if (!A.qcRun || QC.running) return;
+    QC.running = true; QC.t0 = Date.now(); QC.items = {}; QC.at = 0;
+    clearInterval(qcTick); qcTick = setInterval(renderQC, 400);
+    renderQC();
+    var r = null; try { r = await A.qcRun(); } catch (e) {}
+    QC.running = false; clearInterval(qcTick);
+    if (r && r.items) { QC.items = r.items; QC.at = r.at; }
+    var probs = qcProblems(), first = false;
+    try { first = !localStorage.getItem('qcSeen'); localStorage.setItem('qcSeen', '1'); } catch (e) {}
+    if (!probs.length && !first && !QC.fixLog.length) setTimeout(function(){ if (!QC.running && !qcProblems().length) { QC.open = false; renderQC(); } }, 1600);
+    else QC.open = true;
+    renderQC(); renderHealthWarnQC();
+    clearTimeout(qcRetry);
+    if (QC.items.net && QC.items.net.state === 'bad') qcRetry = setTimeout(runQC, 30000);
+    // Нашли проблему с воспроизведением — глубокая проверка (когда ничего не играет)
+    if (probs.some(function (id){ return /^(ym\.play|ym\.site|yt\.dlp)$/.test(id); }) && typeof runHealth === 'function') setTimeout(function(){ try { runHealth(false); } catch (e) {} }, 4000);
+  }
+  async function runFix(){
+    if (!A.autoFix || QC.fixing) return;
+    QC.fixing = true; QC.open = true; QC.fixLog = []; renderQC();
+    var r = null; try { r = await A.autoFix(); } catch (e) {}
+    QC.fixing = false;
+    var q = A.qcGet ? await A.qcGet() : null; if (q && q.items) { QC.items = q.items; QC.at = q.at; }
+    renderQC(); renderHealthWarnQC();
+    toast(r && !r.left ? 'Починил — всё работает' : 'Сделал, что мог — подробности в списке');
+  }
+  if (A.onQcItem) A.onQcItem(function (it){ QC.items[it.id] = it; });
+  if (A.onFixStep) A.onFixStep(function (f){ QC.fixLog.push(f); renderQC(); });
+  // Значок ⚠ в шапке — и по быстрой проверке
+  function renderHealthWarnQC(){
+    var bad = qcProblems().filter(function (id){ return QC.items[id].state === 'bad' && id !== 'net'; });
+    var w = $('healthWarn'); if (!w || !bad.length) return;
+    if (w.hidden) { w.hidden = false; w.textContent = '⚠ Проблем: ' + bad.length; w.title = 'Нажми — список проверки'; w.onclick = function(){ setTab('search'); if (curQuery) { search.value = ''; } QC.open = true; renderQC(); }; }
+  }
+  setTimeout(runQC, 600);
+  // Отчёты: проверка отправки и что отправляется
+  if ($('repTest')) $('repTest').onclick = async function(){
+    var n = $('repNote'); n.textContent = 'Отправляю тестовый отчёт…';
+    var r = A.reportTest ? await A.reportTest() : null;
+    n.textContent = r && r.ok ? '✓ Связь есть — тестовый отчёт принят' + (r.issue ? ' (задача #' + r.issue + ' на GitHub)' : '') : '✗ Не отправилось: ' + ((r && (r.error || r.status)) || 'нет ответа') + '. Возможно, мешает VPN или блокировка';
+  };
+  if ($('repPreview')) $('repPreview').onclick = async function(){
+    var r = A.reportPreview ? await A.reportPreview() : null;
+    askDlg({ title: 'Что уходит в отчёте', text: '<pre style="white-space:pre-wrap;font:11px JetBrains Mono,monospace;color:var(--tx3);max-height:300px;overflow:auto">' + esc(JSON.stringify(r, null, 2)) + '</pre>', ok: 'Понятно' });
+  };
   // ===== Тема оформления =====
   function applyTheme(t){
     t = t === 'mono' ? 'mono' : 'violet';

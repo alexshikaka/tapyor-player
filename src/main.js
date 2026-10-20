@@ -42,7 +42,7 @@ const DEFAULTS = {
   npEnabled: true, nowPlayingFormat: '{artist} — {title}', npIdle: '',
   videoQuality: '720', startVolume: 80, prefetch: true,
   autoUpdate: true, autoStart: false, closeToTray: true,
-  theme: 'violet',
+  theme: 'violet', reportsEnabled: true,
   normalize: true, crossfade: 6,
   ytEnabled: true, ymWebFallback: true, ytUseCookies: false, scEnabled: true, auEnabled: true,
   mediaKeys: true,
@@ -467,6 +467,34 @@ function themeColors() { return cfg('theme') === 'mono' ? { bg: '#161616', sym: 
 function applyThemeWindow() {
   try { if (mainWindow && !mainWindow.isDestroyed()) { const c = themeColors(); mainWindow.setBackgroundColor(c.bg); mainWindow.setTitleBarOverlay({ color: c.bg, symbolColor: c.sym, height: 36 }); } } catch (e) { log('тема: ' + e.message); }
 }
+// ===== Отчёты об ошибках: анонимно, без личного, один и тот же «отпечаток» не чаще раза в сутки =====
+const REPORT_URL = 'https://functions.yandexcloud.net/d4ehsmee0l5joni3fbkf';
+function reportScrub(s) {
+  return String(s || '').replace(/[A-Za-z]:\\Users\\[^\\\s]+/gi, 'C:\\Users\\…').replace(/\/(home|Users)\/[^/\s]+/g, '/$1/…')
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '…@…').replace(/(token|cookie|sapisid|sid|auth|key|secret|password)[=:]\s*\S+/gi, '$1=…')
+    .replace(/\b[A-Za-z0-9_\-]{32,}\b/g, '…');
+}
+function installId() { let id = settingsStore.get('installId'); if (!id) { id = require('crypto').randomUUID(); settingsStore.set('installId', id); } return id; }
+let lastReport = null;
+async function sendReport(r, force) {
+  try {
+    if (!force && cfg('reportsEnabled') === false) return { skipped: 'off' };
+    const code = String(r.code || '').replace(/\d{4,}/g, '#').slice(0, 40);
+    const fp = require('crypto').createHash('sha1').update([r.service, r.stage, code].join('|')).digest('hex').slice(0, 10);
+    const sent = settingsStore.get('reportsSent') || {};
+    if (!force && sent[fp] && Date.now() - sent[fp] < 24 * 3600 * 1000) return { skipped: 'today' };
+    const body = { fp, service: r.service, stage: r.stage, code, msg: reportScrub(r.msg).slice(0, 600), details: reportScrub(r.details).slice(0, 1500),
+      app: app.getVersion(), recipes: String((recipes.info() || {}).version || ''), os: process.platform + ' ' + require('os').release(), iid: installId() };
+    lastReport = body;
+    const { net: enet } = require('electron');
+    const res = await enet.fetch(REPORT_URL, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000) });
+    const j = await res.json().catch(() => ({}));
+    if (res.ok) settingsStore.set('reportsSent', Object.assign({}, sent, { [fp]: Date.now() }));
+    log('отчёт об ошибке ' + r.service + '/' + r.stage + ': ' + (res.ok ? 'отправлен' + (j.issue ? ' (задача #' + j.issue + ', пользователей ' + j.users + ')' : '') : 'не отправлен, ' + res.status + ' ' + (j.error || '')));
+    return Object.assign({ ok: res.ok, status: res.status }, j);
+  } catch (e) { log('отчёт об ошибке: не отправлен — ' + e.message); return { ok: false, error: e.message }; }
+}
+
 function createTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray16.png')); // tray16@2x.png Windows возьмёт сам на экранах 200%
   tray = new Tray(icon);
@@ -1145,6 +1173,14 @@ app.whenReady().then(async () => {
       try { res.services.audius = await checkAudius(); } catch (e) { res.services.audius = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
       try { res.services.youtube = await checkYouTube(); } catch (e) { res.services.youtube = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
       settingsStore.set('health', res);
+      // Отчёты: сломанные шаги глубокой проверки (кроме «нет сети / нужен VPN»)
+      const SLUG = { 'Поиск': 'search', 'Воспроизведение': 'stream', 'Запасной': 'site', 'Библиотека': 'ytdlp' };
+      for (const [name, sv] of Object.entries(res.services)) {
+        (sv.steps || []).filter((st) => st.ok === false && !/VPN|не отвечает/i.test(st.text || '')).forEach((st) => {
+          const stage = (Object.keys(SLUG).find((k) => st.name.indexOf(k) === 0) && SLUG[Object.keys(SLUG).find((k) => st.name.indexOf(k) === 0)]) || 'check';
+          sendReport({ service: name, stage, code: String(st.details || st.text || '').split(/[:\n]/)[0].slice(0, 40) || 'fail', msg: st.name + ': ' + (st.text || ''), details: st.details || '' });
+        });
+      }
       log('самопроверка: Яндекс — ' + res.services.yandex.status + ', YouTube — ' + res.services.youtube.status + ', SoundCloud — ' + res.services.soundcloud.status);
       for (const [name, sv] of Object.entries(res.services)) {
         log('самопроверка · ' + name + ': ' + sv.status + (sv.title ? ' — ' + sv.title : ''));
@@ -1155,6 +1191,122 @@ app.whenReady().then(async () => {
     })();
     try { return await healthRunning; } finally { healthRunning = null; }
   }
+  // ===== Быстрая проверка при запуске: всё параллельно, по 6 секунд на пункт, без воспроизведения =====
+  // Каждый пункт сразу сообщается окну (qc-item), чтобы лампочки загорались по очереди.
+  const QC_T = 6000;
+  async function ping(url, opts) {
+    const t0 = Date.now();
+    const { net: enet } = require('electron');
+    const r = await enet.fetch(url, Object.assign({ method: 'GET', signal: AbortSignal.timeout(QC_T), redirect: 'follow' }, opts || {}));
+    try { r.body && r.body.cancel && r.body.cancel(); } catch (e) {}
+    return { status: r.status, ms: Date.now() - t0 };
+  }
+  const ytdlpAgeDays = (v) => { const m = /^(\d{4})\.(\d{2})\.(\d{2})/.exec(v || ''); return m ? Math.round((Date.now() - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000) : null; };
+  let qcRunning = null;
+  async function quickCheck(send) {
+    if (qcRunning) return qcRunning;
+    qcRunning = (async () => {
+      const out = {};
+      const put = (id, state, text, extra) => { out[id] = Object.assign({ id, state, text }, extra || {}); try { send && send(out[id]); } catch (e) {} };
+      const t0 = Date.now();
+      const job = async (id, fn) => { put(id, 'run', 'проверяю…'); try { await fn(); } catch (e) { put(id, 'bad', 'ошибка проверки', { details: String(e.message || e).slice(0, 300) }); } };
+      // Интернет — от него зависит всё остальное
+      let online = false;
+      await job('net', async () => {
+        for (const u of ['https://ya.ru/', 'https://www.google.com/generate_204']) { try { const r = await ping(u); online = true; put('net', 'ok', 'есть · ' + r.ms + ' мс'); return; } catch (e) {} }
+        put('net', 'bad', 'нет связи', { action: 'retry' });
+      });
+      if (!online) {
+        ['app', 'recipes', 'ym.svc', 'ym.acc', 'ym.play', 'ym.site', 'yt.svc', 'yt.login', 'yt.dlp', 'sc', 'refs', 'tg'].forEach((id) => put(id, 'off', 'нет интернета'));
+      } else {
+        await Promise.all([
+          job('app', async () => {
+            const u = updateState || {};
+            if (u.state === 'available' || u.state === 'downloading' || u.state === 'ready') put('app', 'warn', 'вышла ' + (u.version || 'новая версия'), { action: 'update' });
+            else put('app', 'ok', app.getVersion() + (u.state === 'latest' ? ' · последняя' : ''));
+          }),
+          job('recipes', async () => { const r = await recipes.refresh(); const i = recipes.info(); put('recipes', r.ok ? 'ok' : 'warn', 'v' + i.version + (r.ok ? ' · свежие' : ' · GitHub недоступен, работаю на сохранённых')); }),
+          job('ym.svc', async () => { const r = await ping('https://api.music.yandex.net/genres'); put('ym.svc', r.status < 500 ? 'ok' : 'bad', r.status < 500 ? 'доступен · ' + r.ms + ' мс' : 'ошибка ' + r.status, r.status < 500 ? {} : { report: { stage: 'service', code: 'HTTP ' + r.status } }); }),
+          job('ym.acc', async () => {
+            const st = await ymStatus();
+            if (!st.loggedIn) put('ym.acc', st.error ? 'bad' : 'off', st.error || 'нет входа', { action: 'ym-login' });
+            else put('ym.acc', st.offline ? 'warn' : (st.hasPlus ? 'ok' : 'warn'), (st.name || 'вход есть') + (st.offline ? ' · не проверить' : (st.hasPlus ? ' · Плюс' : ' · без Плюса — отрывки')));
+            const tok = getYmToken(), tr = settingsStore.get('healthYmTrack');
+            if (!tok) { put('ym.play', 'off', 'нужен вход'); return; }
+            if (!tr) { put('ym.play', 'off', 'проверится при глубокой проверке'); return; }
+            try { const s2 = await ym.streamUrl(tr.id, tok); const ok = !!(s2 && s2.audioUrl); put('ym.play', ok ? (s2.preview ? 'warn' : 'ok') : 'bad', ok ? (s2.preview ? 'только отрывки' : 'поток получен') : 'поток не получен', ok ? {} : { report: { stage: 'stream', code: 'no-url' } }); }
+            catch (e) { put('ym.play', 'bad', 'не работает', { details: e.message, report: { stage: 'stream', code: String(e.status || e.message).slice(0, 40) } }); }
+          }),
+          job('ym.site', async () => {
+            if (!cfg('ymWebFallback')) { put('ym.site', 'off', 'выключен в настройках'); return; }
+            const h = settingsStore.get('health'), y = h && h.services && h.services.yandex;
+            const st = y && (y.steps || []).find((x) => /сайт/i.test(x.name));
+            if (!st || st.ok == null) put('ym.site', 'off', 'проверяется раз в сутки');
+            else put('ym.site', st.ok ? 'ok' : 'bad', st.ok ? 'кнопка найдена' : 'сайт изменился', st.ok ? {} : { action: 'fix', report: { stage: 'site', code: 'button' }, details: st.text });
+          }),
+          job('yt.svc', async () => {
+            if (cfg('ytEnabled') === false) { put('yt.svc', 'off', 'выключен в настройках'); return; }
+            try { const r = await ping('https://www.youtube.com/generate_204'); put('yt.svc', r.status < 500 ? 'ok' : 'bad', 'доступен · ' + r.ms + ' мс'); }
+            catch (e) { put('yt.svc', 'bad', 'не отвечает', { action: 'vpn' }); }
+          }),
+          job('yt.login', async () => {
+            const a = ytAuthStatus();
+            const who = (a.cookies && a.cookies.name) || (a.oauth && a.oauth.account && a.oauth.account.name);
+            put('yt.login', who ? 'ok' : 'off', who ? who : 'нет входа', who ? {} : { action: 'yt-login' });
+          }),
+          job('yt.dlp', async () => {
+            const v = await ytdlpVersion(ytdlpPath()); const age = ytdlpAgeDays(v);
+            if (!v) put('yt.dlp', 'bad', 'не найден', { action: 'fix', report: { stage: 'ytdlp', code: 'missing' } });
+            else put('yt.dlp', age != null && age > 45 ? 'warn' : 'ok', v + (age != null && age > 45 ? ' · устарел' : ' · свежий'), age != null && age > 45 ? { action: 'fix' } : {});
+          }),
+          job('sc', async () => {
+            const res = await Promise.allSettled([ping('https://soundcloud.com/'), ping('https://api.audius.co/v1/tracks/trending?limit=1&app_name=' + AU_APP)]);
+            const okN = res.filter((x) => x.status === 'fulfilled' && x.value.status < 500).length;
+            put('sc', okN === 2 ? 'ok' : (okN ? 'warn' : 'bad'), okN === 2 ? 'доступны' : (okN ? (res[0].status === 'fulfilled' ? 'Audius не отвечает' : 'SoundCloud не отвечает') : 'не отвечают'));
+          }),
+          job('refs', async () => {
+            const res = await Promise.allSettled([ping('https://api.deezer.com/genre'), lastfm.configured() ? ping('https://ws.audioscrobbler.com/2.0/') : Promise.reject(new Error('нет ключа'))]);
+            const dz = res[0].status === 'fulfilled', lf = res[1].status === 'fulfilled';
+            put('refs', dz && lf ? 'ok' : (dz || lf ? 'warn' : 'bad'), dz && lf ? 'доступны' : (dz ? (lastfm.configured() ? 'Last.fm не отвечает' : 'Last.fm без ключа') : (lf ? 'Deezer не отвечает' : 'не отвечают')));
+          }),
+          job('tg', async () => { try { const r = await ping('https://web.telegram.org/a/'); put('tg', r.status < 500 ? 'ok' : 'warn', 'сайт доступен'); } catch (e) { put('tg', 'warn', 'сайт не отвечает'); } })
+        ]);
+      }
+      const res = { at: Date.now(), ms: Date.now() - t0, items: out };
+      settingsStore.set('quickCheck', res);
+      const bad = Object.values(out).filter((x) => x.state === 'bad' || x.state === 'warn').map((x) => x.id + ':' + x.text);
+      log('быстрая проверка: ' + Math.round(res.ms / 100) / 10 + ' с' + (bad.length ? ' · внимание: ' + bad.join('; ') : ' · всё работает'));
+      // Отчёты об ошибках сервисов (не «нет входа» и не «нет интернета»)
+      Object.values(out).forEach((x) => { if (x.report && x.state === 'bad') sendReport({ service: x.id.split('.')[0], stage: x.report.stage, code: x.report.code, msg: x.text, details: x.details || '' }); });
+      return res;
+    })();
+    try { return await qcRunning; } finally { qcRunning = null; }
+  }
+  ipcMain.handle('qc-run', (e) => quickCheck((it) => { try { e.sender.send('qc-item', it); } catch (x) {} }));
+  ipcMain.handle('qc-get', () => settingsStore.get('quickCheck') || null);
+
+  // ===== Автопочинка: по шагам, с отчётом что сделано =====
+  ipcMain.handle('auto-fix', async (e) => {
+    const done = [];
+    const say = (t, ok) => { done.push({ t, ok }); try { e.sender.send('fix-step', { t, ok }); } catch (x) {} log('автопочинка: ' + (ok ? '✓ ' : '✗ ') + t); };
+    const r1 = await recipes.refresh(); say(r1.ok ? 'Рецепты сайтов обновлены до v' + recipes.info().version : 'Свежие рецепты скачать не удалось — GitHub недоступен', r1.ok);
+    const r2 = await ytdlpUpdate(); say(r2.updated ? 'yt-dlp обновлён' : (r2.ok ? 'yt-dlp уже свежий' : 'yt-dlp обновить не удалось'), r2.ok);
+    const ys = await ymStatus(); say(ys.loggedIn ? 'Вход в Яндекс в порядке' + (ys.offline ? ' (не проверить — Яндекс не отвечает)' : '') : 'Нужно войти в Яндекс заново', ys.loggedIn);
+    { const a = ytAuthStatus(); const who = (a.cookies && a.cookies.name) || (a.oauth && a.oauth.account && a.oauth.account.name); say(who ? 'Вход в YouTube есть: ' + who : 'Вход в YouTube не настроен (не обязателен)', true); }
+    try {
+      const { session } = require('electron');
+      await session.defaultSession.clearCache(); await session.fromPartition('persist:yandex-login').clearCache();
+      say('Временные файлы площадок очищены (входы не тронуты)', true);
+    } catch (x) { say('Очистить временные файлы не удалось', false); }
+    const q = await quickCheck((it) => { try { e.sender.send('qc-item', it); } catch (x) {} });
+    const left = Object.values(q.items).filter((x) => x.state === 'bad').length;
+    say(left ? 'Осталось проблем: ' + left + ' — отчёт отправлен разработчику' : 'Проверка заново: всё работает', !left);
+    return { done, left };
+  });
+
+  ipcMain.handle('report-test', () => sendReport({ service: 'test', stage: 'setup', code: 'check', msg: 'Проверка связи из Тапёра', details: '' }, true));
+  ipcMain.handle('report-preview', () => lastReport || { пример: 'отчёта ещё не было', поля: 'площадка, этап, код ошибки, текст без личного, версия Тапёра и рецептов, Windows, случайный номер установки' });
+  ipcMain.handle('report-send', (e, r) => sendReport(r || {}));
   ipcMain.handle('health-get', () => settingsStore.get('health') || null);
   ipcMain.handle('health-run', () => (playerBusy ? { busy: true } : runHealth()));
 
