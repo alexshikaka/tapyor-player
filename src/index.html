@@ -134,9 +134,9 @@
   /* Основная часть */
   main { flex: 1; display: flex; min-height: 0; }
   .results-col { flex: 1 1 auto; min-width: 0; padding: 18px 24px; display: flex; flex-direction: column; gap: 8px; }
-  .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 4px; }
-  .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; }
-  .col-head .hint { font-size: 13px; color: #8A8E9C; }
+  .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 4px; gap: 8px; flex-wrap: wrap; }
+  .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: #C9CBD4; flex-shrink: 0; }
+  .col-head .hint { font-size: 13px; color: #8A8E9C; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .row { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 12px; cursor: pointer; position: relative; }
   .row:hover { background: rgba(255,255,255,.05); }
@@ -188,7 +188,7 @@
   .rbadge { display: inline-block; margin-right: 6px; height: 18px; line-height: 16px; padding: 0 7px; border-radius: 9px; border: 1px solid #3A3D4A; background: transparent; color: #9EA2B0; font: 500 11px Onest, sans-serif; vertical-align: middle; }
   button.rbadge { cursor: pointer; }
   button.rbadge:hover { border-color: #9B87FF; color: #ECEDF2; }
-  .smode { border: 1px solid #2C2F3A; background: transparent; color: #9EA2B0; height: 28px; padding: 0 12px; border-radius: 14px; font: 500 12px Onest, sans-serif; cursor: pointer; }
+  .smode { border: 1px solid #2C2F3A; background: transparent; color: #9EA2B0; height: 28px; padding: 0 12px; border-radius: 14px; font: 500 12px Onest, sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
   .smode b { color: #ECEDF2; font-weight: 600; }
   .smode:hover { border-color: #9B87FF; }
   .sback { margin: 2px 6px 6px; }
