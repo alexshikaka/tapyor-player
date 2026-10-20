@@ -311,6 +311,27 @@ async function artistTracks(token, artistId) {
   try { const b = await api('/artists/' + encodeURIComponent(artistId) + '/brief-info', token, 8000); name = b && b.artist && b.artist.name; } catch (e) {}
   return { src: 'ym', type: 'artist', artistId: String(artistId), title: name || 'Исполнитель', author: 'Популярные треки', count: tracks.length, thumb: tracks[0] ? tracks[0].thumb : '', tracks: tracks };
 }
+// Страница исполнителя: популярное, альбомы, синглы, сборники, похожие
+function mapAlbum(a) {
+  const t = a.type === 'single' ? 'single' : (a.type === 'compilation' || a.type === 'podcast' ? 'compilation' : 'album');
+  return { src: 'ym', id: String(a.id), title: a.version ? a.title + ' (' + a.version + ')' : (a.title || ''), year: a.year || (a.releaseDate ? Number(String(a.releaseDate).slice(0, 4)) : 0), type: t, thumb: cover(a.coverUri, '200x200'), count: a.trackCount || 0, author: ((a.artists || []).map((x) => x.name)).join(', ') };
+}
+async function artistInfo(token, artistId) {
+  const b = await api('/artists/' + encodeURIComponent(artistId) + '/brief-info', token);
+  let albums = (b && b.albums) || [];
+  try { const d = await api('/artists/' + encodeURIComponent(artistId) + '/direct-albums?page=0&page-size=100&sort-by=year', token); if (d && d.albums && d.albums.length) albums = d.albums; } catch (e) {}
+  const a = (b && b.artist) || {};
+  const c = (a.cover && (a.cover.uri || a.cover.prefix)) || a.ogImage || '';
+  const desc = a.description && (a.description.text || a.description);
+  return {
+    id: String(artistId), name: a.name || '', photo: c ? cover(c, '400x400') : '',
+    about: typeof desc === 'string' ? desc : '',
+    popular: ((b && b.popularTracks) || []).map(mapTrack).filter((t) => t.available).slice(0, 20),
+    albums: albums.filter((x) => x.available !== false).map(mapAlbum),
+    also: ((b && b.alsoAlbums) || []).filter((x) => x.available !== false).map((x) => Object.assign(mapAlbum(x), { type: 'compilation' })),
+    similar: ((b && b.similarArtists) || []).map(mapArtist).slice(0, 16)
+  };
+}
 // Лайки: список id и поставить/снять
 async function likedIds(token, uid) {
   const r = await api('/users/' + encodeURIComponent(uid) + '/likes/tracks?if-modified-since-revision=0', token);
@@ -367,4 +388,4 @@ async function streamUrl(trackId, token) {
   return { audioUrl: 'https://' + host + '/get-mp3/' + sign + '/' + ts + path, preview: preview, bitrate: pick.bitrateInKbps };
 }
 
-module.exports = { CLIENT_ID, setLogger, search, searchTracksPage, suggest, accountStatus, streamUrl, waveStart, waveTracks, waveFeedback, stationsList, stationsDashboard, wavePresets, likedTracks, userPlaylists, playlistTracks, albumTracks, artistTracks, trackById, likedIds, setLike, createPlaylist, addToPlaylist };
+module.exports = { artistInfo, CLIENT_ID, setLogger, search, searchTracksPage, suggest, accountStatus, streamUrl, waveStart, waveTracks, waveFeedback, stationsList, stationsDashboard, wavePresets, likedTracks, userPlaylists, playlistTracks, albumTracks, artistTracks, trackById, likedIds, setLike, createPlaylist, addToPlaylist };

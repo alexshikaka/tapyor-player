@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard, globalShortcut, session } = require('electron');
 const ym = require('./yandex');
+const dz = require('./deezer');
 const match = require('./match');
 const ymweb = require('./ymweb');
 const ytauth = require('./ytauth');
@@ -880,6 +881,35 @@ app.whenReady().then(async () => {
     catch (err) { log('Яндекс: исполнитель — ' + err.message); return { error: err.message }; }
   });
 
+  ipcMain.handle('ym-album', async (e, id) => {
+    try { return await ym.albumTracks(getYmToken(), id); }
+    catch (err) { log('Яндекс: альбом — ' + err.message); return { error: err.message }; }
+  });
+  // Страница исполнителя: Яндекс (играет сразу) + Deezer (полная дискография, без ключа)
+  ipcMain.handle('artist-page', async (e, name, ymId) => {
+    const tok = getYmToken();
+    const out = { name: name || '', errors: [] };
+    const nn = dz.norm(name);
+    const ymP = (async () => {
+      let id = ymId;
+      if (!id && name) {
+        const r = await ym.search(name, tok);
+        const a = (r.artists || []).find((x) => dz.norm(x.name) === nn) || null;
+        id = a && a.id;
+      }
+      return id ? ym.artistInfo(tok, id) : null;
+    })().catch((err) => { out.errors.push('Яндекс: ' + err.message); log('исполнитель: Яндекс — ' + err.message); return null; });
+    const dzP = dz.artistPage(name).catch((err) => { out.errors.push('Deezer: ' + err.message); log('исполнитель: Deezer — ' + err.message); return null; });
+    const [y, d] = await Promise.all([ymP, dzP]);
+    out.ym = y; out.dz = d;
+    log('исполнитель «' + name + '»: Яндекс ' + (y ? y.albums.length + ' альб.' : 'нет') + ', Deezer ' + (d ? d.albums.length + ' альб.' : 'нет'));
+    return out;
+  });
+  ipcMain.handle('dz-album', async (e, id) => {
+    try { return await dz.album(id); }
+    catch (err) { log('Deezer: альбом — ' + err.message); return { error: err.message }; }
+  });
+
   // Ссылка в строке поиска: Яндекс Музыка или YouTube
   ipcMain.handle('resolve-link', async (e, text) => {
     const t = String(text || '').trim();
@@ -1200,7 +1230,7 @@ app.on('web-contents-created', (e, contents) => {
   contents.on('will-attach-webview', (ev, wp, params) => {
     delete wp.preload;
     wp.nodeIntegration = false; wp.contextIsolation = true; wp.sandbox = true;
-    if (!/^https:\/\/([a-z0-9-]+\.)*(yandex\.ru|youtube\.com|vk\.com|vk\.ru)\//i.test(params.src || '')) ev.preventDefault();
+    if (!/^https?:\/\//i.test(params.src || '')) ev.preventDefault(); // вкладка «Браузер»: любые сайты, без доступа к Тапёру (sandbox)
   });
   if (contents.getType() === 'webview') contents.setWindowOpenHandler(({ url }) => { if (/^https:\/\//.test(url)) contents.loadURL(url); return { action: 'deny' }; });
 });
