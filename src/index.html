@@ -16,7 +16,11 @@
 
   /* Шапка */
   header { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 12px; border-bottom: 1px solid #24262F; flex: 0 0 auto; -webkit-app-region: drag; }
-  .titlebar-space { height: 36px; flex: 0 0 auto; margin-bottom: -10px; } /* место под системные кнопки окна (titleBarOverlay height: 36); -10px гасит gap строки */
+  .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 -24px -10px; display: flex; align-items: center; justify-content: center; }
+  header .tbrand img { -webkit-app-region: drag; }
+  .tbrand { display: flex; align-items: center; gap: 8px; pointer-events: none; }
+  .tbrand .logo { width: 20px; height: 20px; border-radius: 6px; }
+  .tbrand .name { font-weight: 700; font-size: 13px; color: #C9CBD4; letter-spacing: .02em; } /* место под системные кнопки окна (titleBarOverlay height: 36); -10px гасит gap строки */
   .hrow { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .hrow1 { min-height: 28px; }
   .hspace { flex: 1 1 auto; }
@@ -76,10 +80,12 @@
   .br-web { flex: 1; width: 100%; height: 100%; border: 0; }
   .br-empty { flex: 1; display: flex; align-items: center; justify-content: center; background: #15161C; color: #8A8E9C; font-size: 14px; text-align: center; padding: 30px; line-height: 1.5; }
   /* Вход в YouTube */
+  .yl-ov, .ask-ov, .ctx, .toast { -webkit-app-region: no-drag; }
   .yl-ov { position: fixed; inset: 0; background: rgba(5,5,8,.72); z-index: 60; overflow: auto; padding: 48px 16px; }
   .yl-dlg { position: relative; margin: 0 auto; max-width: 980px; background: #15161C; border: 1px solid #2C2F3A; border-radius: 20px; padding: 26px 28px 28px; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
   .yl-dlg h1 { margin: 0; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
-  .yl-x { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 10px; border: 0; background: transparent; color: #9EA2B0; font-size: 22px; cursor: pointer; }
+  .yl-x { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border-radius: 10px; border: 0; background: transparent; color: #9EA2B0; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 2; }
+  .yl-x svg { pointer-events: none; }
   .yl-x:hover { background: #23252F; color: #ECEDF2; }
   .yl-lead { color: #9EA2B0; font-size: 14px; margin: 8px 0 18px; line-height: 1.5; }
   .yl-ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -118,6 +124,13 @@
   .yl-ui { color: #ECEDF2; background: #262833; border-radius: 4px; padding: 0 5px; font-weight: 500; white-space: nowrap; }
   .yl-tip { font-size: 12px; color: #FFD43B; margin-top: 6px; line-height: 1.45; }
   .yl-pic { background: #0E0F13; border: 1px solid #2C2F3A; border-radius: 10px; height: 112px; overflow: hidden; }
+  .yl-pres { margin-top: 10px; border-radius: 12px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; font-size: 14px; border: 1px solid #2C2F3A; background: #181A21; }
+  .yl-pres.ok { border-color: rgba(74,222,154,.5); background: rgba(74,222,154,.08); }
+  .yl-pres.bad { border-color: rgba(255,138,122,.5); background: rgba(255,138,122,.08); }
+  .yl-pres .yl-pi { font-size: 22px; width: 28px; text-align: center; }
+  .yl-pres.ok .yl-pi { color: #4ADE9A; } .yl-pres.bad .yl-pi { color: #FF8A7A; }
+  .yl-spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #3A3D4A; border-top-color: #9B87FF; animation: ylspin .8s linear infinite; }
+  @keyframes ylspin { to { transform: rotate(360deg); } }
   .yl-paste { margin-top: 14px; border: 1px dashed #4A4E5E; border-radius: 14px; padding: 14px; display: flex; gap: 12px; align-items: stretch; }
   .yl-paste textarea { flex: 1; min-height: 38px; height: 38px; resize: none; background: #0E0F13; border: 1px solid #2C2F3A; border-radius: 10px; color: #9EA2B0; font: 13px Onest, sans-serif; padding: 9px 12px; }
   .yl-res { display: flex; align-items: center; gap: 12px; margin-top: 14px; border-radius: 12px; padding: 12px 14px; }
@@ -382,6 +395,9 @@
   .art-m { flex: 1 1 160px; min-width: 0; }
   .art-n { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .art-m .sub { margin-top: 3px; }
+  .art-go { cursor: pointer; }
+  .art-n.art-go:hover { color: #B9A9FF; text-decoration: underline; text-underline-offset: 4px; }
+  .art-ph.art-go:hover { outline: 2px solid #9B87FF; outline-offset: 2px; }
   .art-b { display: flex; gap: 8px; flex-wrap: wrap; }
   .art-b .pbtn { height: 34px; padding: 0 14px; font-size: 12px; }
 
@@ -530,11 +546,9 @@
 </head>
 <body>
   <header>
-    <div class="titlebar-space"></div>
+    <div class="titlebar-space"><div class="tbrand"><img class="logo" src="assets/icon.png" alt=""><span class="name">Тапёр</span></div></div>
     <div class="hrow hrow1">
       <div class="brand">
-        <img class="logo" src="assets/icon.png" alt="">
-        <div class="name">Тапёр</div>
         <nav id="tabs" aria-label="Разделы">
           <button class="active" data-tab="search">Поиск</button>
           <button data-tab="my">Плейлисты</button>
@@ -799,7 +813,7 @@
 
     <div class="yl-ov" id="ytDlg" hidden role="dialog" aria-modal="true" aria-label="Вход в YouTube">
       <div class="yl-dlg">
-        <button class="yl-x" id="ytDlgClose" aria-label="Закрыть">×</button>
+        <button class="yl-x" id="ytDlgClose" aria-label="Закрыть" title="Закрыть"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         <h1><span style="width:30px;height:30px;border-radius:8px;background:#FF4E45;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span>Вход в YouTube</h1>
         <div class="yl-lead">Без входа YouTube в Тапёре тоже работает. Вход нужен, чтобы видеть свои плейлисты и лайки, смотреть без рекламы с Premium и реже ловить проверку «ты не робот». Можно подключить несколько способов.</div>
         <div id="ytDlgBody"></div>
@@ -2391,6 +2405,8 @@
       cache = Object.assign({}, meta, r, { title: a.name, thumb: a.thumb || r.thumb });
       return cache;
     }
+    // Иконка и имя в карточке — как «Все треки»
+    [sec.querySelector('.art-ph'), sec.querySelector('.art-n')].forEach(function (el){ if (!el) return; el.classList.add('art-go'); el.title = 'Все треки исполнителя'; el.onclick = function(){ openSearchList(meta); }; });
     sec.querySelector('.art-b').onclick = async function(e){
       var b = e.target.closest('button'); if (!b) return;
       var k = b.dataset.art;
@@ -3179,13 +3195,13 @@
       ytCard(2, 'Внутри Тапёра', 'ДЛЯ PREMIUM', 'y', 'Окно входа Google прямо в программе. Иногда Google такое окно не пускает — тогда бери третий способ.', '<span>Premium без рекламы</span><span>плейлисты</span><span>меньше проверок</span>', c2) +
       ytCard(3, 'Ключ из браузера', 'САМЫЙ НАДЁЖНЫЙ', 'p', 'Копируешь из своего браузера «ключ входа» и вставляешь сюда. Пара минут по инструкции ниже.', '<span>Premium без рекламы</span><span>плейлисты</span><span>меньше проверок</span>', c3) +
       '</div>';
-    if (ytMsg) h += '<div class="yl-res ' + (ytMsg.ok ? 'ok' : 'bad') + '">' + (ytMsg.ok ? (ytMsg.photo ? '<img src="' + esc(ytMsg.photo) + '" alt="">' : '<span class="yl-ava"></span>') : '<span style="font-size:20px">⚠</span>') + '<div style="flex:1"><div style="font-weight:600">' + esc(ytMsg.title) + '</div>' + (ytMsg.text ? '<div class="yl-small">' + esc(ytMsg.text) + '</div>' : '') + '</div>' + (ytMsg.ok ? '<button class="yl-btn g" data-yl="close">Готово</button>' : '') + '</div>';
+    if (ytMsg && !ytPasteRes) h += '<div class="yl-res ' + (ytMsg.ok ? 'ok' : 'bad') + '">' + (ytMsg.ok ? (ytMsg.photo ? '<img src="' + esc(ytMsg.photo) + '" alt="">' : '<span class="yl-ava"></span>') : '<span style="font-size:20px">⚠</span>') + '<div style="flex:1"><div style="font-weight:600">' + esc(ytMsg.title) + '</div>' + (ytMsg.text ? '<div class="yl-small">' + esc(ytMsg.text) + '</div>' : '') + '</div>' + (ytMsg.ok ? '<button class="yl-btn g" data-yl="close">Готово</button>' : '') + '</div>';
     h += '<div class="yl-sec"><h2>Как достать ключ входа</h2><div class="yl-small">Ничего не устанавливаем и ничего не меняем — только копируем. Выбери свой браузер:</div>' +
       '<div class="yl-tabs"><button data-ylb="chrome" class="' + (ytBrowser === 'chrome' ? 'on' : '') + '">Chrome · Яндекс Браузер · Edge · Opera</button><button data-ylb="firefox" class="' + (ytBrowser === 'firefox' ? 'on' : '') + '">Firefox</button></div><div class="yl-steps">';
     ytSteps().forEach(function (s, i){
       h += '<div class="yl-st"><div class="yl-n">' + (i + 1) + '</div><div><div class="yl-t">' + s.t + '</div><div class="yl-d">' + s.d + '</div>' + (s.tip ? '<div class="yl-tip">' + s.tip + '</div>' : '') + '</div><div class="yl-pic">' + s.p + '</div></div>';
     });
-    h += '</div><div class="yl-paste"><button class="yl-btn" data-yl="paste"' + (ytBusy ? ' disabled' : '') + '>' + (ytBusy === 'paste' ? 'Проверяю…' : 'Вставить ключ') + '</button><textarea id="ytPasteBox" placeholder="Тапёр возьмёт скопированное из буфера обмена. Или вставь сюда: Ctrl+V" spellcheck="false"></textarea></div>' +
+    h += '</div><div class="yl-paste"><button class="yl-btn" data-yl="paste"' + (ytBusy ? ' disabled' : '') + '>' + (ytBusy === 'paste' ? 'Проверяю…' : 'Вставить ключ') + '</button><textarea id="ytPasteBox" placeholder="Тапёр возьмёт скопированное из буфера обмена. Или вставь сюда: Ctrl+V" spellcheck="false"></textarea></div>' + pasteStatus() +
       (ck ? '<label class="yl-opt"><input type="checkbox" id="ytUseCk"' + (ytAuth.useCookies ? ' checked' : '') + '> Использовать вход и для основного способа воспроизведения <span class="yl-mute">— реже будет проверка «ты не робот». YouTube может заметить частое использование; если боишься за аккаунт — не включай</span></label>' : '') +
       '<div class="yl-safe"><div style="font-size:18px">🔒</div><div><b>Ключ — это доступ к твоему аккаунту.</b> Тапёр хранит его зашифрованным только на этом компьютере и никуда не отправляет, даже в журнал работы. Никому его не пересылай. Чтобы отключить — «Выйти» здесь. Чтобы ключ точно перестал работать везде: Google → «Безопасность» → «Выйти на всех устройствах».</div></div></div>';
     box.innerHTML = h;
@@ -3193,19 +3209,30 @@
     if (ta) ta.addEventListener('paste', function(e){ var t = (e.clipboardData || window.clipboardData).getData('text'); e.preventDefault(); ytPaste(t); });
     var uc = $('ytUseCk'); if (uc) uc.onchange = function(){ ytAuth.useCookies = uc.checked; if (A.setSetting) A.setSetting('ytUseCookies', uc.checked); };
   }
+  // Итог вставки ключа — прямо под полем вставки: что вставили и чем закончилось (сам ключ не показываем)
+  var ytPasteRes = null;
+  var PASTE_KIND = { curl: 'cURL (bash)', 'curl-cmd': 'cURL (Windows cmd)', powershell: 'PowerShell', 'cookies.txt': 'файл cookies.txt', headers: 'заголовки запроса', 'cookie-string': 'строка cookie', text: 'обычный текст' };
+  function pasteStatus(){
+    if (ytBusy === 'paste') return '<div class="yl-pres busy"><span class="yl-spin"></span><div>Проверяю ключ…</div></div>';
+    var r = ytPasteRes; if (!r) return '';
+    var what = r.pasted ? 'Вставлено: ' + (PASTE_KIND[r.pasted.kind] || 'текст') + ' · ' + r.pasted.len.toLocaleString('ru-RU') + ' симв.' + (r.count ? ' · записей входа: ' + r.count : '') : '';
+    if (r.ok) return '<div class="yl-pres ok"><span class="yl-pi">✓</span><div><b>Готово! Вошёл как ' + esc(r.name || 'аккаунт YouTube') + '</b><div class="yl-small">' + esc(what) + (r.unchecked ? ' · проверить не удалось: ' + esc(r.message || 'YouTube не отвечает') + ', но ключ сохранён' : ' · ключ проверен') + '</div></div></div>';
+    return '<div class="yl-pres bad"><span class="yl-pi">⚠</span><div><b>' + esc(ytMsg && !ytMsg.ok ? ytMsg.title : 'Не получилось') + '</b><div class="yl-small">' + esc(what) + (ytMsg && ytMsg.text ? ' — ' + esc(ytMsg.text) : '') + '</div></div></div>';
+  }
   async function ytPaste(text){
-    ytBusy = 'paste'; ytMsg = null; renderYtDlg();
+    ytBusy = 'paste'; ytMsg = null; ytPasteRes = null; renderYtDlg();
     var r = A.ytLoginPaste ? await A.ytLoginPaste(text || '') : { error: 'failed' };
-    ytBusy = '';
+    ytBusy = ''; ytPasteRes = r || { error: 'failed' };
     if (r && r.ok) ytMsg = { ok: true, title: 'Вошёл как ' + (r.name || 'аккаунт YouTube'), photo: r.photo, text: r.unchecked ? 'Ключ сохранён, но проверить не удалось: ' + (r.message || 'YouTube не отвечает') : 'Ключ проверен, всё нужное на месте (записей: ' + r.count + ')' };
     else {
       var code = r && r.error;
       ytMsg = { ok: false, title: code === 'rejected' ? 'YouTube не принял ключ' : 'Это не тот текст', text: code === 'rejected' ? (r.message || '') + '. Повтори шаги 1–5.' : (r && r.wrongSite ? YT_ERR_TEXT.wrongSite : (YT_ERR_TEXT[code] || ('Ошибка: ' + code))) };
     }
     await ytAuthRefresh(); renderYtDlg();
+    var pr = document.querySelector('#ytDlg .yl-pres'); if (pr) pr.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     if (r && r.ok) { myLoaded = false; if (curTab === 'my') loadMy(true); }
   }
-  function openYtDlg(){ ytDlgOpen = true; ytMsg = null; $('ytDlg').hidden = false; renderYtDlg(); ytAuthRefresh(); }
+  function openYtDlg(){ ytDlgOpen = true; ytMsg = null; ytPasteRes = null; $('ytDlg').hidden = false; renderYtDlg(); ytAuthRefresh(); }
   function closeYtDlg(){ ytDlgOpen = false; $('ytDlg').hidden = true; }
   $('ytDlg').addEventListener('click', async function(e){
     if (e.target === $('ytDlg')) { closeYtDlg(); return; }

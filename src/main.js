@@ -973,7 +973,10 @@ app.whenReady().then(async () => {
   ipcMain.handle('yt-auth-status', () => ytAuthStatus());
   ipcMain.handle('yt-login-paste', async (e, text) => {
     const t = text != null && String(text).trim() ? String(text) : clipboard.readText();
-    try { return await ytauth.loginWithText(t); } catch (err) { log('YouTube: ключ — ' + err.message); return { error: 'failed', message: err.message }; }
+    let kind = '';
+    try { kind = ytauth.parse(t).kind || ''; } catch (e2) {}
+    const pasted = { kind, len: String(t || '').length }; // что вставили — без самого ключа
+    try { return Object.assign(await ytauth.loginWithText(t), { pasted }); } catch (err) { log('YouTube: ключ — ' + err.message); return { error: 'failed', message: err.message, pasted }; }
   });
   ipcMain.handle('yt-login-window', () => ytauth.loginWindow(mainWindow));
   ipcMain.handle('yt-oauth-login', () => ytoauth.login());
