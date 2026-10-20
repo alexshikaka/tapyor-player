@@ -1,6 +1,6 @@
 {
-  "name": "stream-player",
-  "version": "0.12.5",
+  "name": "tapyor",
+  "version": "0.13.0",
   "description": "Тапёр — музыка и заказы для стрима из нескольких сервисов",
   "main": "src/main.js",
   "scripts": {
@@ -19,17 +19,21 @@
     "@distube/ytdl-core": "^4.16.4"
   },
   "build": {
-    "appId": "app.shikaka.streamplayer",
+    "appId": "app.alexshikaka.tapyor",
     "productName": "Тапёр",
     "win": {
       "target": "nsis"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Тапёр"
     },
     "extraResources": [
-      { "from": "resources/yt-dlp.exe", "to": "yt-dlp.exe" }
+      {
+        "from": "resources/yt-dlp.exe",
+        "to": "yt-dlp.exe"
+      }
     ],
     "publish": [
       {
@@ -38,6 +42,7 @@
         "repo": "tapyor-player",
         "releaseType": "release"
       }
-    ]
+    ],
+    "artifactName": "Tapyor-Setup-${version}.${ext}"
   }
 }

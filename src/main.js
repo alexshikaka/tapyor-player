@@ -42,6 +42,7 @@ const DEFAULTS = {
   npEnabled: true, nowPlayingFormat: '{artist} — {title}', npIdle: '',
   videoQuality: '720', startVolume: 80, prefetch: true,
   autoUpdate: true, autoStart: false, closeToTray: true,
+  theme: 'violet',
   normalize: true, crossfade: 6,
   ytEnabled: true, ymWebFallback: true, ytUseCookies: false, scEnabled: true, auEnabled: true,
   mediaKeys: true,
@@ -303,7 +304,7 @@ function urlStream(url) {
 
 // --- Audius: открытая площадка независимых артистов (свой API) ---
 const AUDIUS = 'https://api.audius.co/v1';
-const AU_APP = 'Taper';
+const AU_APP = 'Tapyor';
 async function auSearch(q, n) {
   const { net } = require('electron');
   try {
@@ -428,14 +429,14 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    backgroundColor: '#15161C',
+    backgroundColor: themeColors().bg,
     title: 'Тапёр',
     show: !startHidden,
     icon: path.join(__dirname, 'assets', 'icon.png'),
     autoHideMenuBar: true,
     // Тёмная верхняя полоса в цвет оформления; системные кнопки остаются
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#15161C', symbolColor: '#C9CBD4', height: 36 },
+    titleBarOverlay: { color: themeColors().bg, symbolColor: themeColors().sym, height: 36 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -461,8 +462,13 @@ function createWindow() {
   });
 }
 
+// Цвета системной полосы окна под тему оформления
+function themeColors() { return cfg('theme') === 'mono' ? { bg: '#0B0B0B', sym: '#CFCFCF' } : { bg: '#15161C', sym: '#C9CBD4' }; }
+function applyThemeWindow() {
+  try { if (mainWindow && !mainWindow.isDestroyed()) { const c = themeColors(); mainWindow.setBackgroundColor(c.bg); mainWindow.setTitleBarOverlay({ color: c.bg, symbolColor: c.sym, height: 36 }); } } catch (e) { log('тема: ' + e.message); }
+}
 function createTray() {
-  const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray16.png')); // tray16@2x.png Windows возьмёт сам на экранах 200%
   tray = new Tray(icon);
   tray.setToolTip('Тапёр');
 
@@ -684,6 +690,7 @@ app.whenReady().then(async () => {
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
     if (key === 'autoStart') applyAutoStart();
+    if (key === 'theme') applyThemeWindow();
     if (key === 'mediaKeys' || key === 'hotkeys') return applyHotkeys();
     if (key === 'npEnabled' || key === 'nowPlayingFormat' || key === 'npIdle' || key === 'nowPlayingPath') writeNowPlaying(lastNpInfo, true);
     return true;
