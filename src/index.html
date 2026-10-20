@@ -297,7 +297,24 @@
   #ytFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   #ytFrame iframe { width: 100%; height: 100%; border: 0; display: block; }
   #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; object-fit: contain; }
-  .vmeta { padding: 12px 4px 2px; display: flex; flex-direction: column; gap: 4px; }
+  .vmeta { padding: 12px 4px 2px; display: flex; align-items: flex-start; gap: 10px; }
+  .vm-l { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .vmeta .clearq { margin-top: 2px; }
+  /* «Дальше в волне / в плейлисте»: что сыграет фон — бледно и мельче */
+  .qnext { margin-top: 6px; border-top: 1px dashed var(--ln); padding-top: 6px; }
+  .qn-h { display: flex; align-items: center; gap: 6px; width: 100%; border: 0; background: transparent; color: var(--tx4); font: 600 11px Onest, sans-serif; letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; cursor: pointer; text-align: left; }
+  .qn-h:hover { color: var(--tx2); }
+  .qn-h small { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--tx5); }
+  .qn-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 8px; opacity: .62; }
+  .qn-row:hover { opacity: 1; background: var(--hov); }
+  .qn-row .qn-c { width: 26px; height: 26px; border-radius: 5px; background: var(--bg4); flex: 0 0 auto; overflow: hidden; }
+  .qn-row .qn-c img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .qn-row .qn-m { flex: 1; min-width: 0; }
+  .qn-row .qn-t { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .qn-row .qn-s { font-size: 11px; color: var(--tx4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qn-row .x { width: 26px; height: 26px; opacity: 0; }
+  .qn-row:hover .x, .qn-row .x:focus { opacity: 1; }
+  .qn-more { font-size: 11.5px; color: var(--tx5); padding: 4px 8px; }
   .nplabel { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ac); }
   .vmeta .t { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vmeta .s { font-size: 13px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1134,9 +1151,12 @@
       <div class="nowcard">
         <div class="video"><video id="player" playsinline></video><audio id="aud"></audio><audio id="aud2"></audio><div id="ytFrame" hidden></div></div>
         <div class="vmeta">
-          <div class="nplabel" id="nplabel">Сейчас играет</div>
-          <div class="t" id="card-title">Ничего не играет</div>
-          <div class="s" id="card-sub">Найди трек и запусти</div>
+          <div class="vm-l">
+            <div class="nplabel" id="nplabel">Сейчас играет</div>
+            <div class="t" id="card-title">Ничего не играет</div>
+            <div class="s" id="card-sub">Найди трек и запусти</div>
+          </div>
+          <button class="clearq" id="clearq" title="Убрать из очереди всё, что ещё не играло">Очистить очередь</button>
         </div>
       </div>
 
@@ -1146,7 +1166,6 @@
         <div class="muted">Пусто. Добавляй треки из поиска.</div>
       </div>
 
-      <button class="clearq" id="clearq">Очистить очередь</button>
     </aside>
   </main>
 
@@ -1731,7 +1750,7 @@
     var prevItem = queue[current];
     if (prevItem && prevItem !== queue[i] && prevItem.bg && bgSel.kind === 'wave' && srcOf(prevItem) === 'ym' && !prevItem.altFrom && !isIdle()) {
       var m = master();
-      if (m.currentTime > 0 && m.duration && m.currentTime < m.duration - 2) A.ymWaveFeedback('skip', ymKey(prevItem), m.currentTime);
+      if (m.currentTime > 0 && m.duration && m.currentTime < m.duration - 2) { A.ymWaveFeedback('skip', ymKey(prevItem), m.currentTime); trimWaveTail(); }
     }
     previewT = null;
     current = i; var v = queue[i];
@@ -1741,6 +1760,7 @@
     playingId = v.id; markPlayingRows();
     setNowPlaying(v); showTrack(v);
     renderQueue(true); renderWaveUi(); saveToday();
+    if (v.bg) topUpWave();
     setSub('Загружаю…');
     var r = await getStream(v);
     if (i !== current) return; // переключили, пока грузилось
@@ -1873,7 +1893,7 @@
     var pending = 0, played = 0;
     queue.forEach(function (v, i){ if (i > current && !v.played) pending++; else if (v.played && i !== current) played++; });
     $('qcount').textContent = pending + ' в очереди' + (played ? ' · ' + played + ' сыграно' : '');
-    if (!queue.length) { box.innerHTML = '<div class="muted">Пусто. Добавляй треки из поиска.</div>'; return; }
+    if (!queue.length && !bgPreview().length) { box.innerHTML = '<div class="muted">Пусто. Добавляй треки из поиска.</div>'; return; }
     box.innerHTML = '';
     queue.forEach(function (v, i) {
       var isCur = i === current;
@@ -1916,6 +1936,7 @@
       r.oncontextmenu = function(e){ openQueueMenu(e, i); };
       box.appendChild(r);
     });
+    renderBgPreview(box);
     // Играющий трек — наверху списка (сыгранные уезжают вверх, один виден для ориентира)
     if (scroll || lastScrolled !== current) {
       lastScrolled = current;
@@ -2120,7 +2141,7 @@
       if (on) likedSet.delete(id); else likedSet.add(id);
       renderLike();
       setSub('⚠ лайк не сохранился: ' + ((r && r.error) || 'ошибка'));
-    } else if (t.bg && bgSel.kind === 'wave' && srcOf(t) === 'ym') A.ymWaveFeedback(on ? 'like' : 'unlike', ymKey(t));
+    } else if (t.bg && bgSel.kind === 'wave' && srcOf(t) === 'ym') { A.ymWaveFeedback(on ? 'like' : 'unlike', ymKey(t)); trimWaveTail(); }
   }
 
   // Полоса прогресса
@@ -2246,7 +2267,7 @@
     var changed = bgId(b) !== bgId(bgSel) || (b.kind === 'list' && b.shuffle !== bgSel.shuffle);
     bgSel = b;
     if (changed) { waveBuf = []; bgToken++; bgNeedStart = true; }
-    saveWaveCfg(); renderWaveUi(); renderVariants();
+    saveWaveCfg(); renderWaveUi(); renderVariants(); if (changed) renderQueue();
     if (!now) return;
     startBg(); // выбрал — играет сразу; несыгранные заказы встанут под него
   }
@@ -2313,7 +2334,62 @@
     if (bgSel.kind !== 'wave') return;
     var tok = ++bgToken;
     var r = await A.ymWaveStart(waveOpts());
-    if (tok === bgToken && r && r.tracks && r.tracks.length) waveBuf = r.tracks;
+    if (tok === bgToken && r && r.tracks && r.tracks.length) { waveBuf = r.tracks; renderQueue(); topUpWave(); }
+  }
+
+  // ===== Что сыграет фон: показываем в очереди =====
+  // Волна: ~10 треков вперёд; после пропуска или лайка первые 3 остаются, остальное Яндекс подбирает заново.
+  // Плейлист фоном: весь оставшийся список.
+  var WAVE_AHEAD = 10, WAVE_KEEP = 3, qNextOpen = true, waveTopping = false;
+  function bgPreview(){ return (bgOn || bgPending) && (bgSel.kind === 'wave' || bgSel.kind === 'list') ? waveBuf : []; }
+  function lastBgTrack(){ if (waveBuf.length) return waveBuf[waveBuf.length - 1]; for (var q = queue.length - 1; q >= 0; q--) if (queue[q].bg) return queue[q]; return null; }
+  async function topUpWave(){
+    if (waveTopping || bgSel.kind !== 'wave' || !ymLoggedIn || !A.ymWaveMore || !(bgOn || bgPending)) return;
+    waveTopping = true; var tok = bgToken, added = 0;
+    try {
+      for (var k = 0; k < 4 && waveBuf.length < WAVE_AHEAD; k++) {
+        var last = lastBgTrack(); if (!last) break;
+        var r = await A.ymWaveMore(ymKey(last)).catch(function(){ return null; });
+        if (tok !== bgToken || bgSel.kind !== 'wave') return;
+        var have = {}; waveBuf.concat(queue).forEach(function (t){ have[String(t.id)] = 1; });
+        var add = ((r && r.tracks) || []).filter(function (t){ return !have[String(t.id)]; });
+        if (!add.length) break;
+        waveBuf = waveBuf.concat(add); added += add.length;
+      }
+    } finally { waveTopping = false; }
+    if (added) renderQueue();
+  }
+  function trimWaveTail(){
+    if (bgSel.kind !== 'wave') return;
+    if (waveBuf.length > WAVE_KEEP) { waveBuf = waveBuf.slice(0, WAVE_KEEP); renderQueue(); }
+    topUpWave();
+  }
+  function renderBgPreview(box){
+    var list = bgPreview(); if (!list.length) return;
+    var isList = bgSel.kind === 'list';
+    var wrap = document.createElement('div'); wrap.className = 'qnext';
+    var hd = document.createElement('button'); hd.className = 'qn-h'; hd.setAttribute('aria-expanded', qNextOpen ? 'true' : 'false');
+    hd.innerHTML = (qNextOpen ? '▾ ' : '▸ ') + (isList ? 'Дальше в плейлисте' : 'Дальше в волне') + ' · ' + list.length + (isList ? (bgSel.shuffle ? ' <small>вперемешку</small>' : '') : ' <small>обновится после пропуска или лайка</small>');
+    hd.onclick = function(){ qNextOpen = !qNextOpen; renderQueue(); };
+    wrap.appendChild(hd);
+    if (qNextOpen) {
+      var max = isList ? 200 : list.length;
+      list.slice(0, max).forEach(function (t, j){
+        var r = document.createElement('div'); r.className = 'qn-row';
+        r.innerHTML = '<div class="qn-c">' + (t.thumb ? '<img src="' + esc(t.thumb) + '" alt="" loading="lazy">' : '') + '</div><div class="qn-m"><div class="qn-t" title="Играть сейчас">' + esc(t.title) + '</div><div class="qn-s">' + esc(t.author || '') + ' · ' + esc(srcName(t)) + '</div></div>';
+        var up = document.createElement('button'); up.className = 'x'; up.title = 'Играть следующим (как заказ)'; up.setAttribute('aria-label', up.title);
+        up.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M12 20V9M7 13l5-5 5 5"></path></svg>';
+        up.onclick = function(){ var t2 = waveBuf.splice(j, 1)[0]; if (t2) addNext(t2); topUpWave(); };
+        var x = document.createElement('button'); x.className = 'x'; x.title = 'Не играть'; x.setAttribute('aria-label', 'Не играть');
+        x.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
+        x.onclick = function(){ waveBuf.splice(j, 1); renderQueue(); topUpWave(); };
+        r.querySelector('.qn-t').onclick = function(){ var t2 = waveBuf.splice(j, 1)[0]; if (t2) { bgOn = true; bgPending = false; playBgTrack(t2); } };
+        r.appendChild(up); r.appendChild(x);
+        wrap.appendChild(r);
+      });
+      if (list.length > max) { var mo = document.createElement('div'); mo.className = 'qn-more'; mo.textContent = '… и ещё ' + (list.length - max); wrap.appendChild(mo); }
+    }
+    box.appendChild(wrap);
   }
 
   function showWaveSettings(open){
@@ -2388,7 +2464,7 @@
   $('waveShake').onclick = async function(){
     var playing = !isIdle() || loadingIdx >= 0;
     if (!playing) { startBg(); return; }
-    if (bgSel.kind === 'list') { bgSel.shuffle = true; waveBuf = listOrder(); renderWaveUi(); }
+    if (bgSel.kind === 'list') { bgSel.shuffle = true; waveBuf = listOrder(); renderWaveUi(); renderQueue(); }
     else {
       waveBuf = []; await refreshWave();
     }

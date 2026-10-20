@@ -28,6 +28,16 @@ async def main():
         print('без звука:', round(await E("parseFloat(document.getElementById('vol').value)"),1))
         await E("document.getElementById('muteBtn').click()"); await pg.wait_for_timeout(700)
         print('звук вернулся:', round(await E("parseFloat(document.getElementById('vol').value)"),1))
+        # «Дальше в волне»: ~10 треков вперёд, после пропуска хвост обновляется
+        await E("document.getElementById('wavePlay').click()"); await pg.wait_for_timeout(1500)
+        print('дальше в волне:', await E("(document.querySelector('.qn-h')||{}).textContent"), '| строк:', await E("document.querySelectorAll('.qn-row').length"))
+        await pg.screenshot(path='q_next.png')
+        n0 = len([x for x in await E("window.__log") if x.startswith('waveMore')])
+        await pg.wait_for_timeout(300)
+        await E("document.getElementById('next').click()"); await pg.wait_for_timeout(1500)
+        print('после пропуска: запросов waveMore +', len([x for x in await E("window.__log") if x.startswith('waveMore')]) - n0, '| skip:', [x for x in await E("window.__log") if x == 'fb skip'][:1], '| строк:', await E("document.querySelectorAll('.qn-row').length"))
+        # кнопка «Очистить очередь» — напротив названия трека
+        print('очистить рядом с названием:', await E("!!document.querySelector('.vmeta #clearq')"))
         # меню волны: плейлисты фоном
         await E("document.getElementById('waveGear').click()"); await pg.wait_for_timeout(500)
         pls = await E("Array.from(document.querySelectorAll('#wavePls .wv')).map(x=>x.textContent)")
@@ -35,6 +45,7 @@ async def main():
         await E("Array.from(document.querySelectorAll('#wavePls .wv')).find(x=>/Рок на стрим/.test(x.textContent)).click()"); await pg.wait_for_timeout(900)
         print('после выбора плейлиста:', await E("document.getElementById('waveTitle').textContent"), '|', await E("document.getElementById('waveSub').textContent"), '| встряхнуть:', await E("document.getElementById('waveShakeT').textContent"))
         print('играет:', await E("document.getElementById('nplabel').textContent"))
+        print('дальше в плейлисте:', await E("(document.querySelector('.qn-h')||{}).textContent"))
         # смена настроения → снова волна
         await E("document.getElementById('waveGear').click()"); await pg.wait_for_timeout(200)
         if await E("document.getElementById('waveSettings').hidden"): await E("document.getElementById('waveGear').click()")
