@@ -149,6 +149,51 @@
   .row .s { font-size: 13px; color: #9EA2B0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sub { display: flex; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; }
   .sub .sa { font-size: 13px; font-weight: 500; color: #C9CBD4; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .rbs { display: flex; gap: 6px; }
+  .ask-ov { position: fixed; inset: 0; background: rgba(5,5,8,.6); z-index: 250; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .ask { width: 420px; max-width: 100%; background: #1A1B22; border: 1px solid #2C2F3A; border-radius: 16px; padding: 20px; box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+  .ask h4 { margin: 0 0 10px; font-size: 17px; font-weight: 700; }
+  .ask p { margin: 0 0 12px; color: #9EA2B0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+  .ask label { display: block; font-size: 12px; color: #9EA2B0; margin-bottom: 12px; }
+  .ask input[type=text] { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; height: 40px; border-radius: 10px; border: 1px solid #2C2F3A; background: #0E0F13; color: #ECEDF2; padding: 0 12px; font: 500 14px Onest, sans-serif; }
+  .ask input[type=text]:focus { outline: none; border-color: #9B87FF; }
+  .ask .ask-c { display: flex; gap: 8px; align-items: center; color: #C9CBD4; font-size: 13px; }
+  .ask-b { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 240; background: #2A2D38; color: #ECEDF2; border: 1px solid #3A3D4A; border-radius: 12px; padding: 10px 14px; font-size: 13px; display: flex; gap: 14px; align-items: center; box-shadow: 0 12px 30px rgba(0,0,0,.5); max-width: 80vw; }
+  .toast[hidden] { display: none; }
+  .toast button { border: 0; background: transparent; color: #B9A9FF; font: 600 13px Onest, sans-serif; cursor: pointer; }
+  .mbar { margin: 8px 4px 0; padding: 10px; border: 1px solid #9B87FF; border-radius: 12px; background: #1E1B2C; display: flex; flex-direction: column; gap: 6px; }
+  .mbar span { font-size: 12px; color: #9EA2B0; }
+  .mbar div { display: flex; gap: 6px; }
+  .mbar .pbtn { height: 32px; padding: 0 12px; font-size: 12px; }
+  .mbar .pbtn:disabled { opacity: .45; cursor: default; }
+  .mchk { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid #4A4D5A; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; color: #fff; }
+  .mit.msel.on .mchk { background: #9B87FF; border-color: #9B87FF; }
+  .mit.msel.on { background: #221F33; }
+  .pbtn.danger { color: #FF8A7A !important; }
+  .plhead h3.ren { cursor: text; }
+  .prow.dragging { opacity: .4; }
+  .prow.drop-before { box-shadow: inset 0 2px 0 #9B87FF; }
+  .prow.drop-after { box-shadow: inset 0 -2px 0 #9B87FF; }
+  .smodes { display: flex; flex-direction: column; gap: 6px; min-width: 320px; }
+  .smodes button { text-align: left; border: 1px solid #2C2F3A; background: #181A21; color: #C9CBD4; border-radius: 10px; padding: 8px 12px; font: 500 13px Onest, sans-serif; cursor: pointer; }
+  .smodes button small { display: block; color: #8A8E9C; font-size: 12px; margin-top: 2px; }
+  .smodes button.on { border-color: #9B87FF; background: #221F33; color: #ECEDF2; }
+  .sorder { display: flex; flex-direction: column; gap: 6px; min-width: 320px; }
+  .sorder .so { display: flex; align-items: center; gap: 10px; border: 1px solid #2C2F3A; background: #181A21; border-radius: 10px; padding: 6px 8px 6px 12px; font-size: 13px; }
+  .sorder .so b { flex: 1; font-weight: 600; }
+  .sorder .so i { color: #8A8E9C; font-style: normal; width: 18px; }
+  .sorder .so button { width: 28px; height: 28px; border-radius: 8px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; cursor: pointer; }
+  .sorder .so button:disabled { opacity: .3; cursor: default; }
+  .rbadge { display: inline-block; margin-right: 6px; height: 18px; line-height: 16px; padding: 0 7px; border-radius: 9px; border: 1px solid #3A3D4A; background: transparent; color: #9EA2B0; font: 500 11px Onest, sans-serif; vertical-align: middle; }
+  button.rbadge { cursor: pointer; }
+  button.rbadge:hover { border-color: #9B87FF; color: #ECEDF2; }
+  .smode { border: 1px solid #2C2F3A; background: transparent; color: #9EA2B0; height: 28px; padding: 0 12px; border-radius: 14px; font: 500 12px Onest, sans-serif; cursor: pointer; }
+  .smode b { color: #ECEDF2; font-weight: 600; }
+  .smode:hover { border-color: #9B87FF; }
+  .sback { margin: 2px 6px 6px; }
+  .al { cursor: pointer; border-radius: 3px; transition: color .12s; }
+  .al:hover { color: #B9A9FF; text-decoration: underline; text-underline-offset: 3px; }
   .sub .sd { width: 7px; height: 7px; border-radius: 4px; flex: 0 0 auto; }
   .sub .ss { font: 400 11px 'JetBrains Mono', ui-monospace, monospace; color: #7C8090; flex: 0 0 auto; }
   .qs.sub .sa, #f-sub .sa { font-size: 12px; }
@@ -528,7 +573,7 @@
     <section class="results-col view" id="viewSearch" aria-label="Результаты поиска">
       <div class="col-head">
         <h2>Результаты</h2>
-        <span class="hint" id="hint">Введи название и нажми Enter</span>
+        <span style="display:flex;gap:10px;align-items:center;min-width:0"><span class="hint" id="hint">Введи название и нажми Enter</span><button class="smode" id="smode" aria-haspopup="menu" title="Как упорядочивать найденное">Выдача: <b>Умный</b> ▾</button></span>
       </div>
       <div class="results" id="results">
         <div class="muted">Здесь появятся найденные треки, волны и плейлисты.</div>
@@ -558,6 +603,7 @@
           <button data-go="sAcc">Аккаунты</button>
           <button data-go="sHealth">Состояние сервисов</button>
           <button data-go="sObs">OBS и стрим</button>
+          <button data-go="sSearch">Поиск</button>
           <button data-go="sPlay">Воспроизведение</button>
           <button data-go="sKeys">Горячие клавиши</button>
           <button data-go="sApp">Программа</button>
@@ -648,6 +694,20 @@
               <div class="srow">
                 <div class="sl"><label class="st" for="setNpIdle">Когда ничего не играет</label><div class="sd">Пусто — надпись на стриме исчезнет</div></div>
                 <input id="setNpIdle" class="field" placeholder="пусто" style="flex:0 1 260px;font-family:Onest,sans-serif">
+              </div>
+            </div>
+          </section>
+
+          <section id="sSearch">
+            <div class="sec-h"><h2>Поиск</h2><span>Что показывать первым</span></div>
+            <div class="card">
+              <div class="srow" style="align-items:flex-start">
+                <div class="sl"><div class="st">Выдача поиска</div><div class="sd">Так же переключается кнопкой «Выдача» над результатами. Действует и в «Плейлисте из текста»</div></div>
+                <div class="smodes" id="setSmode"></div>
+              </div>
+              <div class="srow" style="align-items:flex-start">
+                <div class="sl"><div class="st">Порядок площадок</div><div class="sd">Для варианта «По площадкам» и когда треки одинаково подходят. Площадка, которая сейчас не работает, всё равно уходит в конец</div></div>
+                <div class="sorder" id="setSrcOrder"></div>
               </div>
             </div>
           </section>
@@ -853,6 +913,7 @@
       <input id="vol" type="range" min="0" max="100" value="80" aria-label="Громкость">
     </div>
   </footer>
+<script src="rank.js"></script>
 <script>
   var A = window.app || {};
   function $(id){ return document.getElementById(id); }
@@ -946,8 +1007,29 @@
   function ymKey(t){ return t.id + (t.albumId ? ':' + t.albumId : ''); }
   // «Исполнитель ● Источник» — исполнитель обычным шрифтом, источник моноширинным
   function subLine(v, extra){
-    return '<div class="s sub">' + (v.author ? '<span class="sa">' + esc(v.author) + '</span>' : '') +
+    return '<div class="s sub">' + (v.author ? '<span class="sa">' + artistLinks(v.author) + '</span>' : '') +
       '<span class="dot sd" style="background:' + srcColor(v) + '"></span><span class="ss">' + esc(extra || srcName(v)) + '</span></div>';
+  }
+  // Имена исполнителей — кликабельные: при наведении подсвечиваются, нажатие ищет исполнителя
+  function artistLinks(author){
+    if (!window.TapRank) return esc(author);
+    return TapRank.splitArtists(author).map(function (p){
+      return p.sep ? esc(p.sep) : '<span class="al" data-artist="' + esc(p.name) + '" title="Найти исполнителя «' + esc(p.name) + '»">' + esc(p.name) + '</span>';
+    }).join('');
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('.al[data-artist]'); if (!a) return;
+    e.preventDefault(); e.stopPropagation();
+    searchArtist(a.dataset.artist);
+  }, true);
+  document.addEventListener('mousedown', function(e){ if (e.target.closest && e.target.closest('.al[data-artist]')) e.stopPropagation(); }, true);
+  function searchArtist(name){
+    name = window.TapRank ? TapRank.cleanChannel(name) : name;
+    if (!name) return;
+    closeCtx();
+    setTab('search');
+    search.value = name;
+    doSearch();
   }
   function curVol(){ var n = parseInt($('vol').value, 10); return (isNaN(n) ? 80 : n) / 100; }
   function allEls(){ return [video, aud, aud2]; }
@@ -1275,7 +1357,11 @@
     });
   });
 
-  function setSub(txt){ $('card-sub').textContent = txt; }
+  function setSub(txt){
+    var a = curTrack && curTrack.author, el = $('card-sub');
+    if (a && typeof txt === 'string' && txt.indexOf(a) === 0) el.innerHTML = artistLinks(a) + esc(txt.slice(a.length));
+    else el.textContent = txt;
+  }
   function setErr(txt){ $('card-sub').textContent = txt; $('f-sub').textContent = txt; }
   function showTrack(v){
     $('card-title').textContent = v.title;
@@ -1365,7 +1451,7 @@
   async function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
     var prevItem = queue[current];
-    if (prevItem && prevItem !== queue[i] && prevItem.bg && bgSel.kind === 'wave' && !isIdle()) {
+    if (prevItem && prevItem !== queue[i] && prevItem.bg && bgSel.kind === 'wave' && srcOf(prevItem) === 'ym' && !prevItem.altFrom && !isIdle()) {
       var m = master();
       if (m.currentTime > 0 && m.duration && m.currentTime < m.duration - 2) A.ymWaveFeedback('skip', ymKey(prevItem), m.currentTime);
     }
@@ -1627,6 +1713,8 @@
     if (pend && i !== current + 1) items.push({ label: 'Играть следующим', act: function(){ moveItem(i, current + 1); } });
     if (!pend && i !== current) items.push({ label: 'Сыграть ещё раз — следующим', act: function(){ queue.splice(current + 1, 0, copyTrack(v)); renderQueue(); saveToday(); prefetchNext(); } });
     if (pend && i !== queue.length - 1) items.push({ label: 'В конец очереди', act: function(){ moveItem(i, queue.length); } });
+    items.push({ label: 'В плейлист…', act: function(){ setTimeout(function(){ openAddToListMenu(e.clientX, e.clientY, [v]); }, 0); } });
+    items.push({ label: 'Сохранить всю ленту как плейлист…', act: function(){ askDlg({ title: 'Лента в плейлист', text: 'Все песни из очереди и сыгранные сегодня (' + queue.length + ').', label: 'Название', value: 'Стрим ' + new Date().toLocaleDateString('ru-RU') }).then(function (r){ if (!r) return; var m = localCreate(r.value, dedupeTracks(queue)); toast('Создан «' + m.title + '» · ' + m.tracks.length + ' ' + plural(m.tracks.length)); }); } });
     items.push('-');
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
     items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
@@ -1643,6 +1731,8 @@
     items.push({ label: 'Играть сейчас', act: function(){ playNow(v); } });
     items.push({ label: 'Играть следующим', act: function(){ addNext(v); } });
     items.push({ label: 'В конец очереди', act: function(){ addToQueue(v); } });
+    items.push({ label: 'В плейлист…', act: function(){ setTimeout(function(){ openAddToListMenu(x, y, [v]); if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px'; }, 0); } });
+    if (v.alts && v.alts.length) items.push({ label: 'Другие версии (' + v.alts.length + ')', act: function(){ setTimeout(function(){ openVersionsMenu(x, y, v); if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px'; }, 0); } });
     items.push('-');
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
     items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
@@ -1730,7 +1820,7 @@
       if (on) likedSet.delete(id); else likedSet.add(id);
       renderLike();
       setSub('⚠ лайк не сохранился: ' + ((r && r.error) || 'ошибка'));
-    } else if (t.bg && bgSel.kind === 'wave') A.ymWaveFeedback(on ? 'like' : 'unlike', ymKey(t));
+    } else if (t.bg && bgSel.kind === 'wave' && srcOf(t) === 'ym') A.ymWaveFeedback(on ? 'like' : 'unlike', ymKey(t));
   }
 
   // Полоса прогресса
@@ -2074,19 +2164,132 @@
   // Состояние поиска для подгрузки при прокрутке
   var curQuery = '', shownIds = new Set(), loadingMore = false, hasMoreYt = false, hasMoreYm = false, ymPage = 1, searchToken = 0;
 
-  async function doSearch() {
+  // ===== Варианты выдачи поиска =====
+  var SMODES = [
+    { id: 'smart', n: 'Умный', d: 'Точные совпадения с площадок, где есть полный доступ' },
+    { id: 'exact', n: 'По точности', d: 'Сильнее всего совпадает с запросом — с любой площадки' },
+    { id: 'subs', n: 'Сначала мои подписки', d: 'Яндекс с Плюсом, YouTube со входом; отрывки — вниз' },
+    { id: 'free', n: 'Сначала бесплатные', d: 'SoundCloud, Audius, YouTube; Яндекс ниже' },
+    { id: 'air', n: 'Для эфира', d: 'Студийные версии целиком; клипы, лайвы, отрывки — вниз' },
+    { id: 'src', n: 'По площадкам', d: 'Разделами, в порядке из Настроек → Поиск' }
+  ];
+  var searchMode = 'smart', srcOrder = ['ym', 'yt', 'sc', 'au'], ymPlus = false;
+  if (A.getSetting) {
+    A.getSetting('searchMode').then(function (v){ if (SMODES.some(function (m){ return m.id === v; })) { searchMode = v; renderSmode(); } });
+    A.getSetting('srcOrder').then(function (v){ if (Array.isArray(v) && v.length) { srcOrder = v.filter(function (x){ return SRC[x]; }); ['ym', 'yt', 'sc', 'au'].forEach(function (x){ if (srcOrder.indexOf(x) < 0) srcOrder.push(x); }); renderSrcOrder(); } });
+  }
+  function smodeOf(id){ return SMODES.find(function (m){ return m.id === id; }) || SMODES[0]; }
+  function renderSmode(){ renderSmodeSet(); var b = $('smode'); if (b) b.innerHTML = 'Выдача: <b>' + esc(smodeOf(searchMode).n) + '</b> <span aria-hidden="true">▾</span>'; var sb = document.querySelectorAll('#setSmode button'); for (var k = 0; k < sb.length; k++) sb[k].classList.toggle('on', sb[k].dataset.v === searchMode); }
+  function setSearchMode(id){
+    searchMode = id; renderSmode();
+    if (A.setSetting) A.setSetting('searchMode', id);
+    if (curQuery && !results.hidden) rerenderTracks(true);
+  }
+  function openSmodeMenu(x, y){
+    showCtx(x, y, SMODES.map(function (m){ return { label: (m.id === searchMode ? '✓ ' : '  ') + m.n + ' — ' + m.d, act: function(){ setSearchMode(m.id); } }; }));
+  }
+  function renderSmodeSet(){
+    var h = $('setSmode'); if (!h) return;
+    h.innerHTML = SMODES.map(function (m){ return '<button data-v="' + m.id + '"' + (m.id === searchMode ? ' class="on"' : '') + '>' + esc(m.n) + '<small>' + esc(m.d) + '</small></button>'; }).join('');
+  }
+  function renderSrcOrder(){
+    var h = $('setSrcOrder'); if (!h) return;
+    h.innerHTML = srcOrder.map(function (src, i){
+      return '<div class="so"><i>' + (i + 1) + '</i>' + srcDot({ src: src }) + '<b>' + esc(srcLabel(src)) + '</b>' +
+        '<button data-up="' + i + '"' + (i === 0 ? ' disabled' : '') + ' aria-label="Выше">↑</button><button data-dn="' + i + '"' + (i === srcOrder.length - 1 ? ' disabled' : '') + ' aria-label="Ниже">↓</button></div>';
+    }).join('');
+  }
+  $('setSmode').addEventListener('click', function(e){ var b = e.target.closest('button[data-v]'); if (!b) return; setSearchMode(b.dataset.v); renderSmodeSet(); });
+  $('setSrcOrder').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b || b.disabled) return;
+    var i = parseInt(b.dataset.up != null ? b.dataset.up : b.dataset.dn, 10), j = b.dataset.up != null ? i - 1 : i + 1;
+    var t = srcOrder[i]; srcOrder[i] = srcOrder[j]; srcOrder[j] = t;
+    if (A.setSetting) A.setSetting('srcOrder', srcOrder);
+    renderSrcOrder();
+    if (curQuery && !results.hidden) rerenderTracks(true);
+  });
+  renderSmodeSet(); renderSrcOrder();
+  function rankCtx(){ return { ymFull: ymLoggedIn && ymPlus, ymOn: true, ytOn: ytUsable(), ytLogged: typeof ytLogged === 'function' && ytLogged(), scOn: SVC.scOn, auOn: SVC.auOn, order: srcOrder }; }
+
+  // Состояние выдачи: все найденные треки и где они показаны
+  var S = { tracks: [], box: null, boxes: {}, history: [] };
+  function srcLabel(src){ return { ym: 'Яндекс Музыка', yt: 'YouTube', sc: 'SoundCloud', au: 'Audius' }[src] || src; }
+  function buildTrackArea(){
+    S.boxes = {}; S.box = null;
+    var wrap = document.createElement('div'); wrap.className = 'tarea';
+    if (searchMode === 'src') {
+      srcOrder.forEach(function (src){
+        var sec = document.createElement('div'); sec.className = 'tsec'; sec.dataset.src = src; sec.hidden = true;
+        sec.innerHTML = '<div class="xlbl" style="padding:10px 8px 4px">' + esc(srcLabel(src)) + '</div>';
+        var box = document.createElement('div'); sec.appendChild(box);
+        S.boxes[src] = box; wrap.appendChild(sec);
+      });
+    } else { S.box = document.createElement('div'); wrap.appendChild(S.box); }
+    return wrap;
+  }
+  // Показать треки заново (после смены варианта или когда пришли SoundCloud/Audius)
+  function rerenderTracks(rebuild){
+    var area = results.querySelector('.tarea'); if (!area) return;
+    if (rebuild) { var n = buildTrackArea(); area.replaceWith(n); area = n; }
+    var list = S.tracks.map(function (v){ return v; });
+    if (searchMode === 'src') {
+      Object.keys(S.boxes).forEach(function (src){
+        var box = S.boxes[src]; box.innerHTML = '';
+        var part = list.filter(function (v){ return srcOf(v) === src; });
+        part.forEach(function (v){ v.alts = []; box.appendChild(makeRow(v)); });
+        box.parentNode.hidden = !part.length;
+      });
+    } else {
+      S.box.innerHTML = '';
+      TapRank.rank(curQuery, list, searchMode, rankCtx()).forEach(function (v){ S.box.appendChild(makeRow(v)); });
+    }
+  }
+  // Добавить треки в выдачу (без повторов)
+  function addTracks(list, late){
+    var fresh = [];
+    (list || []).forEach(function (v){ if (!v || !v.id) return; var k = srcOf(v) + v.id; if (shownIds.has(k)) return; shownIds.add(k); fresh.push(v); });
+    if (!fresh.length) return 0;
+    S.tracks = S.tracks.concat(fresh);
+    if (searchMode === 'src') {
+      fresh.forEach(function (v){ var box = S.boxes[srcOf(v)]; if (!box) return; v.alts = []; box.appendChild(makeRow(v)); box.parentNode.hidden = false; });
+    } else if (late) rerenderTracks(false);
+    else {
+      // следующая порция при прокрутке: дубли уже показанных песен — в «другие версии», остальное — в конец
+      var shown = {}; S.box.querySelectorAll('.row').forEach(function (r){ if (r._v) { var k = TapRank.songKey(r._v); if (k) shown[k] = r._v; } });
+      TapRank.rank(curQuery, fresh, searchMode, rankCtx()).forEach(function (v){
+        var k = TapRank.songKey(v);
+        if (k && shown[k]) { shown[k].alts = (shown[k].alts || []).concat([v], v.alts || []); return; }
+        S.box.appendChild(makeRow(v));
+      });
+    }
+    return fresh.length;
+  }
+  function renderSearchBack(){
+    var old = results.querySelector('.sback'); if (old) old.remove();
+    if (!S.history.length) return;
+    var prev = S.history[S.history.length - 1];
+    var b = document.createElement('button'); b.className = 'back sback'; b.textContent = '← Назад: «' + (prev.length > 32 ? prev.slice(0, 31) + '…' : prev) + '»';
+    b.onclick = function(){ var q = S.history.pop(); search.value = q; doSearch({ back: true }); };
+    results.insertBefore(b, results.firstChild);
+  }
+
+  async function doSearch(opts) {
+    opts = opts || {};
     var q = search.value.trim(); if (!q) return;
+    if (!opts.back && curQuery && curQuery !== q) { S.history.push(curQuery); if (S.history.length > 20) S.history.shift(); }
     var token = ++searchToken;
     curQuery = q; shownIds = new Set(); hasMoreYt = false; hasMoreYm = false; loadingMore = false; ymPage = 1;
+    S.tracks = [];
     closeSearchList();
     $('hint').textContent = 'Ищу…';
     results.innerHTML = '<div class="muted">Ищу…</div>';
+    renderSearchBack();
     results.scrollTop = 0;
     sgToken++; hideSuggest();
     if (isLink(q) && A.resolveLink) {
       var lr = await A.resolveLink(q);
       if (token !== searchToken) return;
-      if (lr) { renderLinkResult(lr); return; }
+      if (lr) { renderLinkResult(lr); renderSearchBack(); return; }
     }
     var ymP = (A.ymSearch ? A.ymSearch(q) : Promise.resolve(null)).catch(function(){ return null; });
     var scP = (SVC.scOn && A.scSearch) ? A.scSearch(q, 15).catch(function(){ return []; }) : Promise.resolve([]);
@@ -2096,42 +2299,33 @@
     var both = await Promise.all([ymP, ytP]);
     if (token !== searchToken) return; // уже ищем другое
     var ym = both[0] || {}, yt = both[1] || {};
-    var scTracks = [];
     if (yt.error && isNetErr(yt.error)) markYtDown(yt.error); else if (yt.videos && yt.videos.length) markYtOk();
-    var ytNote = !SVC.ytOn ? 'YouTube выключен в настройках' : ((ytSkip || (yt.error && isNetErr(yt.error))) ? 'YouTube не отвечает — показываю только Яндекс' : '');
+    var ytNote = !SVC.ytOn ? 'YouTube выключен в настройках' : ((ytSkip || (yt.error && isNetErr(yt.error))) ? 'YouTube не отвечает — ищу без него' : '');
     var ymTracks = ym.tracks || [];
     var ytVideos = (yt.videos || []).map(function (v){ v.src = 'yt'; return v; });
     var pls = (ym.playlists || []).slice(0, 5).concat((yt.playlists || []).slice(0, 4));
     var artist = matchArtist(q, ym.artists || []);
     var waves = ymLoggedIn ? computeWaves(q, ym.artists || []) : [];
-    if (!ymTracks.length && !ytVideos.length && !pls.length) {
-      results.innerHTML = '<div class="muted">' + (ytNote ? esc(ytNote) + '. В Яндексе ничего не нашлось.' : (yt.error ? 'Ошибка поиска: ' + esc(yt.error) : 'Ничего не нашлось.')) + '</div>';
-      $('hint').textContent = '';
-      var cleared = false;
-      var late = function (p, src, name){ p.then(function (list){ if (token !== searchToken || !Array.isArray(list) || !list.length) return; if (!cleared) { results.innerHTML = ''; cleared = true; } addLateSection(list, src, name); }); };
-      late(scP, 'sc', 'SoundCloud'); late(auP, 'au', 'Audius');
-      return;
-    }
-    $('hint').textContent = ytNote || (ymTracks.length ? 'Сначала Яндекс Музыка, ниже YouTube' : 'Результаты YouTube');
     results.innerHTML = '';
+    renderSearchBack();
     if (artist) results.appendChild(artistSection(artist));
     if (waves.length) results.appendChild(wavesSection(waves));
     if (pls.length) results.appendChild(plsSection('Плейлисты', pls));
-    if (waves.length || pls.length) { var l = document.createElement('div'); l.className = 'xlbl'; l.style.padding = '0 8px 4px'; l.textContent = 'Треки'; results.appendChild(l); }
-    appendResults(ymTracks.concat(ytVideos));
+    if (waves.length || pls.length || artist) { var l = document.createElement('div'); l.className = 'xlbl'; l.style.padding = '0 8px 4px'; l.textContent = 'Треки'; results.appendChild(l); }
+    var empty = document.createElement('div'); empty.className = 'muted tempty';
+    empty.textContent = (!ymTracks.length && !ytVideos.length) ? (ytNote ? ytNote + '. Ищу на других площадках…' : (yt.error ? 'Ошибка поиска: ' + yt.error : 'Ищу на других площадках…')) : '';
+    if (empty.textContent) results.appendChild(empty);
+    results.appendChild(buildTrackArea());
+    addTracks(ymTracks.concat(ytVideos), true);
+    $('hint').textContent = ytNote || '';
     hasMoreYt = ytUsable() && !yt.error; hasMoreYm = ymTracks.length >= 10;
     maybeLoadMore();
-    // SoundCloud приходит позже (yt-dlp) — дописываем ниже, не задерживая основной поиск
-    appendLate(scP, 'sc', 'SoundCloud', token); appendLate(auP, 'au', 'Audius', token);
+    // SoundCloud и Audius отвечают дольше — добавляем их в выдачу, когда придут
+    var lateLeft = 2;
+    function lateDone(){ if (--lateLeft || token !== searchToken) return; var e = results.querySelector('.tempty'); if (e) { if (S.tracks.length) e.remove(); else if (!pls.length && !artist) e.textContent = ytNote ? ytNote + '. Больше нигде не нашлось.' : 'Ничего не нашлось.'; else e.remove(); } }
+    [scP, auP].forEach(function (p){ p.then(function (list){ if (token !== searchToken) return; if (Array.isArray(list) && list.length) { addTracks(list, true); var e = results.querySelector('.tempty'); if (e) e.remove(); } lateDone(); }); });
   }
 
-  // Источники, которые отвечают дольше (SoundCloud через yt-dlp, Audius) — дописываем ниже, не задерживая поиск
-  function addLateSection(list, src, name){
-    var lbl = document.createElement('div'); lbl.className = 'xlbl'; lbl.dataset.src = src; lbl.style.padding = '10px 8px 4px'; lbl.textContent = name;
-    results.appendChild(lbl);
-    list.forEach(function (v){ if (!shownIds.has(v.src + v.id)) { shownIds.add(v.src + v.id); results.appendChild(makeRow(v)); } });
-  }
-  function appendLate(p, src, name, token){ p.then(function (list){ if (token !== searchToken || !Array.isArray(list) || !list.length) return; addLateSection(list, src, name); }); }
   function renderLinkResult(lr){
     results.innerHTML = '';
     if (lr.error) { results.innerHTML = '<div class="muted">По ссылке: ' + esc(lr.error) + '</div>'; $('hint').textContent = ''; return; }
@@ -2263,20 +2457,30 @@
     if (token !== searchToken) return;
     if (!more || more.error || !Array.isArray(more)) { if (useYm) hasMoreYm = false; else hasMoreYt = false; return; }
     if (!useYm) more = more.map(function (v){ v.src = 'yt'; return v; });
-    if (appendResults(more) === 0) { if (useYm) hasMoreYm = false; else hasMoreYt = false; return; }
+    if (addTracks(more, false) === 0) { if (useYm) hasMoreYm = false; else hasMoreYt = false; return; }
     maybeLoadMore();
   }
   results.addEventListener('scroll', maybeLoadMore);
+  $('smode').onmousedown = function(e){ e.stopPropagation(); this._skip = !!ctxEl; if (ctxEl) closeCtx(); };
+  $('smode').onclick = function(){ if (this._skip) { this._skip = false; return; } var r = this.getBoundingClientRect(); openSmodeMenu(r.left, r.bottom + 4); if (ctxEl) ctxEl.style.left = Math.max(8, r.right - ctxEl.offsetWidth) + 'px'; };
 
   function makeRow(v) {
     var row = document.createElement('div'); row.className = 'row' + (v.id === playingId ? ' playing' : '');
-    row.dataset.id = v.id;
+    row.dataset.id = v.id; row._v = v;
     row.dataset.src = srcOf(v);
     row.innerHTML =
       '<div class="cover-wrap"><img class="cover" src="' + esc(v.thumb) + '" alt="">' +
       '<span class="cover-ov"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"></path></svg></span></div>' +
       '<div class="meta"><div class="t">' + esc(v.title) + '</div>' + subLine(v) + '</div>' +
       '<span class="time mono">' + esc(v.duration) + '</span>';
+    if (v._acc === 'preview') { var pv = document.createElement('span'); pv.className = 'rbadge'; pv.textContent = 'отрывок'; pv.title = 'Площадка даёт только 30 секунд (нет подписки)'; badgeBox(row).appendChild(pv); }
+    if (v.alts && v.alts.length) {
+      var vb = document.createElement('button'); vb.className = 'rbadge vers';
+      var srcs = []; v.alts.forEach(function (a){ var n = srcName(a); if (srcs.indexOf(n) < 0) srcs.push(n); });
+      vb.textContent = '+' + v.alts.length + ' ' + verWord(v.alts.length); vb.title = 'Эта же песня: ' + srcs.join(', ');
+      vb.onclick = function(e){ e.stopPropagation(); var r = vb.getBoundingClientRect(); openVersionsMenu(r.left, r.bottom + 4, v); };
+      badgeBox(row).appendChild(vb);
+    }
     var add = document.createElement('button'); add.className = 'add';
     add.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>В очередь';
     add.onclick = function(e){ e.stopPropagation(); addToQueue(v); };
@@ -2289,6 +2493,20 @@
     row.oncontextmenu = function(e){ e.preventDefault(); openTrackMenu(e.clientX, e.clientY, v); };
     row.onclick = function(){ playNow(v); };
     return row;
+  }
+  function badgeBox(row){ var b = row.querySelector('.rbs'); if (!b) { b = document.createElement('div'); b.className = 'rbs'; row.querySelector('.meta').appendChild(b); } return b; }
+  function verWord(n){ n = n % 100; if (n >= 11 && n <= 14) return 'версий'; n = n % 10; if (n === 1) return 'версия'; if (n >= 2 && n <= 4) return 'версии'; return 'версий'; }
+  // «Другие версии»: та же песня на других площадках или в других альбомах
+  function openVersionsMenu(x, y, v){
+    var items = [];
+    [v].concat(v.alts || []).forEach(function (a, k){
+      var lbl = srcName(a) + ' · ' + (a.author ? a.author + ' — ' : '') + a.title + (a.duration ? ' · ' + a.duration : '');
+      if (lbl.length > 70) lbl = lbl.slice(0, 69) + '…';
+      items.push({ label: (k === 0 ? '★ ' : '▶ ') + lbl, act: function(){ playNow(a); } });
+    });
+    items.push('-');
+    items.push({ label: 'Все версии — в конец очереди', act: function(){ addMany([v].concat(v.alts || [])); } });
+    showCtx(x, y, items);
   }
   function markPlayingRows(){
     var rows = document.querySelectorAll('.row');
@@ -2312,10 +2530,14 @@
   if (A.getSetting) A.getSetting('savedLists').then(function (v){ savedLists = Array.isArray(v) ? v : []; if (curTab === 'my') renderMySide(); });
   function listId(m){ return m.src + ':' + (m.type === 'liked' ? 'liked' : (m.listId || m.uuid || (m.uid && m.kind ? m.uid + '/' + m.kind : '') || m.artistId || m.title)); }
   function isSaved(m){ var id = listId(m); return savedLists.some(function (x){ return listId(x) === id; }); }
-  function slimTrack(v){ return { src: v.src, id: v.id, albumId: v.albumId, title: v.title, author: v.author, album: v.album, duration: v.duration, seconds: v.seconds, thumb: v.thumb, cover: v.cover }; }
+  function slimTrack(v){
+    var o = {};
+    for (var k in v) { if (k[0] === '_' || k === 'alts' || k === 'played' || k === 'bg' || k === 'fromList' || k === 'altTried') continue; var x = v[k]; if (x != null && (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean')) o[k] = x; }
+    return o;
+  }
   function slim(m){
     var o = { src: m.src, type: m.type, listId: m.listId, uid: m.uid, kind: m.kind, uuid: m.uuid, artistId: m.artistId, title: m.title, author: m.author, count: m.count || (m.tracks ? m.tracks.length : 0), thumb: m.thumb };
-    if (m.type === 'text') o.tracks = (m.tracks || []).map(slimTrack);
+    if (m.src === 'tap') o.tracks = (m.tracks || []).map(slimTrack);
     return o;
   }
   function toggleSaved(m){
@@ -2338,40 +2560,157 @@
   async function renderListView(host, meta, withBack){
     var tok = host._tok = (host._tok || 0) + 1;
     var back = withBack ? '<button class="back" data-back="1">← Назад к поиску</button>' : '';
+    var local = meta.src === 'tap';
+    if (local) { var cur = localGet(listId(meta)); if (cur) meta = cur; }
     host.innerHTML = back + '<div class="muted">Загружаю «' + esc(meta.title || '') + '»…</div>';
     bindBack(host);
     var list = meta.tracks ? meta : await loadList(meta);
     if (host._tok !== tok) return;
     if (!list || list.error) { host.innerHTML = back + '<div class="muted">Не удалось открыть: ' + esc((list && list.error) || 'ошибка') + '</div>'; bindBack(host); return; }
-    var L = {};
-    [meta, list].forEach(function (o){ for (var k in o) if (o[k] !== undefined && o[k] !== '' && o[k] !== null) L[k] = o[k]; });
+    var L = local ? meta : {};
+    if (!local) [meta, list].forEach(function (o){ for (var k in o) if (o[k] !== undefined && o[k] !== '' && o[k] !== null) L[k] = o[k]; });
     L.tracks = list.tracks || [];
-    var kindName = L.type === 'album' ? 'альбом' : (L.type === 'artist' ? 'исполнитель' : (L.type === 'liked' ? 'любимое' : (L.type === 'text' ? 'плейлист из текста' : 'плейлист')));
-    var canSave = !(L.src === 'ym' && (L.type === 'liked' || L.own));
+    var kindName = local ? (L.type === 'text' ? 'плейлист из текста' : 'плейлист Тапёра') : (L.type === 'album' ? 'альбом' : (L.type === 'artist' ? 'исполнитель' : (L.type === 'liked' ? 'любимое' : 'плейлист')));
+    var canSave = !local && !(L.src === 'ym' && (L.type === 'liked' || L.own));
+    var thumb = L.thumb || (local ? ((L.tracks.find(function (t){ return t.thumb; }) || {}).thumb || '') : '');
+    var dupN = local ? countDups(L.tracks) : 0;
     host.innerHTML = back +
-      '<div class="plhead">' + (L.thumb ? '<img class="pcov" src="' + esc(L.thumb) + '" alt="">' : '<div class="pcov"' + (L.type === 'liked' ? ' style="background:linear-gradient(135deg,#FF3D6E,#9B87FF)"' : '') + '></div>') +
-        '<div class="pinfo"><div class="pk">' + srcDot(L) + srcName(L) + ' · ' + kindName + '</div><h3>' + esc(L.title) + '</h3>' +
-        '<div class="pm">' + (L.tracks.length + ' ' + (L.src === 'yt' ? 'видео' : plural(L.tracks.length))) + (L.author && L.type !== 'liked' ? ' · ' + esc(L.author) : '') + '</div>' +
+      '<div class="plhead">' + (thumb ? '<img class="pcov" src="' + esc(thumb) + '" alt="">' : '<div class="pcov"' + (L.type === 'liked' ? ' style="background:linear-gradient(135deg,#FF3D6E,#9B87FF)"' : (local ? ' style="background:linear-gradient(135deg,#9B87FF,#4A3F8F)"' : '')) + '></div>') +
+        '<div class="pinfo"><div class="pk">' + srcDot(L) + srcName(L) + ' · ' + kindName + '</div><h3' + (local ? ' class="ren" title="Дважды нажми, чтобы переименовать"' : '') + '>' + esc(L.title) + '</h3>' +
+        '<div class="pm">' + (L.tracks.length + ' ' + (L.src === 'yt' ? 'видео' : plural(L.tracks.length))) + (L.author && L.type !== 'liked' && !local ? ' · ' + esc(L.author) : '') + '</div>' +
         '<div class="plbtns">' +
           '<button class="pbtn y" data-a="bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button>' +
           '<button class="pbtn" data-a="shuffle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></svg>Фоном вперемешку</button>' +
           '<button class="pbtn g" data-a="queue">Всё в очередь</button>' +
-          (canSave ? '<button class="pbtn g" data-a="save">' + (L.type === 'text' ? (isSaved(L) ? 'Удалить плейлист' : 'Вернуть плейлист') : (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр')) + '</button>' : '') +
+          (canSave ? '<button class="pbtn g" data-a="save">' + (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр') + '</button>' : '') +
+          (!local && L.tracks.length ? '<button class="pbtn g" data-a="copy" title="Свой плейлист Тапёра с этими треками — его можно менять">Копия в мои плейлисты</button>' : '') +
+          (local ? '<button class="pbtn g" data-a="rename">Переименовать</button>' : '') +
+          (local && dupN ? '<button class="pbtn g" data-a="dedupe">Убрать повторы (' + dupN + ')</button>' : '') +
+          (local ? '<button class="pbtn g danger" data-a="del">Удалить плейлист</button>' : '') +
         '</div></div></div>' +
-      '<div class="plnote">«Играть фоном» и «Фоном вперемешку» — плейлист играет вместо волны, пока нет заказов (вперемешку — в случайном порядке, по кругу). Заказы всё равно идут первыми.</div>' +
+      '<div class="plnote">' + (local ? 'Перетаскивай треки, чтобы поменять порядок. Добавить песню: «⋯» у трека → «В плейлист…». ' : '') + '«Играть фоном» и «Фоном вперемешку» — плейлист играет вместо волны, пока нет заказов. Заказы всё равно идут первыми.</div>' +
       '<div class="plrows"></div>';
     bindBack(host);
     var rowsBox = host.querySelector('.plrows');
-    if (!L.tracks.length) rowsBox.innerHTML = '<div class="muted">Здесь пусто.</div>';
-    else appendResults(L.tracks, rowsBox);
+    if (!L.tracks.length) rowsBox.innerHTML = '<div class="muted">' + (local ? 'Пока пусто. Добавляй песни через «⋯» → «В плейлист…» в поиске или очереди.' : 'Здесь пусто.') + '</div>';
+    else if (!local) appendResults(L.tracks, rowsBox);
+    else {
+      L.tracks.forEach(function (t, i){
+        var r = makeRow(t); r.dataset.pi = i; r.draggable = true; r.classList.add('prow');
+        var rm = document.createElement('button'); rm.className = 'more prm'; rm.title = 'Убрать из плейлиста'; rm.setAttribute('aria-label', 'Убрать из плейлиста');
+        rm.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
+        rm.onclick = function(e){ e.stopPropagation(); localRemoveTrack(L, i); };
+        r.appendChild(rm);
+        rowsBox.appendChild(r);
+      });
+      bindPlDrag(rowsBox, L);
+    }
+    var h3 = host.querySelector('h3.ren'); if (h3) h3.ondblclick = function(){ localRename(L); };
     host.querySelector('.plbtns').onclick = function(e){
       var b = e.target.closest('button'); if (!b) return;
+      var a = b.dataset.a;
+      if (a === 'rename') { localRename(L); return; }
+      if (a === 'del') { localDelete(L); return; }
+      if (a === 'dedupe') { localDedupe(L); return; }
+      if (a === 'save') { toggleSaved(L); b.textContent = isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр'; return; }
+      if (a === 'copy') { askDlg({ title: 'Копия в мои плейлисты', label: 'Название', value: L.title }).then(function (r){ if (!r) return; var m = localCreate(r.value, L.tracks); toast('Создан плейлист «' + m.title + '» · ' + m.tracks.length + ' ' + plural(m.tracks.length)); }); return; }
       if (!L.tracks.length) return;
-      if (b.dataset.a === 'bg') setBg({ kind: 'list', list: L, shuffle: false }, true);
-      else if (b.dataset.a === 'shuffle') setBg({ kind: 'list', list: L, shuffle: true }, true);
-      else if (b.dataset.a === 'queue') addMany(L.tracks, true);
-      else if (b.dataset.a === 'save') { toggleSaved(L); b.textContent = L.type === 'text' ? (isSaved(L) ? 'Удалить плейлист' : 'Вернуть плейлист') : (isSaved(L) ? 'Убрать из сохранённых' : 'Сохранить в Тапёр'); }
+      if (a === 'bg') setBg({ kind: 'list', list: L, shuffle: false }, true);
+      else if (a === 'shuffle') setBg({ kind: 'list', list: L, shuffle: true }, true);
+      else if (a === 'queue') addMany(L.tracks, true);
     };
+  }
+
+  // ===== Свои плейлисты Тапёра =====
+  function localLists(){ return savedLists.filter(function (x){ return x.src === 'tap'; }); }
+  function localGet(id){ return savedLists.find(function (x){ return listId(x) === id; }) || null; }
+  function trackKeyOf(t){ var k = window.TapRank ? TapRank.songKey(t) : ''; return k ? srcOf(t) + '|' + k : srcOf(t) + ':' + t.id; }
+  function dedupeTracks(list){ var seen = {}, idSeen = {}, out = []; list.forEach(function (t){ var a = srcOf(t) + ':' + t.id, b = trackKeyOf(t); if (idSeen[a] || seen[b]) return; idSeen[a] = seen[b] = 1; out.push(t); }); return out; }
+  function countDups(list){ return list.length - dedupeTracks(list).length; }
+  function saveLocal(m){
+    if (m) { m.count = (m.tracks || []).length; m.thumb = ((m.tracks || []).find(function (t){ return t.thumb; }) || {}).thumb || ''; }
+    if (A.setSetting) A.setSetting('savedLists', savedLists);
+    renderMySide();
+  }
+  function refreshOpenList(m){
+    var id = listId(m);
+    if (mySel && listId(mySel) === id && curTab === 'my') renderListView($('myPl'), m, false);
+  }
+  function localCreate(title, tracks){
+    var m = { src: 'tap', type: 'tap', listId: 'tp' + Date.now() + Math.floor(Math.random() * 1000), title: String(title || 'Мой плейлист').slice(0, 100), author: 'Тапёр', tracks: (tracks || []).map(slimTrack) };
+    savedLists.unshift(m); saveLocal(m);
+    return m;
+  }
+  function localAdd(m, tracks){
+    var have = {}; m.tracks.forEach(function (t){ have[srcOf(t) + ':' + t.id] = 1; });
+    var add = tracks.filter(function (t){ return t && t.id && !have[srcOf(t) + ':' + t.id]; }).map(slimTrack);
+    m.tracks = m.tracks.concat(add); saveLocal(m); refreshOpenList(m);
+    toast(add.length ? 'В «' + m.title + '» ' + (add.length === 1 ? 'добавлена песня' : 'добавлено: ' + add.length) : 'Уже есть в «' + m.title + '»');
+  }
+  function localRemoveTrack(m, i){ var t = m.tracks.splice(i, 1)[0]; saveLocal(m); refreshOpenList(m); toast('Убрано: «' + (t && t.title || '') + '»', 'Вернуть', function(){ m.tracks.splice(i, 0, t); saveLocal(m); refreshOpenList(m); }); }
+  function localRename(m){ askDlg({ title: 'Переименовать плейлист', label: 'Название', value: m.title }).then(function (r){ if (!r || !r.value) return; m.title = r.value.slice(0, 100); saveLocal(m); refreshOpenList(m); }); }
+  function localDedupe(m){ var n = countDups(m.tracks); m.tracks = dedupeTracks(m.tracks); saveLocal(m); refreshOpenList(m); toast('Убрано повторов: ' + n); }
+  function localDelete(m){
+    var idx = savedLists.indexOf(m); if (idx < 0) return;
+    savedLists.splice(idx, 1); saveLocal();
+    if (mySel && listId(mySel) === listId(m)) selectMy(ymLoggedIn ? LIKED : (localLists()[0] || savedLists[0] || null));
+    toast('Плейлист «' + m.title + '» удалён', 'Вернуть', function(){ savedLists.splice(idx, 0, m); saveLocal(); selectMy(m); });
+  }
+  function bindPlDrag(box, m){
+    var from = -1;
+    box.addEventListener('dragstart', function(e){ var r = e.target.closest && e.target.closest('.prow'); if (!r) return; from = parseInt(r.dataset.pi, 10); r.classList.add('dragging'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(from)); } catch (x) {} });
+    box.addEventListener('dragover', function(e){
+      if (from < 0) return; e.preventDefault();
+      box.querySelectorAll('.drop-before,.drop-after').forEach(function (x){ x.classList.remove('drop-before', 'drop-after'); });
+      var r = e.target.closest && e.target.closest('.prow'); if (!r) return;
+      var rc = r.getBoundingClientRect(); r.classList.add(e.clientY > rc.top + rc.height / 2 ? 'drop-after' : 'drop-before');
+    });
+    box.addEventListener('drop', function(e){
+      if (from < 0) return; e.preventDefault();
+      var r = e.target.closest && e.target.closest('.prow'); var f = from; from = -1;
+      if (!r) return;
+      var i = parseInt(r.dataset.pi, 10), rc = r.getBoundingClientRect(), to = e.clientY > rc.top + rc.height / 2 ? i + 1 : i;
+      if (to === f || to === f + 1) { refreshOpenList(m); return; }
+      var t = m.tracks.splice(f, 1)[0]; if (f < to) to--; m.tracks.splice(to, 0, t);
+      saveLocal(m); refreshOpenList(m);
+    });
+    box.addEventListener('dragend', function(){ from = -1; box.querySelectorAll('.dragging,.drop-before,.drop-after').forEach(function (x){ x.classList.remove('dragging', 'drop-before', 'drop-after'); }); });
+  }
+  // Меню «В плейлист…»
+  function openAddToListMenu(x, y, tracks){
+    tracks = (tracks || []).filter(Boolean); if (!tracks.length) return;
+    var items = [{ label: '＋ Новый плейлист…', act: function(){ askDlg({ title: 'Новый плейлист', label: 'Название', value: tracks.length === 1 ? (tracks[0].author || 'Мой плейлист') : 'Мой плейлист' }).then(function (r){ if (!r) return; var m = localCreate(r.value, []); localAdd(m, tracks); }); } }];
+    var ls = localLists();
+    if (ls.length) items.push('-');
+    ls.slice(0, 14).forEach(function (m){ items.push({ label: m.title + ' · ' + (m.tracks || []).length, act: function(){ localAdd(m, tracks); } }); });
+    showCtx(x, y, items);
+  }
+
+  // Небольшое окно ввода (в Electron нет window.prompt)
+  function askDlg(o){
+    return new Promise(function (resolve){
+      var ov = document.createElement('div'); ov.className = 'ask-ov';
+      ov.innerHTML = '<div class="ask" role="dialog" aria-modal="true"><h4>' + esc(o.title || '') + '</h4>' +
+        (o.text ? '<p>' + o.text + '</p>' : '') +
+        (o.label ? '<label>' + esc(o.label) + '<input type="text" maxlength="100"></label>' : '') +
+        (o.check ? '<label class="ask-c"><input type="checkbox"' + (o.checked ? ' checked' : '') + '> ' + esc(o.check) + '</label>' : '') +
+        '<div class="ask-b"><button class="pbtn g" data-x="0">Отмена</button><button class="pbtn y" data-x="1">' + esc(o.ok || 'Готово') + '</button></div></div>';
+      document.body.appendChild(ov);
+      var inp = ov.querySelector('input[type=text]'), chk = ov.querySelector('input[type=checkbox]');
+      if (inp) { inp.value = o.value || ''; setTimeout(function(){ inp.focus(); inp.select(); }, 0); }
+      function done(ok){ ov.remove(); document.removeEventListener('keydown', key, true); resolve(ok ? { value: inp ? inp.value.trim() : '', checked: chk ? chk.checked : false } : null); }
+      function key(e){ if (e.key === 'Escape') { e.stopPropagation(); done(false); } else if (e.key === 'Enter') { e.preventDefault(); if (!inp || inp.value.trim()) done(true); } }
+      document.addEventListener('keydown', key, true);
+      ov.onclick = function(e){ if (e.target === ov) done(false); var b = e.target.closest('[data-x]'); if (b) { if (b.dataset.x === '1' && inp && !inp.value.trim()) { inp.focus(); return; } done(b.dataset.x === '1'); } };
+    });
+  }
+  // Короткое сообщение внизу, с кнопкой «Вернуть»
+  var toastT = null;
+  function toast(text, btn, act){
+    var t = $('toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.innerHTML = '<span>' + esc(text) + '</span>' + (btn ? '<button>' + esc(btn) + '</button>' : '');
+    if (btn) t.querySelector('button').onclick = function(){ t.hidden = true; act(); };
+    t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function(){ t.hidden = true; }, btn ? 7000 : 3000);
   }
   function bindBack(host){ var b = host.querySelector('[data-back]'); if (b) b.onclick = closeSearchList; }
 
@@ -2399,13 +2738,19 @@
   }
   function myItem(m, sub){
     var i = myItems.push(m) - 1;
-    var on = mySel && listId(mySel) === listId(m);
+    var on = mergeSel ? mergeSel.has(listId(m)) : (mySel && listId(mySel) === listId(m));
     var ph = m.type === 'liked' ? '<span class="ph" style="background:linear-gradient(135deg,' + (m.src === 'yt' ? '#FF4E45,#FF8A3D' : '#FF3D6E,#9B87FF') + ')"></span>' : (m.thumb ? '<img src="' + esc(m.thumb) + '" alt="">' : '<span class="ph"></span>');
-    return '<button class="mit' + (on ? ' on' : '') + '" data-i="' + i + '">' + ph + '<span class="mm"><b>' + esc(m.title) + '</b><small>' + sub + '</small></span></button>';
+    return '<button class="mit' + (on ? ' on' : '') + (mergeSel ? ' msel' : '') + '" data-i="' + i + '">' + (mergeSel ? '<span class="mchk" aria-hidden="true">' + (on ? '✓' : '') + '</span>' : '') + ph + '<span class="mm"><b>' + esc(m.title) + '</b><small>' + sub + '</small></span></button>';
   }
   function renderMySide(loading){
     var side = $('mySide'); myItems = [];
-    var h = '<div style="padding:8px 4px 0"><button class="pbtn" data-import="1" style="width:100%;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Плейлист из текста</button></div>';
+    var h = mergeSel ? '<div class="mbar"><b>Объединить плейлисты</b><span>Отметь 2 или больше · выбрано ' + mergeSel.size + '</span><div><button class="pbtn y" data-mgo="1"' + (mergeSel.size < 2 ? ' disabled' : '') + '>Объединить</button><button class="pbtn g" data-mcancel="1">Отмена</button></div></div>' : '';
+    h += '<div style="padding:8px 4px 0;display:flex;gap:6px"><button class="pbtn" data-new="1" style="flex:1;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Новый плейлист</button></div>';
+    h += '<div style="padding:6px 4px 0"><button class="pbtn" data-import="1" style="width:100%;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Плейлист из текста</button></div>';
+    var mine = localLists(), links = savedLists.filter(function (x){ return x.src !== 'tap'; });
+    h += '<div class="mgrp">Мои плейлисты' + (mergeSel ? '' : '<button data-merge="1" title="Собрать несколько плейлистов в один">Объединить</button>') + '</div>';
+    if (!mine.length) h += '<div class="mnote">«Новый плейлист» — и добавляй песни через «⋯» → «В плейлист…».</div>';
+    mine.forEach(function (p){ h += myItem(p, srcDot(p) + (p.type === 'text' ? 'Из текста' : 'Тапёр') + ' · ' + ((p.tracks || []).length) + ' ' + plural((p.tracks || []).length)); });
     h += '<div class="mgrp">Яндекс Музыка' + (ymLoggedIn ? '<button data-refresh="1">Обновить</button>' : '') + '</div>';
     if (!ymLoggedIn) h += '<div class="mnote">Войди в Яндекс, чтобы видеть «Мне нравится» и свои плейлисты.</div><div style="padding:0 10px"><button class="pbtn" data-login="1">Войти в Яндекс</button></div>';
     else {
@@ -2424,9 +2769,9 @@
       else if (ytMyErr) h += '<div class="mnote">⚠ ' + esc(ytMyErr) + '</div>';
       ytPls.forEach(function (p){ h += myItem(p, 'Плейлист' + (countText(p) ? ' · ' + countText(p) : '')); });
     }
-    h += '<div class="mgrp">Сохранённые в Тапёре</div>';
-    if (!savedLists.length) h += '<div class="mnote">Открой плейлист в поиске и нажми «Сохранить в Тапёр».</div>';
-    savedLists.forEach(function (p){ h += myItem(p, srcDot(p) + (p.type === 'text' ? 'Из текста' : srcName(p)) + (countText(p) ? ' · ' + countText(p) : '')); });
+    h += '<div class="mgrp">Сохранённые ссылки</div>';
+    if (!links.length) h += '<div class="mnote">Открой плейлист в поиске и нажми «Сохранить в Тапёр».</div>';
+    links.forEach(function (p){ h += myItem(p, srcDot(p) + srcName(p) + (countText(p) ? ' · ' + countText(p) : '')); });
     side.innerHTML = h;
   }
   $('mySide').addEventListener('click', function(e){
@@ -2435,8 +2780,38 @@
     if (b.dataset.login) { browserLogin(); return; }
     if (b.dataset.ytlogin) { openYtDlg(); return; }
     if (b.dataset.import) { openImport(); return; }
-    if (b.dataset.i != null) selectMy(myItems[parseInt(b.dataset.i, 10)]);
+    if (b.dataset.new) { askDlg({ title: 'Новый плейлист', label: 'Название', value: 'Мой плейлист' }).then(function (r){ if (!r) return; var m = localCreate(r.value, []); selectMy(m); }); return; }
+    if (b.dataset.merge) { mergeSel = new Set(); mergeMap = {}; renderMySide(); return; }
+    if (b.dataset.mcancel) { mergeSel = null; renderMySide(); return; }
+    if (b.dataset.mgo) { doMerge(); return; }
+    if (b.dataset.i != null) {
+      var m = myItems[parseInt(b.dataset.i, 10)];
+      if (mergeSel) { var id = listId(m); if (mergeSel.has(id)) mergeSel.delete(id); else { mergeSel.add(id); mergeMap[id] = m; } renderMySide(); return; }
+      selectMy(m);
+    }
   });
+  // Объединение: отмеченные плейлисты (любые — Яндекс, YouTube, свои) → новый плейлист Тапёра
+  var mergeSel = null, mergeMap = {};
+  async function doMerge(){
+    var sel = Array.from(mergeSel).map(function (id){ return mergeMap[id]; }).filter(Boolean);
+    if (sel.length < 2) return;
+    var r = await askDlg({ title: 'Объединить ' + sel.length + ' ' + (sel.length < 5 ? 'плейлиста' : 'плейлистов'), text: esc(sel.map(function (m){ return '«' + m.title + '»'; }).join(' + ')) + '<br>Повторы песен уберу. Получится новый плейлист Тапёра.', label: 'Название', value: sel.map(function (m){ return m.title; }).join(' + ').slice(0, 100),
+      check: sel.some(function (m){ return m.src === 'tap'; }) ? 'Удалить исходные плейлисты Тапёра' : '', checked: false, ok: 'Объединить' });
+    if (!r) return;
+    toast('Собираю треки…');
+    var all = [];
+    for (var k = 0; k < sel.length; k++) {
+      var m = sel[k];
+      var L = m.src === 'tap' ? m : await loadList(m).catch(function(){ return null; });
+      if (!L || L.error) { toast('Не удалось загрузить «' + m.title + '» — пропускаю'); continue; }
+      all = all.concat(L.tracks || []);
+    }
+    var before = all.length; all = dedupeTracks(all);
+    var nm = localCreate(r.value, all);
+    if (r.checked) sel.forEach(function (m){ if (m.src === 'tap') { var i = savedLists.indexOf(localGet(listId(m))); if (i >= 0) savedLists.splice(i, 1); } });
+    mergeSel = null; saveLocal(nm); selectMy(nm);
+    toast('Готово: «' + nm.title + '» · ' + nm.tracks.length + ' ' + plural(nm.tracks.length) + (before - all.length ? ', повторов убрано: ' + (before - all.length) : ''));
+  }
   function selectMy(m){
     mySel = m;
     var bs = document.querySelectorAll('#mySide .mit');
@@ -2493,6 +2868,13 @@
         try { r = await A.matchLine(it.line); } catch (e) {}
         if (!imp || imp.run !== run) return;
         Object.assign(it, r || { status: 'none', alts: [] });
+        if (window.TapRank && it.track && (it.status === 'exact' || it.status === 'close') && searchMode !== 'src') {
+          // вариант выдачи из поиска: среди почти одинаково подходящих берём тот, что выше по выбранному варианту
+          var q0 = it.query || it.line, base = TapRank.relevance(q0, it.track);
+          var cand = [it.track].concat(it.alts || []).filter(function (c){ return TapRank.relevance(q0, c) >= base - 8; });
+          var best = TapRank.rank(q0, cand.map(function (c){ return Object.assign({}, c); }), searchMode, rankCtx())[0];
+          if (best && (best.src !== it.track.src || best.id !== it.track.id)) { var old = it.track; it.track = cand.find(function (c){ return c.src === best.src && c.id === best.id; }) || it.track; it.alts = [old].concat((it.alts || []).filter(function (c){ return c !== it.track; })); }
+        }
         if (it.status === 'skip') it.removed = true;
         imp.done++;
         if (Date.now() - lastDraw > 400 || imp.done === imp.items.length) { lastDraw = Date.now(); renderImportResults(); }
@@ -3085,6 +3467,7 @@
     var s = await A.ymStatus();
     var was = ymLoggedIn;
     ymLoggedIn = !!(s && s.loggedIn);
+    ymPlus = !!(s && s.loggedIn && (s.hasPlus || s.offline));
     renderSetYm(s);
     if (s && s.loggedIn) {
       acctBtn.innerHTML = YM_DOT + esc(s.name || s.login || 'Яндекс') + (s.offline ? '' : (s.hasPlus ? ' · Плюс' : ' · без Плюса'));

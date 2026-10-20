@@ -38,6 +38,7 @@ const PAGE = `(function(){
   };
   function allMedia(){ var a = Array.prototype.slice.call(document.querySelectorAll('audio,video')); if (cur && a.indexOf(cur) < 0) a.push(cur); return a; }
   function visible(el){ var r = el.getBoundingClientRect(); return r.width > 4 && r.height > 4 && getComputedStyle(el).visibility !== 'hidden'; }
+  function nrm(x){ return String(x || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/g, ' ').trim(); }
   function label(el){ return ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('data-test-id') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + (el.textContent || '')).replace(/\\s+/g, ' ').trim().slice(0, 80); }
   // Кнопка «Слушать» на странице трека (не в нижней панели плеера). Правила — из «рецепта» (recipes.json)
   function findPlay(R){
@@ -47,6 +48,19 @@ const PAGE = `(function(){
     var pref = [];
     (R.preferSelectors || []).forEach(function(sel){ try { Array.prototype.forEach.call(document.querySelectorAll(sel), function(b){ if (visible(b) && !inBar(b)) pref.push({ b: b, s: 100, l: label(b) + ' [' + sel + ']' }); }); } catch (x) {} });
     if (pref.length) return pref;
+    // Строка нужного трека: ближайший небольшой блок, где написано название песни
+    var tn = nrm(R.title);
+    function rowBonus(b){
+      if (!tn || tn.length < 2) return 0;
+      var a = b, hops = 0;
+      while (a && a !== document.body && hops < 9) {
+        var tx = a.textContent || '';
+        if (tx.length > 700) return 0;
+        if (nrm(tx).indexOf(tn) >= 0) return 12 - hops;
+        a = a.parentElement; hops++;
+      }
+      return -2;
+    }
     var inc = new RegExp(R.include || 'play', 'i'), exc = R.exclude ? new RegExp(R.exclude, 'i') : null, boost = R.boost ? new RegExp(R.boost, 'i') : null;
     var btns = Array.prototype.slice.call(document.querySelectorAll('button,[role="button"],a[href]')).filter(visible);
     return btns.map(function(b){
@@ -56,6 +70,7 @@ const PAGE = `(function(){
       if (boost && boost.test(l)) s += 2;
       if (inBar(b)) s -= 10;
       var r = b.getBoundingClientRect(); if (r.top < window.innerHeight * 0.6) s += 1;
+      if (s >= 5) { var rb = rowBonus(b); s += rb; if (rb > 0) l += ' [строка трека]'; }
       return { b: b, s: s, l: l };
     }).filter(function(x){ return x.s >= 5; }).sort(function(a, b){ return b.s - a.s; });
   }

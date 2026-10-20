@@ -80,7 +80,7 @@ async function play(t, volume) {
   // Сайт дорисовывается скриптами — ищем кнопку «Слушать» до 15 секунд
   let clicked = null, seen = null;
   for (let k = 0; k < 30 && token === playToken; k++) {
-    const r = await cmd('start', R.play || {}, 3000);
+    const r = await cmd('start', Object.assign({}, R.play || {}, { title: t.title || '', artist: t.author || '' }), 3000);
     if (r && r.ok) { clicked = r; break; }
     if (r && r.seen) seen = r.seen;
     await sleep(500);

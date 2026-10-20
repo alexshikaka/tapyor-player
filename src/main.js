@@ -1104,6 +1104,11 @@ app.whenReady().then(async () => {
       try { res.services.youtube = await checkYouTube(); } catch (e) { res.services.youtube = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
       settingsStore.set('health', res);
       log('самопроверка: Яндекс — ' + res.services.yandex.status + ', YouTube — ' + res.services.youtube.status + ', SoundCloud — ' + res.services.soundcloud.status);
+      for (const [name, sv] of Object.entries(res.services)) {
+        log('самопроверка · ' + name + ': ' + sv.status + (sv.title ? ' — ' + sv.title : ''));
+        (sv.steps || []).forEach((st) => log('   ' + (st.ok ? '✓' : '✗') + ' ' + st.name + (st.text ? ': ' + st.text : '') + (st.details ? ' [' + String(st.details).slice(0, 300) + ']' : '')));
+      }
+      if (res.recipes) log('самопроверка · рецепты: ' + JSON.stringify(res.recipes).slice(0, 300));
       return res;
     })();
     try { return await healthRunning; } finally { healthRunning = null; }
