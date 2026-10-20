@@ -124,7 +124,15 @@ function ytdlpUpdate() {
       if (err && !m) { log('yt-dlp: обновление не удалось — ' + txt.trim().slice(-300)); resolve({ ok: false, text: txt.trim().slice(-200) }); return; }
       const updated = /Updated yt-dlp/i.test(txt);
       if (updated) log('yt-dlp: обновлён до ' + (m ? m[1] : '?'));
-      resolve({ ok: true, updated, version: m ? m[1] : '' });
+      if (!updated || !m) { resolve({ ok: true, updated, version: m ? m[1] : '' }); return; }
+      // На Windows файл заменяется уже после выхода — ждём, пока новая версия встанет на место (до 10 с)
+      let k = 0;
+      (function wait() {
+        ytdlpVersion(u).then((v) => {
+          if (v === m[1] || ++k > 20) { resolve({ ok: true, updated, version: m[1] }); return; }
+          setTimeout(wait, 500);
+        });
+      })();
     });
   });
 }
@@ -211,7 +219,7 @@ function fmtDur(sec) {
 function ytdlpSearch(query, count) {
   return new Promise((resolve) => {
     const bin = ytdlpPath();
-    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    if (!fs.existsSync(bin)) { resolve({ error: 'движок YouTube не найден' }); return; }
     execFile(bin, ['ytsearch' + count + ':' + query, '--flat-playlist', '--dump-single-json', '--no-warnings'],
       { timeout: 45000, windowsHide: true, maxBuffer: 32 * 1024 * 1024 }, (err, stdout, stderr) => {
         if (err) { log('поиск (ещё): ошибка ' + (stderr || err.message)); resolve({ error: 'не удалось загрузить ещё' }); return; }
@@ -236,7 +244,7 @@ function ytdlpSearch(query, count) {
 function ytdlpPlaylist(listId) {
   return new Promise((resolve) => {
     const bin = ytdlpPath();
-    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    if (!fs.existsSync(bin)) { resolve({ error: 'движок YouTube не найден' }); return; }
     execFile(bin, ['https://www.youtube.com/playlist?list=' + listId, '--flat-playlist', '--dump-single-json', '--no-warnings', '--playlist-end', '500', ...ytCookieArgs(false)],
       { timeout: 60000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
         if (err) { log('плейлист YouTube: ошибка ' + (stderr || err.message)); resolve({ error: 'не удалось открыть плейлист' }); return; }
@@ -267,7 +275,7 @@ function mapYdl(e, src) {
 function ydlJson(args, timeout) {
   return new Promise((resolve) => {
     const bin = ytdlpPath();
-    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    if (!fs.existsSync(bin)) { resolve({ error: 'движок YouTube не найден' }); return; }
     execFile(bin, [...args, '--dump-single-json', '--no-warnings'], { timeout: timeout || 45000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) { resolve({ error: String(stderr || err.message).trim().split('\n').pop().slice(0, 300) }); return; }
       try { resolve(JSON.parse(stdout)); } catch (e) { resolve({ error: 'ошибка разбора' }); }
@@ -291,7 +299,7 @@ async function urlList(url) {
 function urlStream(url) {
   return new Promise((resolve) => {
     const bin = ytdlpPath();
-    if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+    if (!fs.existsSync(bin)) { resolve({ error: 'движок YouTube не найден' }); return; }
     execFile(bin, ['-f', 'ba[protocol^=http]/ba/b', '--print', '%(protocol)s|%(url)s', '--no-playlist', '--no-warnings', url], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
       if (err) { const m = String(stderr || err.message).trim().split('\n').pop(); log('поток по ссылке: ' + m); resolve({ error: m.slice(0, 300) }); return; }
       const line = String(stdout || '').trim().split(/\r?\n/).pop() || '';
@@ -326,7 +334,7 @@ function streamViaYtDlp(videoUrl) {
     const bin = ytdlpPath();
     const exists = fs.existsSync(bin);
     log('yt-dlp: запуск. bin=' + bin + ' | файл есть=' + exists + ' | url=' + videoUrl);
-    if (!exists) { resolve({ error: 'yt-dlp.exe не найден по пути: ' + bin }); return; }
+    if (!exists) { resolve({ error: 'движок YouTube не найден' }); return; }
     const q = String(cfg('videoQuality'));
     const fmt = q === 'audio' ? 'ba[ext=m4a]/ba/b'
       : q === '480' ? 'bv*[height<=480][ext=mp4]+ba[ext=m4a]/bv*[height<=480]+ba/b[height<=480]/b/ba'
@@ -340,7 +348,7 @@ function streamViaYtDlp(videoUrl) {
     ], { timeout: 30000, windowsHide: true }, (err, stdout, stderr) => {
       if (err) {
         log('yt-dlp: ОШИБКА code=' + (err.code) + ' msg=' + (err.message || '') + ' | stderr=' + (stderr || ''));
-        resolve({ error: ('yt-dlp: ' + ((stderr || err.message || '').toString())).slice(0, 400) });
+        resolve({ error: ('движок YouTube: ' + ((stderr || err.message || '').toString())).slice(0, 400) });
         return;
       }
       const lines = (stdout || '').trim().split(/\r?\n/).filter(Boolean);
@@ -1053,7 +1061,7 @@ app.whenReady().then(async () => {
   function ytdlpFeed(url, end) {
     return new Promise((resolve) => {
       const bin = ytdlpPath();
-      if (!fs.existsSync(bin)) { resolve({ error: 'yt-dlp не найден' }); return; }
+      if (!fs.existsSync(bin)) { resolve({ error: 'движок YouTube не найден' }); return; }
       execFile(bin, [url, '--flat-playlist', '--dump-single-json', '--no-warnings', '--playlist-end', String(end || 300), ...ytCookieArgs(false)],
         { timeout: 60000, windowsHide: true, maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
           if (err) { log('YouTube: ' + url + ' — ' + String(stderr || err.message).slice(0, 300)); resolve({ error: 'не удалось загрузить' }); return; }
@@ -1129,7 +1137,7 @@ app.whenReady().then(async () => {
     catch (e) { net1 = false; steps.push(step('Поиск на YouTube', false, 'YouTube не отвечает — возможно, нужен VPN на весь компьютер', e.message)); }
     const up = await ytdlpUpdate();
     const ver = await ytdlpVersion(ytdlpPath());
-    steps.push(step('Библиотека yt-dlp', !!ver, ver ? 'версия ' + ver + (up.updated ? ' — только что обновлена' : (up.ok ? ', свежая' : ', обновить не удалось')) : 'не найдена', up.ok ? '' : up.text));
+    steps.push(step('Движок YouTube', !!ver, ver ? 'версия ' + ver + (up.updated ? ' — только что обновлена' : (up.ok ? ', свежая' : ', обновить не удалось')) : 'не найдена', up.ok ? '' : up.text));
     let dlOk = false;
     if (net1) {
       const r = await streamViaYtDlp('https://www.youtube.com/watch?v=' + (R.testVideo || 'jNQXAC9IVRw'));
@@ -1174,7 +1182,7 @@ app.whenReady().then(async () => {
       try { res.services.youtube = await checkYouTube(); } catch (e) { res.services.youtube = { status: 'fail', title: 'Проверка не удалась', steps: [step('Проверка', false, e.message)] }; }
       settingsStore.set('health', res);
       // Отчёты: сломанные шаги глубокой проверки (кроме «нет сети / нужен VPN»)
-      const SLUG = { 'Поиск': 'search', 'Воспроизведение': 'stream', 'Запасной': 'site', 'Библиотека': 'ytdlp' };
+      const SLUG = { 'Поиск': 'search', 'Воспроизведение': 'stream', 'Запасной': 'site', 'Движок': 'ytdlp' };
       for (const [name, sv] of Object.entries(res.services)) {
         (sv.steps || []).filter((st) => st.ok === false && !/VPN|не отвечает/i.test(st.text || '')).forEach((st) => {
           const stage = (Object.keys(SLUG).find((k) => st.name.indexOf(k) === 0) && SLUG[Object.keys(SLUG).find((k) => st.name.indexOf(k) === 0)]) || 'check';
@@ -1201,6 +1209,7 @@ app.whenReady().then(async () => {
     try { r.body && r.body.cancel && r.body.cancel(); } catch (e) {}
     return { status: r.status, ms: Date.now() - t0 };
   }
+  const verOlder = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0; } return false; };
   const ytdlpAgeDays = (v) => { const m = /^(\d{4})\.(\d{2})\.(\d{2})/.exec(v || ''); return m ? Math.round((Date.now() - Date.UTC(+m[1], +m[2] - 1, +m[3])) / 86400000) : null; };
   let qcRunning = null;
   async function quickCheck(send) {
@@ -1255,9 +1264,17 @@ app.whenReady().then(async () => {
             put('yt.login', who ? 'ok' : 'off', who ? who : 'нет входа', who ? {} : { action: 'yt-login' });
           }),
           job('yt.dlp', async () => {
-            const v = await ytdlpVersion(ytdlpPath()); const age = ytdlpAgeDays(v);
-            if (!v) put('yt.dlp', 'bad', 'не найден', { action: 'fix', report: { stage: 'ytdlp', code: 'missing' } });
-            else put('yt.dlp', age != null && age > 45 ? 'warn' : 'ok', v + (age != null && age > 45 ? ' · устарел' : ' · свежий'), age != null && age > 45 ? { action: 'fix' } : {});
+            // «Устарел» — только если вышла версия новее (по GitHub); старая дата сама по себе не проблема
+            const v = await ytdlpVersion(ytdlpPath());
+            if (!v) { put('yt.dlp', 'bad', 'не найден', { action: 'fix', report: { stage: 'ytdlp', code: 'missing' } }); return; }
+            let latest = '';
+            try {
+              const { net: enet } = require('electron');
+              const r = await enet.fetch('https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest', { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Tapyor' }, signal: AbortSignal.timeout(QC_T) });
+              if (r.ok) latest = String((await r.json()).tag_name || '').replace(/^v/, '');
+            } catch (e) {}
+            const older = latest && verOlder(v, latest);
+            put('yt.dlp', older ? 'warn' : 'ok', 'версия ' + v + (older ? ' · есть новее' : (latest ? ' · последняя' : '')), older ? { action: 'fix' } : {});
           }),
           job('sc', async () => {
             const res = await Promise.allSettled([ping('https://soundcloud.com/'), ping('https://api.audius.co/v1/tracks/trending?limit=1&app_name=' + AU_APP)]);
@@ -1290,7 +1307,7 @@ app.whenReady().then(async () => {
     const done = [];
     const say = (t, ok) => { done.push({ t, ok }); try { e.sender.send('fix-step', { t, ok }); } catch (x) {} log('автопочинка: ' + (ok ? '✓ ' : '✗ ') + t); };
     const r1 = await recipes.refresh(); say(r1.ok ? 'Рецепты сайтов обновлены до v' + recipes.info().version : 'Свежие рецепты скачать не удалось — GitHub недоступен', r1.ok);
-    const r2 = await ytdlpUpdate(); say(r2.updated ? 'yt-dlp обновлён' : (r2.ok ? 'yt-dlp уже свежий' : 'yt-dlp обновить не удалось'), r2.ok);
+    const r2 = await ytdlpUpdate(); say(r2.updated ? 'Движок YouTube обновлён' + (r2.version ? ' до ' + r2.version : '') : (r2.ok ? 'Движок YouTube уже свежий' : 'Движок YouTube обновить не удалось'), r2.ok);
     const ys = await ymStatus(); say(ys.loggedIn ? 'Вход в Яндекс в порядке' + (ys.offline ? ' (не проверить — Яндекс не отвечает)' : '') : 'Нужно войти в Яндекс заново', ys.loggedIn);
     { const a = ytAuthStatus(); const who = (a.cookies && a.cookies.name) || (a.oauth && a.oauth.account && a.oauth.account.name); say(who ? 'Вход в YouTube есть: ' + who : 'Вход в YouTube не настроен (не обязателен)', true); }
     try {

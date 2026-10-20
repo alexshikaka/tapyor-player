@@ -29,7 +29,7 @@
   a.qcRun = function(){ var it = base(), ids = Object.keys(it), out = {};
     return new Promise(function(res){ var k = 0; (function step(){ if (k >= ids.length) { res({ at: Date.now(), ms: 900, items: out }); return; } var id = ids[k++]; out[id] = Object.assign({ id: id }, it[id]); qcL && qcL(out[id]); setTimeout(step, 60); })(); }); };
   a.qcGet = function(){ return Promise.resolve({ at: Date.now(), items: window.__qcAfterFix || base() }); };
-  a.autoFix = function(){ ['Рецепты сайтов обновлены до v8','yt-dlp обновлён','Вход в Яндекс в порядке'].forEach(function(t){ fxL && fxL({ t: t, ok: true }); }); return Promise.resolve({ left: 0 }); };
+  a.autoFix = function(){ ['Рецепты сайтов обновлены до v8','Движок YouTube обновлён','Вход в Яндекс в порядке'].forEach(function(t){ fxL && fxL({ t: t, ok: true }); }); return Promise.resolve({ left: 0 }); };
   a.reportTest = function(){ return Promise.resolve({ ok: true, issue: 12, users: 1 }); };
   a.reportPreview = function(){ return Promise.resolve({ fp: 'a1b2c3', service: 'youtube', stage: 'stream', code: 'HTTP 403', app: '0.14.0' }); };
 })();

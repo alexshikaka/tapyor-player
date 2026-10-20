@@ -2373,7 +2373,7 @@
   var QC_GROUPS = [
     ['Основа', [['net', 'Интернет'], ['app', 'Тапёр'], ['recipes', 'Рецепты сайтов']]],
     ['Яндекс Музыка', [['ym.svc', 'Сервис'], ['ym.acc', 'Аккаунт'], ['ym.play', 'Воспроизведение'], ['ym.site', 'Запасной путь (сайт)']]],
-    ['YouTube', [['yt.svc', 'Сервис'], ['yt.login', 'Вход'], ['yt.dlp', 'Движок yt-dlp']]],
+    ['YouTube', [['yt.svc', 'Сервис'], ['yt.login', 'Вход'], ['yt.dlp', 'Движок']]],
     ['Другие площадки', [['sc', 'SoundCloud · Audius'], ['refs', 'Справочники · Deezer · Last.fm'], ['tg', 'Telegram (браузер)']]]
   ];
   var QC_ACT = { 'ym-login': 'войти', 'yt-login': 'войти', update: 'обновить', vpn: 'что делать', fix: 'починить', retry: 'ещё раз' };
@@ -2384,7 +2384,7 @@
     'ym.site': 'Сайт Яндекса поменялся. «Починить автоматически» скачает свежие рецепты с GitHub.',
     'ym.svc': 'Яндекс Музыка не отвечает. Скорее всего, это у них — подожди немного.',
     'yt.svc': 'YouTube не отвечает. Часто так бывает без VPN. Поиск и очередь работают без него: заказы с YouTube Тапёр найдёт в Яндексе и SoundCloud.',
-    'yt.dlp': 'Движок YouTube устарел — «Починить автоматически» обновит его.',
+    'yt.dlp': 'Вышла новая версия движка для YouTube — «Починить автоматически» обновит его.',
     app: 'Вышла новая версия Тапёра — нажми «обновить».'
   };
   var QC = { items: {}, running: false, t0: 0, open: true, fixing: false, fixLog: [], help: {}, at: 0 };
@@ -2428,14 +2428,19 @@
   function qcAction(a, id){
     if (a === 'ym-login') browserLogin();
     else if (a === 'yt-login') openYtDlg();
+    else if (a === 'fix' && id === 'yt.dlp') runFix();
     else if (a === 'update') { if (A.updateCheck) A.updateCheck(); toast('Проверяю обновление — кнопка «Обновить» появится в шапке'); }
     else if (a === 'vpn') { QC.help[id] = !QC.help[id]; renderQC(); }
     else if (a === 'fix') runFix();
     else if (a === 'retry') runQC();
   }
   var qcTick = null, qcRetry = null;
+  // Перепроверить чуть позже (после входа, починки, глубокой проверки); если проверка идёт — сразу после неё
+  var qcSoonT = null;
+  function qcSoon(){ clearTimeout(qcSoonT); qcSoonT = setTimeout(function(){ if (QC.running || QC.fixing) { QC.again = true; return; } runQC(); }, 800); }
   async function runQC(){
-    if (!A.qcRun || QC.running) return;
+    if (!A.qcRun || QC.running) { QC.again = true; return; }
+    QC.again = false;
     QC.running = true; QC.t0 = Date.now(); QC.items = {}; QC.at = 0;
     clearInterval(qcTick); qcTick = setInterval(renderQC, 400);
     renderQC();
@@ -2451,6 +2456,7 @@
     if (QC.items.net && QC.items.net.state === 'bad') qcRetry = setTimeout(runQC, 30000);
     // Нашли проблему с воспроизведением — глубокая проверка (когда ничего не играет)
     if (probs.some(function (id){ return /^(ym\.play|ym\.site|yt\.dlp)$/.test(id); }) && typeof runHealth === 'function') setTimeout(function(){ try { runHealth(false); } catch (e) {} }, 4000);
+    if (QC.again) qcSoon();
   }
   async function runFix(){
     if (!A.autoFix || QC.fixing) return;
@@ -2459,6 +2465,7 @@
     QC.fixing = false;
     var q = A.qcGet ? await A.qcGet() : null; if (q && q.items) { QC.items = q.items; QC.at = q.at; }
     renderQC(); renderHealthWarnQC();
+    runQC(); // контрольная перепроверка после починки — лампочки по факту
     toast(r && !r.left ? 'Починил — всё работает' : 'Сделал, что мог — подробности в списке');
   }
   if (A.onQcItem) A.onQcItem(function (it){ QC.items[it.id] = it; });
@@ -3726,7 +3733,7 @@
     if (r && r.ok) { myLoaded = false; if (curTab === 'my') loadMy(true); }
   }
   function openYtDlg(){ ytDlgOpen = true; ytMsg = null; ytPasteRes = null; $('ytDlg').hidden = false; renderYtDlg(); ytAuthRefresh(); }
-  function closeYtDlg(){ ytDlgOpen = false; $('ytDlg').hidden = true; }
+  function closeYtDlg(){ ytDlgOpen = false; $('ytDlg').hidden = true; if (typeof qcSoon === 'function') qcSoon(); }
   $('ytDlg').addEventListener('click', async function(e){
     if (e.target === $('ytDlg')) { closeYtDlg(); return; }
     var b = e.target.closest('button'); if (!b) return;
@@ -3806,6 +3813,7 @@
     if (r && r.busy) healthNote = 'Музыка играет — проверю позже.';
     else if (r) health = r;
     renderHealth();
+    if (r && !r.busy) qcSoon(); // после глубокой проверки (она обновляет движок) — лампочки заново
   }
   $('hsRun').onclick = function(){ runHealth(true); };
   $('healthBox').addEventListener('click', function(e){ var b = e.target.closest('[data-hs-browser]'); if (b) { setTab('browser'); brShow(b.dataset.hsBrowser); } });
@@ -4032,6 +4040,7 @@
   var acctBtn = $('acct');
   var YM_DOT = '<span class="dot" style="background:#FFD43B"></span>';
   var YT_DOT = '<span class="dot" style="background:#FF0000"></span>';
+  var acctFirst = true;
   async function refreshAcct(){
     if (!A.ymStatus) return;
     var s = await A.ymStatus();
@@ -4049,6 +4058,8 @@
       acctBtn.title = (s && s.error) ? s.error : 'Войти в Яндекс Музыку';
     }
     if (ymLoggedIn !== was || ymLoggedIn) { myLoaded = false; if (curTab === 'my') loadMy(true); }
+    if (!acctFirst && ymLoggedIn !== was && typeof qcSoon === 'function') qcSoon(); // вошёл/вышел — лампочки заново
+    acctFirst = false;
     if (ymLoggedIn) {
       if (A.ymLikeIds) A.ymLikeIds().then(function (ids){ likedSet = new Set((ids || []).map(String)); renderLike(); });
       if (A.ymStations) A.ymStations().then(function (list){ stations = list || []; renderGenres(); });
