@@ -1799,7 +1799,7 @@
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
     items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
     items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на ' + srcName(v), act: function(){ A.openExternal(trackUrl(v)); } });
-    if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch(); } });
+    if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch({ nav: true }); } });
     if (v.author) items.push({ label: 'Страница исполнителя «' + firstArtist(v) + '»', act: function(){ openArtistPage(firstArtist(v)); } });
     items.push('-');
     items.push({ label: 'Убрать из очереди', danger: true, act: function(){ removeAt(i); } });
@@ -1818,7 +1818,7 @@
     if (srcOf(v) === 'ym' && ymLoggedIn) items.push({ label: likedSet.has(String(v.id)) ? 'Убрать из «Мне нравится»' : 'В «Мне нравится»', act: function(){ toggleLike(v); } });
     items.push({ label: 'Скопировать «Исполнитель — Название»', act: function(){ copyText((v.author ? v.author + ' — ' : '') + v.title); } });
     items.push({ label: srcOf(v) === 'ym' ? 'Открыть в Яндекс Музыке' : 'Открыть на ' + srcName(v), act: function(){ A.openExternal(trackUrl(v)); } });
-    if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch(); } });
+    if (v.author) items.push({ label: 'Искать «' + (v.author.length > 28 ? v.author.slice(0, 27) + '…' : v.author) + '»', act: function(){ setTab('search'); search.value = v.author; doSearch({ nav: true }); } });
     if (v.author) items.push({ label: 'Страница исполнителя «' + firstArtist(v) + '»', act: function(){ openArtistPage(firstArtist(v)); } });
     showCtx(x, y, items);
     if (alignRight && ctxEl) ctxEl.style.left = Math.max(8, x - ctxEl.offsetWidth) + 'px';
@@ -2212,11 +2212,12 @@
   function highlightSg(){ var els = sgEl.querySelectorAll('.sg-item'); for (var k = 0; k < els.length; k++) els[k].classList.toggle('active', k === sgIdx); }
   function pickSuggest(i){ var s = sgItems[i]; if (s == null) return; search.value = s; hideSuggest(); doSearch(); }
   function isLink(q){ return /^(https?:\/\/)?(www\.|m\.)?(music\.yandex\.[a-z]+|youtube\.com|music\.youtube\.com|youtu\.be)\//i.test(q); }
+  var sgLastSearched = null; // после поиска подсказки не показываем, пока строку не изменят
   async function loadSuggest(t){
     var tok = ++sgToken;
-    if (!A.suggest || isLink(t)) return;
+    if (!A.suggest || isLink(t) || t === sgLastSearched) return;
     var r = await A.suggest(t);
-    if (tok !== sgToken || search.value.trim() !== t || document.activeElement !== search) return;
+    if (tok !== sgToken || search.value.trim() !== t || document.activeElement !== search || t === sgLastSearched) return;
     if (!r || !r.items || !r.items.length) { hideSuggest(); return; }
     sgItems = r.items; sgIdx = -1;
     var isYm = r.source === 'ym';
@@ -2227,6 +2228,7 @@
   search.addEventListener('input', function(){
     clearTimeout(sgTimer);
     var t = search.value.trim();
+    if (t !== sgLastSearched) sgLastSearched = null;
     if (t.length < 2) { sgToken++; hideSuggest(); return; }
     sgTimer = setTimeout(function(){ loadSuggest(t); }, 220);
   });
@@ -2266,6 +2268,7 @@
     searchMode = id; renderSmode();
     if (A.setSetting) A.setSetting('searchMode', id);
     if (curQuery && !results.hidden) rerenderTracks(true);
+    if (AP && AP.tab === 'search' && !$('searchPl').hidden && $('searchPl').querySelector('.arh')) renderArtistPage($('searchPl'));
   }
   function openSmodeMenu(x, y){
     showCtx(x, y, SMODES.map(function (m){ return { label: (m.id === searchMode ? '✓ ' : '  ') + m.n + ' — ' + m.d, act: function(){ setSearchMode(m.id); } }; }));
@@ -2358,7 +2361,10 @@
   async function doSearch(opts) {
     opts = opts || {};
     var q = search.value.trim(); if (!q) return;
-    if (!opts.back && curQuery && curQuery !== q) { S.history.push(curQuery); if (S.history.length > 20) S.history.shift(); }
+    clearTimeout(sgTimer); sgToken++; sgLastSearched = q; hideSuggest();
+    // «Назад» — только если пришли сюда из выдачи (кнопка «Найти», «Искать …» и т.п.); новый поиск руками историю сбрасывает
+    if (opts.nav && curQuery && curQuery !== q) { S.history.push(curQuery); if (S.history.length > 20) S.history.shift(); }
+    else if (!opts.back && !opts.nav) S.history = [];
     var token = ++searchToken;
     curQuery = q; shownIds = new Set(); hasMoreYt = false; hasMoreYm = false; loadingMore = false; ymPage = 1;
     S.tracks = [];
@@ -2715,13 +2721,14 @@
     return window.TapRank ? TapRank.cleanChannel(a ? a.name : (v.author || '')) : (a ? a.name : v.author);
   }
   var AP = null; // открытая страница: { name, data, tab }
-  var AP_TABS = [{ id: 'pop', n: 'Популярное' }, { id: 'all', n: 'Все треки' }, { id: 'album', n: 'Альбомы' }, { id: 'single', n: 'Синглы и EP' }, { id: 'compilation', n: 'Сборники' }, { id: 'similar', n: 'Похожие' }];
+  var AP_TABS = [{ id: 'search', n: 'Поиск' }, { id: 'pop', n: 'Популярное' }, { id: 'all', n: 'Все треки' }, { id: 'album', n: 'Альбомы' }, { id: 'single', n: 'Синглы и EP' }, { id: 'compilation', n: 'Сборники' }, { id: 'similar', n: 'Похожие' }];
   function apNorm(x){ return String(x || '').toLowerCase().replace(/ё/g, 'е').replace(/[([{][^)\]}]*[)\]}]/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
   function listenersText(n){ if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' млн слушателей'; if (n >= 1e3) return Math.round(n / 1e3) + ' тыс. слушателей'; return n + ' слушателей'; }
   function fansText(n){ if (!n) return ''; if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' млн поклонников'; if (n >= 1e3) return Math.round(n / 1e3) + ' тыс. поклонников'; return n + ' поклонников'; }
   async function openArtistPage(name, ymId){
     name = String(name || '').trim(); if (!name) return;
     closeCtx(); setTab('search');
+    search.value = name; sgLastSearched = name; clearTimeout(sgTimer); sgToken++; hideSuggest();
     results.hidden = true; var host = $('searchPl'); host.hidden = false;
     var tok = host._tok = (host._tok || 0) + 1;
     host._backFn = null;
@@ -2759,6 +2766,29 @@
     };
     return tb;
   }
+  // Выдача поиска по имени исполнителя — прямо на его странице (по выбранной «Выдаче»)
+  async function apSearch(P, body, host){
+    if (!P.searchRes) {
+      body.innerHTML = '<div class="muted">Ищу «' + esc(P.name) + '» на всех площадках…</div>';
+      var tk = host._tok, q = P.name;
+      var ps = [
+        (A.ymSearch ? A.ymSearch(q) : Promise.resolve(null)).then(function (r){ return (r && r.tracks) || []; }).catch(function(){ return []; }),
+        (ytUsable() && A.ytSearch ? A.ytSearch(q) : Promise.resolve(null)).then(function (r){ return ((r && r.videos) || []).map(function (v){ v.src = 'yt'; return v; }); }).catch(function(){ return []; }),
+        (SVC.scOn && A.scSearch ? A.scSearch(q, 15) : Promise.resolve([])).catch(function(){ return []; }),
+        (SVC.auOn && A.auSearch ? A.auSearch(q, 10) : Promise.resolve([])).catch(function(){ return []; })
+      ];
+      var all = [].concat.apply([], await Promise.all(ps));
+      if (host._tok !== tk || AP !== P) return;
+      P.searchRes = all;
+      if (P.tab !== 'search') return;
+      body.innerHTML = '';
+    }
+    var list = searchMode === 'src' ? P.searchRes.slice().sort(function (a, b){ return srcOrder.indexOf(srcOf(a)) - srcOrder.indexOf(srcOf(b)); }) : TapRank.rank(P.name, P.searchRes.map(function (v){ return v; }), searchMode, rankCtx());
+    var note = document.createElement('div'); note.className = 'plnote'; note.textContent = 'Выдача поиска по «' + P.name + '» со всех площадок — «Выдача: ' + smodeOf(searchMode).n + '». Сменить можно кнопкой «Выдача» сверху.';
+    body.appendChild(note);
+    if (!list.length) { body.insertAdjacentHTML('beforeend', '<div class="muted">Ничего не нашлось.</div>'); return; }
+    list.forEach(function (v){ body.appendChild(makeRow(v)); });
+  }
   function renderArtistPage(host){
     var P = AP; host._backFn = null;
     var cnt = function (t){ return P.albums.filter(function (a){ return a.type === t; }).length; };
@@ -2771,9 +2801,10 @@
         (P.about ? '<div class="ar-about" title="Нажми, чтобы развернуть">' + esc(P.about) + (P.aboutSrc ? ' <span class="ar-src">— ' + esc(P.aboutSrc) + '</span>' : '') + '</div>' : '') +
         '<div class="plbtns">' +
           (P.ymId && ymLoggedIn ? '<button class="pbtn g" data-ap="wave">Волна в стиле</button>' : '') +
-          '<button class="pbtn g" data-ap="search">Искать везде</button>' +
+          '<button class="pbtn g" data-ap="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>Поиск</button>' +
         '</div></div></div>' +
       '<div class="ar-tabs" role="tablist">' + AP_TABS.map(function (t){
+        if (t.id === 'search') return P.tab === 'search' ? '<button role="tab" data-apt="search" class="on">Поиск</button>' : '';
         var n = t.id === 'pop' ? (P.popular || P.dzTop || []).length : (t.id === 'similar' ? P.similar.length : (t.id === 'all' ? (P.ymId ? (P.allTracks ? P.allTracks.length : '…') : 0) : cnt(t.id)));
         return n ? '<button role="tab" data-apt="' + t.id + '"' + (P.tab === t.id ? ' class="on"' : '') + '>' + t.n + ' <small>' + n + '</small></button>' : '';
       }).join('') + '</div><div class="ar-body"></div>';
@@ -2782,13 +2813,14 @@
       var b = e.target.closest('button'); if (!b) return; var k = b.dataset.ap;
       var L = { src: 'ym', type: 'artist', artistId: P.ymId, title: P.name, author: 'Популярные треки', thumb: P.photo, tracks: P.popular || [] };
       if (k === 'wave') setBg({ kind: 'wave', station: 'artist:' + P.ymId, name: 'В стиле ' + P.name }, true);
-      else if (k === 'search') { search.value = P.name; doSearch(); }
+      else if (k === 'search') { P.tab = 'search'; renderArtistPage(host); }
     };
     var ab = host.querySelector('.ar-about'); if (ab) ab.onclick = function(){ ab.classList.toggle('open'); };
     host.querySelector('.ar-tabs').onclick = function(e){ var b = e.target.closest('[data-apt]'); if (!b) return; P.tab = b.dataset.apt; renderArtistPage(host); };
     if (!host.querySelector('.ar-tabs [data-apt="' + P.tab + '"]')) { var f = host.querySelector('.ar-tabs [data-apt]'); if (f) P.tab = f.dataset.apt; host.querySelectorAll('.ar-tabs [data-apt]').forEach(function (b){ b.classList.toggle('on', b.dataset.apt === P.tab); }); }
     var body = host.querySelector('.ar-body');
-    if (P.tab === 'all') {
+    if (P.tab === 'search') { apSearch(P, body, host); }
+    else if (P.tab === 'all') {
       if (P.allTracks) {
         body.appendChild(apTrackBar(function(){ return P.allTracks; }, 'Все треки'));
         if (P.allTracks.length) appendResults(P.allTracks, body); else body.insertAdjacentHTML('beforeend', '<div class="muted">Треков не нашлось.</div>');
@@ -2896,7 +2928,7 @@
           it.el.replaceWith(row); it.el = row;
         } else {
           var st = it.el.querySelector('.fst'); st.className = 'fst none'; st.textContent = 'не нашлось';
-          var sb = document.createElement('button'); sb.className = 'pbtn g fsearch'; sb.textContent = 'Найти'; sb.onclick = function(){ search.value = (t.author ? t.author + ' ' : '') + t.title; doSearch(); };
+          var sb = document.createElement('button'); sb.className = 'pbtn g fsearch'; sb.textContent = 'Найти'; sb.onclick = function(){ search.value = (t.author ? t.author + ' ' : '') + t.title; doSearch({ nav: true }); };
           it.el.appendChild(sb);
         }
       }

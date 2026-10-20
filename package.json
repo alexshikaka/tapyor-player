@@ -1,6 +1,6 @@
 {
   "name": "stream-player",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "description": "Тапёр — музыка и заказы для стрима из нескольких сервисов",
   "main": "src/main.js",
   "scripts": {
