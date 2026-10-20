@@ -11,7 +11,7 @@ async def main():
         await pg.goto('http://127.0.0.1:8782/app2/index.html'); await pg.wait_for_timeout(800)
         E=pg.evaluate
         await E("setTab('settings')"); await E("$('sLook').scrollIntoView()"); await pg.wait_for_timeout(200)
-        await pg.click('#setTheme [data-v=mono]'); await pg.wait_for_timeout(200)
+        await pg.click('#teList [data-th=mono]'); await pg.wait_for_timeout(200)
         print('тема:', await E("document.documentElement.className"), '| сохранено:', await E("window.__log.filter(x=>x.startsWith('set theme')).pop()"))
         await pg.screenshot(path='m_set.png')
         await E("setTab('search')"); await pg.fill('#search','Кино'); await pg.press('#search','Enter'); await pg.wait_for_timeout(700)

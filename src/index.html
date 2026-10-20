@@ -5,10 +5,10 @@
 <title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script>try { if (localStorage.getItem('tapTheme') === 'mono') document.documentElement.classList.add('theme-mono'); } catch (e) {}</script>
+<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement; if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
 <style>
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
-    --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; }
+    --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; --hov: rgba(255,255,255,.05); --hov2: rgba(255,255,255,.07); --hov3: rgba(255,255,255,.09); }
   /* Тема «Монохром»: чёрный, белый и серые — под чёрно-белый логотип. Обложки остаются цветными */
   html.theme-mono { --bg00: #070707; --bg0: #0F0F0F; --bg1: #161616; --bg2: #1A1A1A; --bg3: #202020; --bg4: #2D2D2D; --ln: #2F2F2F; --ln2: #262626; --ln3: #3E3E3E; --tx: #EDEDED; --tx2: #CBCBCB; --tx3: #A2A2A2; --tx4: #8E8E8E; --tx5: #818181; --ac: #D4D4D4; --ac2: #E6E6E6; --acr: 212,212,212; --acbg: #262626; --pri: #E8E8E8; --prit: #121212; }
 
@@ -161,7 +161,7 @@
   .col-head .hint { font-size: 13px; color: var(--tx4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .row { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 12px; cursor: pointer; position: relative; }
-  .row:hover { background: rgba(255,255,255,.05); }
+  .row:hover { background: var(--hov); }
   .cover-wrap { position: relative; width: 40px; height: 40px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; background: #222; }
   .cover { width: 40px; height: 40px; object-fit: cover; display: block; }
   .cover-ov { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .12s; }
@@ -267,7 +267,7 @@
   .time { flex: 0 0 48px; text-align: right; font-size: 13px; color: var(--tx3); }
   .row .more { flex: 0 0 auto; width: 28px; height: 28px; margin-left: -4px; border-radius: 8px; border: 0; background: transparent; color: var(--tx5); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color .12s, background .12s; }
   .row:hover .more, .row .more:focus-visible { color: var(--tx2); }
-  .row .more:hover { background: rgba(255,255,255,.07); color: var(--tx); }
+  .row .more:hover { background: var(--hov2); color: var(--tx); }
   .kcap { min-width: 150px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--ln); background: var(--bg3); color: var(--tx); font: 500 13px 'JetBrains Mono', monospace; cursor: pointer; white-space: nowrap; }
   .kcap:hover { border-color: var(--ln3); }
   .kcap.empty { color: var(--tx5); font-family: Onest, sans-serif; }
@@ -284,7 +284,7 @@
   .hsplitter::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 3px; border-radius: 2px; background: var(--ln3); transform: translate(-50%, -50%); }
   .hsplitter:hover, .hsplitter.drag { background: rgba(var(--acr),.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 0; box-shadow: inset 1px 0 0 rgba(255,255,255,.05); background: var(--bg00); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 0; box-shadow: inset 1px 0 0 var(--hov); background: var(--bg00); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; }
   /* «Сцена»: свечение цветом обложки играющего трека */
   .qglow { position: absolute; left: 0; right: 0; top: 0; height: 600px; pointer-events: none; opacity: 0; transition: opacity .6s ease; z-index: 0; }
   .queue-col > *:not(.qglow) { position: relative; z-index: 1; }
@@ -321,7 +321,7 @@
   .qrow.drop-after { box-shadow: inset 0 -2px 0 var(--ac); }
   .qrow .nx { opacity: 0; }
   .qrow:hover .nx, .qrow .nx:focus { opacity: 1; }
-  .qrow:hover:not(.playing) { background: rgba(255,255,255,.05); }
+  .qrow:hover:not(.playing) { background: var(--hov); }
   .ctx { position: fixed; z-index: 200; min-width: 240px; background: var(--bg3); border: 1px solid var(--ln); border-radius: 12px; padding: 5px; box-shadow: 0 16px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; }
   .ctx button { display: flex; align-items: center; height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--tx); font: 500 13px Onest, sans-serif; text-align: left; cursor: pointer; white-space: nowrap; }
   .ctx button:hover, .ctx button:focus { background: var(--bg4); outline: none; }
@@ -392,7 +392,7 @@
   .mbtn.ghost { background: transparent; color: var(--tx3); margin-left: auto; }
 
   /* «Моя волна» */
-  .wavecard { flex: 0 0 auto; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .wavecard { flex: 0 0 auto; border-radius: 14px; background: var(--hov); border: 1px solid var(--hov3); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
   .wavecard.on-air { border-color: var(--pri); }
   .whead { display: flex; align-items: center; gap: 10px; }
   .wicon { width: 32px; height: 32px; border-radius: 16px; background: var(--pri); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
@@ -643,6 +643,60 @@
   .thc .thp { height: 90px; border-radius: 9px; display: flex; overflow: hidden; margin-bottom: 8px; }
   .thc .thp i { display: block; }
   .thc small { display: block; color: var(--tx4); font-weight: 500; font-size: 12px; margin-top: 2px; }
+  html.theme-light { --hov: rgba(0,0,0,.05); --hov2: rgba(0,0,0,.07); --hov3: rgba(0,0,0,.09); color-scheme: light; }
+  html.theme-custom .pbtn.y:hover { background: var(--pri); filter: brightness(1.08); }
+  html.theme-custom .upd-go { background: var(--ac); color: var(--prit); }
+  html.theme-custom .wicon { background: var(--pri) !important; }
+  html.theme-custom .chip.active { background: var(--tx); color: var(--bg1); }
+  /* Редактор тем */
+  .te-list { display: flex; gap: 10px; flex-wrap: wrap; }
+  .te-c { width: 150px; border: 2px solid var(--ln); border-radius: 12px; padding: 6px; background: transparent; color: var(--tx); font: 600 12.5px Onest, sans-serif; text-align: left; cursor: pointer; }
+  .te-c:hover { border-color: var(--ln3); }
+  .te-c.on { border-color: var(--ac); }
+  .te-c .p { height: 54px; border-radius: 7px; display: flex; overflow: hidden; margin-bottom: 6px; }
+  .te-c .p i { flex: 1; }
+  .te-c b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .te-c small { display: block; color: var(--tx4); font-weight: 500; font-size: 11px; }
+  .te-c.add { display: flex; flex-direction: column; align-items: center; justify-content: center; border-style: dashed; color: var(--tx3); min-height: 92px; gap: 4px; }
+  .te { display: grid; grid-template-columns: minmax(300px, 1fr) 320px; gap: 22px; border-top: 1px solid var(--ln2); padding-top: 16px; margin-top: 16px; }
+  @media (max-width: 1100px) { .te { grid-template-columns: 1fr; } }
+  .te h4 { margin: 0 0 10px; font-size: 13px; color: var(--tx); }
+  .te-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 12.5px; color: var(--tx2); flex-wrap: wrap; }
+  .te-row > span:first-child { width: 120px; color: var(--tx3); flex: 0 0 auto; }
+  .te-row input[type=color] { width: 30px; height: 30px; border: 1px solid var(--ln3); border-radius: 8px; padding: 0; background: none; cursor: pointer; }
+  .te-row input[type=color]::-webkit-color-swatch-wrapper { padding: 0; } .te-row input[type=color]::-webkit-color-swatch { border: 0; border-radius: 7px; }
+  .te-hex, .te-name { font: 12px 'JetBrains Mono', monospace; color: var(--tx2); background: var(--bg0); border: 1px solid var(--ln); border-radius: 7px; padding: 6px 8px; width: 84px; }
+  .te-name { font-family: Onest, sans-serif; font-size: 13px; width: 220px; }
+  .te-hex:focus, .te-name:focus { outline: none; border-color: var(--ac); }
+  .te-seg { display: flex; background: var(--bg0); border: 1px solid var(--ln); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .te-seg button { height: 26px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
+  .te-seg button.on { background: var(--bg4); color: var(--tx); font-weight: 600; }
+  .te-rng { flex: 1; min-width: 120px; accent-color: var(--ac); }
+  .tones { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .tone { height: 26px; padding: 0 10px 0 6px; border-radius: 13px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font: 500 12px Onest, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .tone i { width: 14px; height: 14px; border-radius: 50%; }
+  .tone.on { border-color: var(--ac); color: var(--tx); }
+  .tvars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .tvar { border: 2px solid var(--ln); border-radius: 10px; padding: 5px; background: transparent; cursor: pointer; text-align: left; }
+  .tvar:hover { border-color: var(--ac); }
+  .tvar .p { height: 46px; border-radius: 6px; overflow: hidden; display: flex; } .tvar .p i { flex: 1; }
+  .tvar small { display: block; font: 10px 'JetBrains Mono', monospace; color: var(--tx5); margin-top: 4px; }
+  .te-f { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .te-f .pbtn { height: 34px; font-size: 12.5px; white-space: nowrap; }
+  .te-note { font-size: 11.5px; color: var(--tx4); margin-top: 8px; line-height: 1.45; }
+  .te-code { display: block; margin-top: 6px; font: 11px 'JetBrains Mono', monospace; color: var(--tx3); background: var(--bg0); border: 1px solid var(--ln); border-radius: 7px; padding: 6px 8px; word-break: break-all; user-select: all; }
+  .pv { border-radius: 14px; overflow: hidden; border: 1px solid var(--ln); background: var(--bg1); color: var(--tx); }
+  .pv .hd { padding: 10px 12px; display: flex; gap: 8px; align-items: center; font-size: 11px; background: var(--bg1); border-bottom: 1px solid var(--ln2); }
+  .pv .hd span { margin-left: auto; border: 1px solid var(--ac); color: var(--ac2); border-radius: 6px; padding: 1px 7px; }
+  .pv .bd { padding: 12px; display: flex; flex-direction: column; gap: 7px; background: var(--bg1); }
+  .pv .rw { display: flex; gap: 9px; align-items: center; padding: 6px; border-radius: 8px; }
+  .pv .rw.on { background: var(--hov); }
+  .pv .cv { width: 30px; height: 30px; border-radius: 6px; background: var(--bg4); }
+  .pv .t { font-size: 12px; font-weight: 600; } .pv .s { font-size: 10.5px; color: var(--tx3); }
+  .pv .q { margin-left: auto; font-size: 10px; background: rgba(var(--acr),.18); color: var(--ac2); padding: 3px 8px; border-radius: 8px; }
+  .pv .bt { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
+  .pv .bt span { height: 24px; padding: 0 10px; border-radius: 12px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; }
+  .pv .tg { width: 30px; height: 17px; border-radius: 9px; position: relative; margin-left: auto; background: var(--ac); } .pv .tg::after { content: ''; position: absolute; right: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--bg0); }
 </style>
 </head>
 <body>
@@ -823,15 +877,10 @@
           </section>
 
           <section id="sLook">
-            <div class="sec-h"><h2>Оформление</h2><span>Тема программы</span></div>
-            <div class="card">
-              <div class="srow" style="align-items:flex-start">
-                <div class="sl"><div class="st">Тема</div><div class="sd">Меняется сразу. Обложки треков остаются цветными в любой теме</div></div>
-                <div class="themes" id="setTheme">
-                  <button class="thc" data-v="violet"><div class="thp"><i style="flex:2;background:#15161C"></i><i style="flex:1;background:#0E0F13;position:relative"><b style="position:absolute;left:10px;top:12px;width:40px;height:8px;border-radius:4px;background:#9B87FF"></b><b style="position:absolute;left:10px;top:28px;width:28px;height:8px;border-radius:4px;background:#FFD43B"></b></i></div>Фиолетовая<small>Тёмная с фиолетовым и жёлтым</small></button>
-                  <button class="thc" data-v="mono"><div class="thp"><i style="flex:2;background:#161616"></i><i style="flex:1;background:#0F0F0F;position:relative"><b style="position:absolute;left:10px;top:12px;width:40px;height:8px;border-radius:4px;background:#D4D4D4"></b><b style="position:absolute;left:10px;top:28px;width:28px;height:8px;border-radius:4px;background:#E8E8E8"></b></i></div>Монохром<small>Мягкая серая, под логотип</small></button>
-                </div>
-              </div>
+            <div class="sec-h"><h2>Оформление</h2><span>Темы и редактор</span></div>
+            <div class="card" style="padding:18px 20px">
+              <div class="te-list" id="teList"></div>
+              <div class="te" id="teEd" hidden></div>
             </div>
           </section>
 
@@ -1051,6 +1100,7 @@
     </div>
   </footer>
 <script src="rank.js"></script>
+<script src="theme.js"></script>
 <script>
   var A = window.app || {};
   function $(id){ return document.getElementById(id); }
@@ -2487,16 +2537,187 @@
     var r = A.reportPreview ? await A.reportPreview() : null;
     askDlg({ title: 'Что уходит в отчёте', text: '<pre style="white-space:pre-wrap;font:11px JetBrains Mono,monospace;color:var(--tx3);max-height:300px;overflow:auto">' + esc(JSON.stringify(r, null, 2)) + '</pre>', ok: 'Понятно' });
   };
-  // ===== Тема оформления =====
-  function applyTheme(t){
-    t = t === 'mono' ? 'mono' : 'violet';
-    document.documentElement.classList.toggle('theme-mono', t === 'mono');
-    try { localStorage.setItem('tapTheme', t); } catch (e) {}
-    var bs = document.querySelectorAll('#setTheme .thc'); for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', bs[k].dataset.v === t);
+  // ===== Темы оформления: встроенные (Фиолетовая, Монохром) и свои (редактор) =====
+  var THEME_KEYS = ['bg00','bg0','bg1','bg2','bg3','bg4','ln','ln2','ln3','tx','tx2','tx3','tx4','tx5','ac','ac2','acr','acbg','pri','prit'];
+  var myThemes = [], curThemeId = 'violet';
+  var TE = { open: false, tone: 'violet', chars: 'tone', pmode: 'dark', variants: [], loading: false, saveT: null };
+  var BUILTIN = [
+    { id: 'violet', name: 'Фиолетовая', sub: 'встроенная', sw: ['#15161C', '#0E0F13', '#9B87FF', '#FFD43B'] },
+    { id: 'mono', name: 'Монохром', sub: 'встроенная', sw: ['#161616', '#0F0F0F', '#D4D4D4', '#E8E8E8'] }
+  ];
+  function clearCustomVars(){ var d = document.documentElement; THEME_KEYS.forEach(function (k){ d.style.removeProperty('--' + k); }); d.classList.remove('theme-custom', 'theme-light'); }
+  function themeById(id){ return myThemes.find(function (t){ return 'c:' + t.id === id; }) || null; }
+  // Применить тему; save — запомнить выбор
+  function applyTheme(id, save){
+    var d = document.documentElement, t = id && id.indexOf('c:') === 0 ? themeById(id) : null;
+    if (id && id.indexOf('c:') === 0 && !t) id = 'violet';
+    if (id !== 'mono' && !t) id = 'violet';
+    curThemeId = id;
+    clearCustomVars();
+    d.classList.toggle('theme-mono', id === 'mono');
+    var bar = null;
+    if (t) {
+      var v = TapTheme.build(t);
+      d.classList.add('theme-custom'); d.classList.toggle('theme-light', t.mode === 'light');
+      THEME_KEYS.forEach(function (k){ d.style.setProperty('--' + k, v[k]); });
+      try { localStorage.setItem('tapThemeVars', JSON.stringify(Object.assign({ _light: t.mode === 'light' }, v))); } catch (e) {}
+      bar = { bg: v.bg1, sym: v.tx2 };
+    }
+    try { localStorage.setItem('tapTheme', id); } catch (e) {}
+    if (save && A.setSetting) { if (bar) A.setSetting('themeBar', bar); A.setSetting('theme', id); }
+    renderThemeList();
   }
+  function swatches(t){ return t.sw || [t.bg, TapTheme.build(t).bg0, t.accent, t.primary]; }
+  function renderThemeList(){
+    var box = $('teList'); if (!box) return;
+    var h = BUILTIN.concat(myThemes.map(function (t){ return { id: 'c:' + t.id, name: t.name || 'Моя тема', sub: (t.mode === 'light' ? 'светлая' : 'тёмная') + ' · моя', t: t }; })).map(function (x){
+      var sw = x.sw || swatches(x.t);
+      return '<button class="te-c' + (curThemeId === x.id ? ' on' : '') + '" data-th="' + esc(x.id) + '"><div class="p">' + sw.map(function (c){ return '<i style="background:' + c + '"></i>'; }).join('') + '</div><b>' + esc(x.name) + '</b><small>' + esc(x.sub) + (curThemeId === x.id && x.t ? ' · редактирую' : '') + '</small></button>';
+    }).join('');
+    h += '<button class="te-c add" data-th-new="1">＋ Создать тему</button><button class="te-c add" data-th-import="1">⤓ Вставить код темы</button>';
+    box.innerHTML = h;
+    var t = themeById(curThemeId);
+    if (t) renderEditor(t); else { var ed = $('teEd'); if (ed) { ed.hidden = true; ed.innerHTML = ''; } }
+  }
+  function saveThemes(){ clearTimeout(TE.saveT); TE.saveT = setTimeout(function(){ if (A.setSetting) A.setSetting('themes', myThemes); }, 300); }
+  function newTheme(base, name){
+    var t = Object.assign({ id: Date.now().toString(36) + Math.floor(Math.random() * 1000), name: name || ('Моя тема ' + (myThemes.length + 1)) }, base);
+    myThemes.push(t); saveThemes(); applyTheme('c:' + t.id, true);
+    setTimeout(function(){ var e = $('teEd'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+    return t;
+  }
+  function currentBase(){
+    var t = themeById(curThemeId);
+    if (t) return { mode: t.mode, bg: t.bg, text: t.text, accent: t.accent, primary: t.primary, contrast: t.contrast };
+    if (curThemeId === 'mono') return { mode: 'dark', bg: '#161616', text: '#EDEDED', accent: '#D4D4D4', primary: '#E8E8E8', contrast: 50 };
+    return { mode: 'dark', bg: '#15161C', text: '#ECEDF2', accent: '#9B87FF', primary: '#FFD43B', contrast: 50 };
+  }
+  function updTheme(t, patch){ Object.assign(t, patch); saveThemes(); applyTheme('c:' + t.id, true); }
+  var TE_COLORS = [['bg', 'Фон'], ['text', 'Текст'], ['accent', 'Акцент'], ['primary', 'Главная кнопка']];
+  function renderEditor(t){
+    var ed = $('teEd'); if (!ed) return;
+    ed.hidden = false;
+    var keepScroll = ed.contains(document.activeElement) ? document.activeElement.id : '';
+    var code = TapTheme.encode(t);
+    var h = '<div><h4>Основные цвета</h4>' +
+      '<div class="te-row"><span>Название</span><input class="te-name" id="teName" maxlength="40" value="' + esc(t.name || '') + '"></div>' +
+      '<div class="te-row"><span>Основа</span><div class="te-seg" id="teMode"><button data-v="dark"' + (t.mode !== 'light' ? ' class="on"' : '') + '>Тёмная</button><button data-v="light"' + (t.mode === 'light' ? ' class="on"' : '') + '>Светлая</button></div></div>';
+    TE_COLORS.forEach(function (c){
+      h += '<div class="te-row"><span>' + c[1] + '</span><input type="color" data-tc="' + c[0] + '" value="' + esc(t[c[0]]) + '" aria-label="' + c[1] + '"><input class="te-hex" data-th="' + c[0] + '" id="teHex_' + c[0] + '" value="' + esc(t[c[0]]) + '" maxlength="7" spellcheck="false"></div>';
+    });
+    h += '<div class="te-row"><span>Контраст</span><input class="te-rng" id="teContrast" type="range" min="0" max="100" value="' + (t.contrast == null ? 50 : t.contrast) + '"><span id="teCv" style="width:70px;color:var(--tx4)">' + contrastWord(t.contrast) + '</span></div>' +
+      '<div class="te-note">Остальные ~20 оттенков (колонки, рамки, подсказки, наведение) Тапёр строит сам и следит, чтобы текст читался.</div>' +
+      '<h4 style="margin-top:18px">Подобрать палитру</h4>' +
+      '<div class="te-row"><span>Основа</span><div class="te-seg" id="tePMode"><button data-v="dark"' + (TE.pmode === 'dark' ? ' class="on"' : '') + '>Тёмная</button><button data-v="light"' + (TE.pmode === 'light' ? ' class="on"' : '') + '>Светлая</button></div></div>' +
+      '<div style="font-size:12px;color:var(--tx3)">Тон</div><div class="tones" id="teTones">' + Object.keys(TapTheme.TONES).map(function (k){
+        var T = TapTheme.TONES[k], col = T.mono ? '#9A9A9A' : TapTheme.oklch2hex({ l: 0.65, c: T.soft ? 0.08 : 0.16, h: T.h });
+        return '<button class="tone' + (TE.tone === k ? ' on' : '') + '" data-tone="' + k + '"><i style="background:' + col + '"></i>' + T.n + '</button>';
+      }).join('') + '</div>' +
+      '<div class="te-row"><span>Акценты</span><div class="te-seg" id="teChars">' + Object.keys(TapTheme.CHARS).map(function (k){ return '<button data-v="' + k + '"' + (TE.chars === k ? ' class="on"' : '') + '>' + TapTheme.CHARS[k] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="tvars" id="teVars">' + (TE.variants.length ? TE.variants.map(function (v, i){ return '<button class="tvar" data-var="' + i + '"><div class="p">' + [v.bg, TapTheme.build(v).bg3, v.accent, v.primary].map(function (c){ return '<i style="background:' + c + '"></i>'; }).join('') + '</div><small>' + (v.src === 'api' ? 'The Color API' : 'свой генератор') + '</small></button>'; }).join('') : '') + '</div>' +
+      (TE.loading ? '<div class="te-note">Подбираю варианты…</div>' : (!TE.variants.length ? '<div class="te-note">Выбери тон и нажми «Подобрать» — появятся 6 вариантов. Нажми на вариант — он применится к этой теме.</div>' : '')) +
+      '<div class="te-f"><button class="pbtn y" id="tePick">' + (TE.variants.length ? 'Ещё варианты' : 'Подобрать') + '</button></div>' +
+      '</div><div><h4>Как будет выглядеть</h4>' +
+      '<div class="pv"><div class="hd"><b style="font-size:12px">Тапёр</b><span>версия 0.15</span></div><div class="bd">' +
+        '<div class="rw on"><i class="cv"></i><div><div class="t">Группа крови</div><div class="s">Кино · Яндекс</div></div><span class="q">+ В очередь</span></div>' +
+        '<div class="rw"><i class="cv"></i><div><div class="t">Кукушка</div><div class="s">Кино · YouTube</div></div></div>' +
+        '<div class="bt"><span style="background:var(--pri);color:var(--prit)">▶ Играть фоном</span><span style="border:1px solid var(--ln);color:var(--tx2)">Фоном вперемешку</span><i class="tg"></i></div>' +
+        '<div style="font-size:10.5px;color:var(--tx4);margin-top:4px">Сейчас играет · <span style="color:var(--ac2)">в эфире</span></div></div></div>' +
+      '<div class="te-note">Всё приложение перекрашивается сразу и тема сохраняется сама.</div>' +
+      '<div class="te-f"><button class="pbtn g" id="teShare">Поделиться кодом</button><button class="pbtn g" id="teDup">Копия</button><button class="pbtn g danger" id="teDel">Удалить</button></div>' +
+      '<div class="te-note">Код темы — его можно отправить другу или зрителям, они вставят его через «Вставить код темы»:<span class="te-code">' + esc(code) + '</span></div>' +
+      '</div>';
+    ed.innerHTML = h;
+    if (keepScroll && $(keepScroll)) { var f = $(keepScroll); f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
+  }
+  // Тёмная ↔ светлая: тон и характер цветов те же, яркость — наоборот
+  function flipMode(t, mode){
+    var light = mode === 'light', o = function (h){ return TapTheme.ok(h); }, mk = TapTheme.oklch2hex;
+    var b = o(t.bg), x = o(t.text), a = o(t.accent), p = o(t.primary);
+    return { mode: mode,
+      bg: mk({ l: light ? 0.965 : 0.175, c: Math.min(b.c, light ? 0.014 : 0.03), h: b.h }),
+      text: mk({ l: light ? 0.22 : 0.95, c: Math.min(x.c, 0.02), h: x.h }),
+      accent: mk({ l: light ? Math.min(0.55, a.l) : Math.max(0.66, a.l), c: a.c, h: a.h }),
+      primary: mk({ l: light ? Math.min(0.5, p.l) : Math.max(0.8, p.l), c: p.c, h: p.h }) };
+  }
+  function contrastWord(c){ c = c == null ? 50 : c; return c < 30 ? 'мягкий' : (c < 70 ? 'средний' : 'высокий'); }
+  async function pickVariants(t){
+    TE.loading = true; TE.variants = []; renderEditor(t);
+    var seed = Math.floor(Math.random() * 100000);
+    var local = TapTheme.suggest({ mode: TE.pmode, tone: TE.tone, chars: TE.chars }, seed);
+    var T = TapTheme.TONES[TE.tone], api = [];
+    if (A.paletteApi) {
+      var hex = T.mono ? '#808080' : TapTheme.oklch2hex({ l: 0.6, c: T.soft ? 0.08 : 0.16, h: T.h + (Math.random() - 0.5) * 16 });
+      var modes = T.mono ? ['monochrome', 'monochrome-dark', 'monochrome-light'] : ({ tone: [TE.pmode === 'light' ? 'monochrome-light' : 'monochrome-dark', 'monochrome', 'analogic'], contrast: ['complement', 'analogic-complement', 'complement'], triad: ['triad', 'triad', 'quad'], near: ['analogic', 'analogic', 'monochrome'] }[TE.chars]);
+      var res = await Promise.all(modes.map(function (m){ return A.paletteApi(hex.replace('#', ''), m).catch(function(){ return null; }); }));
+      res.forEach(function (r){ if (r && r.colors && r.colors.length >= 3) api.push(TapTheme.fromScheme(r.colors, TE.pmode)); });
+    }
+    TE.variants = local.slice(0, api.length ? 3 : 6).concat(api.slice(0, 3));
+    TE.loading = false;
+    if (themeById(curThemeId) === t) renderEditor(t);
+  }
+  // События списка тем
+  $('teList').addEventListener('click', async function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.th) { applyTheme(b.dataset.th, true); return; }
+    if (b.dataset.thNew) { newTheme(currentBase()); return; }
+    if (b.dataset.thImport) {
+      var r = await askDlg({ title: 'Вставить код темы', label: 'Код (начинается с TAPYOR1:)', value: '' });
+      if (!r) return;
+      var t = TapTheme.decode(r.value);
+      if (!t) { toast('Это не код темы Тапёра'); return; }
+      newTheme(t, t.name || 'Тема по коду'); toast('Тема добавлена');
+    }
+  });
+  // События редактора
+  $('teEd').addEventListener('input', function(e){
+    var t = themeById(curThemeId); if (!t) return;
+    var el = e.target;
+    if (el.id === 'teName') { t.name = el.value.slice(0, 40); saveThemes(); var c = document.querySelector('#teList .te-c.on b'); if (c) c.textContent = t.name || 'Моя тема'; return; }
+    if (el.dataset.tc) { var p = {}; p[el.dataset.tc] = el.value.toUpperCase(); var hx = $('teHex_' + el.dataset.tc); if (hx) hx.value = p[el.dataset.tc]; liveTheme(t, p); return; }
+    if (el.dataset.th) { var v = el.value.trim(); if (!/^#?[0-9a-f]{6}$/i.test(v)) return; v = '#' + v.replace('#', '').toUpperCase(); var p2 = {}; p2[el.dataset.th] = v; var cp = document.querySelector('#teEd [data-tc="' + el.dataset.th + '"]'); if (cp) cp.value = v; liveTheme(t, p2); return; }
+    if (el.id === 'teContrast') { $('teCv').textContent = contrastWord(+el.value); liveTheme(t, { contrast: +el.value }); }
+  });
+  // Пока тянут ползунок или выбирают цвет — перекрашиваем без перерисовки редактора
+  var liveT = null;
+  function liveTheme(t, patch){
+    Object.assign(t, patch);
+    var d = document.documentElement, v = TapTheme.build(t);
+    d.classList.add('theme-custom'); d.classList.toggle('theme-light', t.mode === 'light');
+    THEME_KEYS.forEach(function (k){ d.style.setProperty('--' + k, v[k]); });
+    clearTimeout(liveT); liveT = setTimeout(function(){ saveThemes(); applyThemeQuiet(t); }, 350);
+  }
+  function applyThemeQuiet(t){
+    var v = TapTheme.build(t);
+    try { localStorage.setItem('tapThemeVars', JSON.stringify(Object.assign({ _light: t.mode === 'light' }, v))); } catch (e) {}
+    if (A.setSetting) { A.setSetting('themeBar', { bg: v.bg1, sym: v.tx2 }); A.setSetting('theme', 'c:' + t.id); }
+    var sw = document.querySelector('#teList .te-c.on .p'); if (sw) sw.innerHTML = swatches(t).map(function (c){ return '<i style="background:' + c + '"></i>'; }).join('');
+    var code = document.querySelector('#teEd .te-code'); if (code) code.textContent = TapTheme.encode(t);
+  }
+  $('teEd').addEventListener('click', function(e){
+    var t = themeById(curThemeId); if (!t) return;
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.parentNode.id === 'teMode') { if (b.dataset.v !== (t.mode === 'light' ? 'light' : 'dark')) { TE.pmode = b.dataset.v; TE.variants = []; updTheme(t, flipMode(t, b.dataset.v)); } return; }
+    if (b.parentNode.id === 'tePMode') { TE.pmode = b.dataset.v; renderEditor(t); return; }
+    if (b.parentNode.id === 'teChars') { TE.chars = b.dataset.v; renderEditor(t); return; }
+    if (b.dataset.tone) { TE.tone = b.dataset.tone; renderEditor(t); return; }
+    if (b.dataset.var != null) { var v = TE.variants[+b.dataset.var]; if (v) updTheme(t, { mode: v.mode, bg: v.bg, text: v.text, accent: v.accent, primary: v.primary, contrast: v.contrast }); return; }
+    if (b.id === 'tePick') { pickVariants(t); return; }
+    if (b.id === 'teShare') { copyText(TapTheme.encode(t)); toast('Код темы скопирован'); return; }
+    if (b.id === 'teDup') { newTheme({ mode: t.mode, bg: t.bg, text: t.text, accent: t.accent, primary: t.primary, contrast: t.contrast }, (t.name || 'Тема') + ' (копия)'); return; }
+    if (b.id === 'teDel') {
+      var i = myThemes.indexOf(t); if (i < 0) return;
+      myThemes.splice(i, 1); saveThemes(); applyTheme('violet', true);
+      toast('Тема «' + (t.name || '') + '» удалена', 'Вернуть', function(){ myThemes.splice(i, 0, t); saveThemes(); applyTheme('c:' + t.id, true); });
+    }
+  });
   function themeLocal(){ try { return localStorage.getItem('tapTheme'); } catch (e) { return null; } }
-  if (A.getSetting) A.getSetting('theme').then(function (v){ applyTheme(v || themeLocal()); }); else applyTheme(themeLocal());
-  $('setTheme').addEventListener('click', function(e){ var b = e.target.closest('.thc'); if (!b) return; applyTheme(b.dataset.v); if (A.setSetting) A.setSetting('theme', b.dataset.v); });
+  (async function(){
+    var list = A.getSetting ? await A.getSetting('themes') : null;
+    myThemes = Array.isArray(list) ? list.filter(function (t){ return t && t.id && t.bg; }) : [];
+    var id = A.getSetting ? await A.getSetting('theme') : null;
+    applyTheme(id || themeLocal() || 'violet', false);
+  })();
   function rankCtx(){ return { ymFull: ymLoggedIn && ymPlus, ymOn: true, ytOn: ytUsable(), ytLogged: typeof ytLogged === 'function' && ytLogged(), scOn: SVC.scOn, auOn: SVC.auOn, order: srcOrder }; }
 
   // Состояние выдачи: все найденные треки и где они показаны

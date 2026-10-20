@@ -471,7 +471,7 @@ function createWindow() {
 }
 
 // Цвета системной полосы окна под тему оформления
-function themeColors() { return cfg('theme') === 'mono' ? { bg: '#161616', sym: '#CBCBCB' } : { bg: '#15161C', sym: '#C9CBD4' }; }
+function themeColors() { const t = cfg('theme'); if (t === 'mono') return { bg: '#161616', sym: '#CBCBCB' }; if (t && t !== 'violet') { const b = cfg('themeBar'); if (b && /^#[0-9a-f]{6}$/i.test(b.bg) && /^#[0-9a-f]{6}$/i.test(b.sym)) return b; } return { bg: '#15161C', sym: '#C9CBD4' }; }
 function applyThemeWindow() {
   try { if (mainWindow && !mainWindow.isDestroyed()) { const c = themeColors(); mainWindow.setBackgroundColor(c.bg); mainWindow.setTitleBarOverlay({ color: c.bg, symbolColor: c.sym, height: 36 }); } } catch (e) { log('тема: ' + e.message); }
 }
@@ -726,7 +726,7 @@ app.whenReady().then(async () => {
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
     if (key === 'autoStart') applyAutoStart();
-    if (key === 'theme') applyThemeWindow();
+    if (key === 'theme' || key === 'themeBar') applyThemeWindow();
     if (key === 'mediaKeys' || key === 'hotkeys') return applyHotkeys();
     if (key === 'npEnabled' || key === 'nowPlayingFormat' || key === 'npIdle' || key === 'nowPlayingPath') writeNowPlaying(lastNpInfo, true);
     return true;
@@ -1324,6 +1324,17 @@ app.whenReady().then(async () => {
   ipcMain.handle('report-test', () => sendReport({ service: 'test', stage: 'setup', code: 'check', msg: 'Проверка связи из Тапёра', details: '' }, true));
   ipcMain.handle('report-preview', () => lastReport || { пример: 'отчёта ещё не было', поля: 'площадка, этап, код ошибки, текст без личного, версия Тапёра и рецептов, Windows, случайный номер установки' });
   ipcMain.handle('report-send', (e, r) => sendReport(r || {}));
+  // Палитры из The Color API (https, без ключа): режимы monochrome, monochrome-dark, monochrome-light, analogic, complement, analogic-complement, triad, quad
+  ipcMain.handle('palette-api', async (e, hex, mode) => {
+    try {
+      const h = String(hex || '').replace('#', ''); if (!/^[0-9a-f]{6}$/i.test(h)) return { error: 'цвет' };
+      const m = /^(monochrome|monochrome-dark|monochrome-light|analogic|complement|analogic-complement|triad|quad)$/.test(mode) ? mode : 'analogic';
+      const { net: enet } = require('electron');
+      const r = await enet.fetch('https://www.thecolorapi.com/scheme?format=json&count=5&hex=' + h + '&mode=' + m, { signal: AbortSignal.timeout(8000) });
+      const j = await r.json();
+      return { colors: ((j && j.colors) || []).map((c) => c && c.hex && c.hex.value).filter(Boolean) };
+    } catch (err) { log('палитры: The Color API — ' + err.message); return { error: err.message }; }
+  });
   ipcMain.handle('health-get', () => settingsStore.get('health') || null);
   ipcMain.handle('health-run', () => (playerBusy ? { busy: true } : runHealth()));
 

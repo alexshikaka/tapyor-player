@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('app', {
   ymPlaylist: (pl) => ipcRenderer.invoke('ym-playlist', pl),
   ymArtist: (id) => ipcRenderer.invoke('ym-artist', id),
   ymAlbum: (id) => ipcRenderer.invoke('ym-album', id),
+  paletteApi: (hex, mode) => ipcRenderer.invoke('palette-api', hex, mode),
   qcRun: () => ipcRenderer.invoke('qc-run'),
   qcGet: () => ipcRenderer.invoke('qc-get'),
   onQcItem: (fn) => ipcRenderer.on('qc-item', (e, it) => fn(it)),

@@ -33,3 +33,4 @@
   a.reportTest = function(){ return Promise.resolve({ ok: true, issue: 12, users: 1 }); };
   a.reportPreview = function(){ return Promise.resolve({ fp: 'a1b2c3', service: 'youtube', stage: 'stream', code: 'HTTP 403', app: '0.14.0' }); };
 })();
+(function(){ var a = window.app; a.paletteApi = function(hex, mode){ return new Promise(function(r){ setTimeout(function(){ r({ colors: ['#1B0D0E','#5C1A1F','#E5484D','#FF9A8C','#FFE1DC'] }); }, 150); }); }; })();
