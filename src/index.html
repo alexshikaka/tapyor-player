@@ -178,21 +178,24 @@
   .ar-bar { padding: 4px 4px 8px; }
   .ar-more { align-self: center; margin: 10px 0 6px; }
   .ar-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-  .ar-tags span { font-size: 12px; color: #C9CBD4; border: 1px solid #2C2F3A; border-radius: 10px; padding: 2px 9px; text-transform: lowercase; }
+  .ar-tags span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #C9CBD4; border: 1px solid #2C2F3A; border-radius: 10px; padding: 2px 9px; text-transform: lowercase; }
   .ar-tabs { display: flex; gap: 6px; padding: 14px 4px 6px; flex-wrap: wrap; border-bottom: 1px solid #23252F; }
   .ar-tabs button { height: 32px; padding: 0 14px; border-radius: 16px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font: 500 13px Onest, sans-serif; cursor: pointer; }
   .ar-tabs button small { color: #7C8090; margin-left: 4px; }
   .ar-tabs button.on { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
   .ar-tabs button.on small { color: #4A4D5A; }
   .ar-body { padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
-  .ar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 6px 4px; }
-  .alc { display: flex; flex-direction: column; gap: 6px; text-align: left; border: 0; background: transparent; color: #ECEDF2; padding: 8px; border-radius: 12px; cursor: pointer; font-family: inherit; min-width: 0; }
+  .ar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 6px 4px; align-items: start; }
+  .alc { display: flex; flex-direction: column; gap: 6px; text-align: left; border: 0; background: transparent; color: #ECEDF2; padding: 8px; border-radius: 12px; cursor: pointer; font-family: inherit; min-width: 0; width: 100%; overflow: hidden; }
+  .alc > * { flex: 0 0 auto; max-width: 100%; min-width: 0; }
   .alc:hover { background: #181A21; }
-  .alc img, .alc .ph { width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover; background: #2A2D38; display: block; }
-  .alc b { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .alc small { font-size: 12px; color: #9EA2B0; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-  .ar-sim { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 6px 4px; }
-  .ar-simc { display: flex; flex-direction: column; align-items: center; gap: 8px; border: 0; background: transparent; color: #ECEDF2; padding: 10px; border-radius: 12px; cursor: pointer; font: 600 13px Onest, sans-serif; text-align: center; }
+  .alc img, .alc .ph { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 10px; object-fit: cover; background: #2A2D38; display: block; }
+  .alc b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 13.5px; font-weight: 600; line-height: 1.3; overflow: hidden; overflow-wrap: anywhere; width: 100%; }
+  .alc small { font-size: 12px; color: #9EA2B0; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+  .alc small .dot { vertical-align: middle; margin: 0 2px; }
+  .ar-sim { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 6px 4px; align-items: start; }
+  .ar-simc { display: flex; flex-direction: column; align-items: center; gap: 8px; border: 0; background: transparent; color: #ECEDF2; padding: 10px; border-radius: 12px; cursor: pointer; font: 600 13px Onest, sans-serif; text-align: center; min-width: 0; width: 100%; overflow: hidden; }
+  .ar-simc > span:last-child { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; max-width: 100%; line-height: 1.3; }
   .ar-simc:hover { background: #181A21; }
   .ar-simc img, .ar-simc .ph { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; background: #2A2D38; display: block; }
   .frow { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 12px; min-height: 40px; }
@@ -407,7 +410,7 @@
   .toggle.on span { background: #0E0F13; }
   .wrow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
   .wlabel { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #8A8E9C; width: 76px; flex: 0 0 auto; }
-  .wchip { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 12px; cursor: pointer; }
+  .wchip { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font-size: 12px; cursor: pointer;  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .wchip.active { background: #ECEDF2; color: #0E0F13; border-color: transparent; font-weight: 600; }
 
   /* Фильтр по источнику */
@@ -422,7 +425,9 @@
   .xsec { display: flex; flex-direction: column; gap: 8px; padding: 2px 4px 14px; }
   .xlbl { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #8A8E9C; padding: 0 4px; }
   .waves { display: flex; flex-wrap: wrap; gap: 8px; }
-  .wpill { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 5px; border-radius: 20px; border: 1px solid #2C2F3A; background: #14151C; color: #ECEDF2; cursor: pointer; font: 600 13px Onest, sans-serif; }
+  .wpn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wpill > i, .wpill > small { flex: 0 0 auto; }
+  .wpill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 5px; border-radius: 20px; border: 1px solid #2C2F3A; background: #14151C; color: #ECEDF2; cursor: pointer; font: 600 13px Onest, sans-serif; }
   .wpill:hover { background: #1D1F28; }
   .wpill.on { border-color: #FFD43B; }
   .wpill i { width: 30px; height: 30px; border-radius: 15px; flex: 0 0 auto; display: block; }
@@ -433,7 +438,8 @@
   .plc img, .plc .ph, .mit img, .mit .ph { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #2A2D38; flex: 0 0 auto; display: block; }
   .plc .mm, .mit .mm { min-width: 0; flex: 1; }
   .plc b, .mit b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .plc small, .mit small { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9EA2B0; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .plc small, .mit small { display: block; font-size: 12px; color: #9EA2B0; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .plc small .dot, .mit small .dot { vertical-align: middle; margin-right: 5px; position: relative; top: -1px; }
 
   /* Карточка исполнителя в поиске */
   .art { display: flex; align-items: center; gap: 14px; padding: 6px; flex-wrap: wrap; }
@@ -449,6 +455,7 @@
 
   /* Открытый плейлист */
   .plview { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .plview > *, .ar-body > *, .results > * { flex-shrink: 0; } /* блоки в прокручиваемых колонках не сжимаются и не наезжают друг на друга */
   .back { align-self: flex-start; height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font: 500 12px Onest, sans-serif; cursor: pointer; flex: 0 0 auto; }
   .back:hover { background: #20222C; color: #ECEDF2; }
   .plhead { display: flex; gap: 20px; align-items: flex-end; padding: 4px; flex: 0 0 auto; flex-wrap: wrap; }
@@ -545,7 +552,7 @@
   .wshake:hover { background: rgba(255,212,59,.06); }
   .wsub { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #8A8E9C; margin-top: 6px; }
   .wvlist { display: flex; flex-direction: column; gap: 2px; }
-  .wv { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: #ECEDF2; font: 600 12px Onest, sans-serif; text-align: left; cursor: pointer; width: 100%; }
+  .wv { min-width: 0; overflow: hidden; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: #ECEDF2; font: 600 12px Onest, sans-serif; text-align: left; cursor: pointer; width: 100%; }
   .wv:hover { background: #20222C; }
   .wv.on { background: rgba(255,212,59,.1); border-color: rgba(255,212,59,.5); }
   .wv i { width: 22px; height: 22px; border-radius: 6px; flex: 0 0 auto; display: block; }
@@ -2496,7 +2503,7 @@
     waves.forEach(function (w){
       var b = document.createElement('button'); b.className = 'wpill';
       if (bgSel.kind === 'wave' && bgSel.station === w.station && !bgSel.seeds) b.classList.add('on');
-      b.innerHTML = '<i style="background:' + colorFor(w.name, w.color) + '"></i>' + esc(w.name) + ' <small>' + esc(w.sub) + '</small>';
+      b.innerHTML = '<i style="background:' + colorFor(w.name, w.color) + '"></i><span class="wpn">' + esc(w.name) + '</span><small>' + esc(w.sub) + '</small>';
       b.title = 'Включить волну «' + w.name + '» (заказы всё равно первыми)';
       b.onclick = function(){ setBg({ kind: 'wave', station: w.station, name: w.name }, true); var all = row.querySelectorAll('.wpill'); for (var k = 0; k < all.length; k++) all[k].classList.toggle('on', all[k] === b); };
       row.appendChild(b);
