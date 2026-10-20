@@ -2954,8 +2954,11 @@
   }
   async function runHealth(manual){
     if (healthBusy || !A.healthRun) return;
-    var playing = !isIdle() || loadingIdx >= 0;
-    if (playing) { if (manual) { healthNote = 'Поставь музыку на паузу или останови: проверка ненадолго открывает сайт Яндекса без звука.'; renderHealth(); } return; }
+    // Мешает только звук, который идёт прямо сейчас (на паузе — можно проверять)
+    var m = master();
+    var playing = loadingIdx >= 0 || (m.getAttribute('src') && !m.paused && !m.ended);
+    if (playing) { if (manual) { healthNote = 'Поставь музыку на паузу: проверка ненадолго открывает сайт Яндекса без звука.'; renderHealth(); } return; }
+    if (YW.on) { if (manual) { healthNote = 'Сейчас трек идёт через сайт Яндекса — проверка его прервёт. Переключи на трек из другого источника или перезапусти Тапёр.'; renderHealth(); } return; }
     healthBusy = true; healthNote = ''; renderHealth();
     var r = await A.healthRun().catch(function(){ return null; });
     healthBusy = false;
