@@ -36,6 +36,13 @@ jobs:
         run: |
           if ($env:GOOGLE_OAUTH_JSON) { Set-Content -Path src/google-oauth.json -Value $env:GOOGLE_OAUTH_JSON -Encoding utf8NoBOM; Write-Host "google-oauth.json: есть" } else { Write-Host "google-oauth.json: секрет не задан — вход через браузер будет выключен" }
 
+      - name: Ключ Last.fm (из секретов репозитория)
+        shell: pwsh
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+        run: |
+          if ($env:LASTFM_API_KEY) { Set-Content -Path src/lastfm.json -Value ('{"apiKey":"' + $env:LASTFM_API_KEY.Trim() + '"}') -Encoding utf8NoBOM; Write-Host "lastfm.json: есть" } else { Write-Host "lastfm.json: секрет не задан — страница исполнителя без Last.fm" }
+
       - name: Собрать установщик и выложить в Releases
         run: npm run dist
         env:

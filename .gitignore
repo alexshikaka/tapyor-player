@@ -5,3 +5,4 @@ dist/
 
 resources/
 src/google-oauth.json
+src/lastfm.json

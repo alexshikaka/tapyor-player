@@ -174,6 +174,9 @@
   .arh .pm { font-size: 14px; color: #9EA2B0; }
   .ar-about { font-size: 13px; color: #9EA2B0; line-height: 1.5; margin-top: 6px; max-width: 720px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
   .ar-about.open { -webkit-line-clamp: unset; }
+  .ar-src { color: #6E7280; font-size: 12px; }
+  .ar-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .ar-tags span { font-size: 12px; color: #C9CBD4; border: 1px solid #2C2F3A; border-radius: 10px; padding: 2px 9px; text-transform: lowercase; }
   .ar-tabs { display: flex; gap: 6px; padding: 14px 4px 6px; flex-wrap: wrap; border-bottom: 1px solid #23252F; }
   .ar-tabs button { height: 32px; padding: 0 14px; border-radius: 16px; border: 1px solid #2C2F3A; background: transparent; color: #C9CBD4; font: 500 13px Onest, sans-serif; cursor: pointer; }
   .ar-tabs button small { color: #7C8090; margin-left: 4px; }
@@ -2689,6 +2692,7 @@
   var AP = null; // открытая страница: { name, data, tab }
   var AP_TABS = [{ id: 'pop', n: 'Популярное' }, { id: 'all', n: 'Все треки' }, { id: 'album', n: 'Альбомы' }, { id: 'single', n: 'Синглы и EP' }, { id: 'compilation', n: 'Сборники' }, { id: 'similar', n: 'Похожие' }];
   function apNorm(x){ return String(x || '').toLowerCase().replace(/ё/g, 'е').replace(/[([{][^)\]}]*[)\]}]/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); }
+  function listenersText(n){ if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' млн слушателей'; if (n >= 1e3) return Math.round(n / 1e3) + ' тыс. слушателей'; return n + ' слушателей'; }
   function fansText(n){ if (!n) return ''; if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' млн поклонников'; if (n >= 1e3) return Math.round(n / 1e3) + ' тыс. поклонников'; return n + ' поклонников'; }
   async function openArtistPage(name, ymId){
     name = String(name || '').trim(); if (!name) return;
@@ -2700,14 +2704,15 @@
     bindBack(host);
     var r = A.artistPage ? await A.artistPage(name, ymId || '') : null;
     if (host._tok !== tok) return;
-    if (!r || (!r.ym && !r.dz)) { host.innerHTML = '<button class="back" data-back="1">← Назад к поиску</button><div class="muted">Не нашёл исполнителя «' + esc(name) + '» ни в Яндексе, ни в справочнике Deezer.' + (r && r.errors && r.errors.length ? '<br><span style="font-size:12px">' + esc(r.errors.join(' · ')) + '</span>' : '') + '</div>'; bindBack(host); return; }
+    if (!r || (!r.ym && !r.dz && !r.lf)) { host.innerHTML = '<button class="back" data-back="1">← Назад к поиску</button><div class="muted">Не нашёл исполнителя «' + esc(name) + '» ни в Яндексе, ни в справочнике Deezer.' + (r && r.errors && r.errors.length ? '<br><span style="font-size:12px">' + esc(r.errors.join(' · ')) + '</span>' : '') + '</div>'; bindBack(host); return; }
     // Альбомы: сначала Яндекс (играют сразу), потом из Deezer те, которых в Яндексе нет
     var y = r.ym, d = r.dz, albums = [], seen = {};
     if (y) y.albums.concat(y.also || []).forEach(function (a){ var k = a.type + '|' + apNorm(a.title); if (seen[k]) return; seen[k] = 1; albums.push(a); });
     if (d) d.albums.forEach(function (a){ var k = a.type + '|' + apNorm(a.title), k2 = apNorm(a.title); if (seen[k] || (y && y.albums.some(function (x){ return apNorm(x.title) === k2; }))) return; seen[k] = 1; a.author = d.name; albums.push(a); });
     albums.sort(function (a, b){ return (b.year || 0) - (a.year || 0); });
-    AP = { name: (y && y.name) || (d && d.name) || name, ymId: y && y.id, photo: (y && y.photo) || (d && d.photo) || '', about: (y && y.about) || '', fans: d && d.fans, albums: albums,
-      popular: y && y.popular.length ? y.popular : null, dzTop: d ? d.top : [], similar: (y && y.similar.length ? y.similar.map(function (x){ return { name: x.name, thumb: x.thumb, ymId: x.id }; }) : (d ? d.similar : [])), tab: 'pop', srcs: [y ? 'Яндекс' : '', d ? 'Deezer' : ''].filter(Boolean) };
+    var lf = r.lf;
+    AP = { name: (y && y.name) || (d && d.name) || (lf && lf.name) || name, ymId: y && y.id, photo: (y && y.photo) || (d && d.photo) || '', about: (y && y.about) || (lf && lf.bio) || '', aboutSrc: y && y.about ? '' : (lf && lf.bio ? 'Last.fm' : ''), lfUrl: lf && lf.url, tags: lf ? lf.tags : [], listeners: lf ? lf.listeners : 0, fans: d && d.fans, albums: albums,
+      popular: y && y.popular.length ? y.popular : null, dzTop: d ? d.top : [], similar: (y && y.similar.length ? y.similar.map(function (x){ return { name: x.name, thumb: x.thumb, ymId: x.id }; }) : (d && d.similar.length ? d.similar : (lf ? lf.similar : []))), tab: 'pop', srcs: [y ? 'Яндекс' : '', d ? 'Deezer' : '', lf ? 'Last.fm' : ''].filter(Boolean) };
     renderArtistPage(host);
     // Все треки — подгружаем сразу, чтобы на вкладке было видно их число
     if (AP.ymId && A.ymArtist) { var P0 = AP; A.ymArtist(P0.ymId).then(function (r){ if (P0.allTracks) return; P0.allTracks = (r && r.tracks) || []; if (AP !== P0) return; if (P0.tab === 'all') renderArtistPage(host); else { var sm = host.querySelector('.ar-tabs [data-apt=all] small'); if (sm) sm.textContent = P0.allTracks.length; } }); }
@@ -2715,12 +2720,13 @@
   function renderArtistPage(host){
     var P = AP; host._backFn = null;
     var cnt = function (t){ return P.albums.filter(function (a){ return a.type === t; }).length; };
-    var meta = [cnt('album') ? cnt('album') + ' альб.' : '', cnt('single') ? cnt('single') + ' синглов и EP' : '', fansText(P.fans)].filter(Boolean).join(' · ');
+    var meta = [cnt('album') ? cnt('album') + ' альб.' : '', cnt('single') ? cnt('single') + ' синглов и EP' : '', P.listeners ? listenersText(P.listeners) : fansText(P.fans)].filter(Boolean).join(' · ');
     host.innerHTML = '<button class="back" data-back="1">← Назад к поиску</button>' +
       '<div class="arh">' + (P.photo ? '<img class="arp" src="' + esc(P.photo) + '" alt="">' : '<div class="arp"></div>') +
         '<div class="pinfo"><div class="pk">Исполнитель · данные: ' + esc(P.srcs.join(' + ')) + '</div><h3>' + esc(P.name) + '</h3>' +
         (meta ? '<div class="pm">' + esc(meta) + '</div>' : '') +
-        (P.about ? '<div class="ar-about">' + esc(P.about) + '</div>' : '') +
+        (P.tags && P.tags.length ? '<div class="ar-tags">' + P.tags.map(function (t){ return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
+        (P.about ? '<div class="ar-about" title="Нажми, чтобы развернуть">' + esc(P.about) + (P.aboutSrc ? ' <span class="ar-src">— ' + esc(P.aboutSrc) + '</span>' : '') + '</div>' : '') +
         '<div class="plbtns">' +
           (P.popular ? '<button class="pbtn y" data-ap="bg"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"></path></svg>Играть фоном</button><button class="pbtn" data-ap="shuffle">Фоном вперемешку</button>' : '') +
           (P.ymId && ymLoggedIn ? '<button class="pbtn g" data-ap="wave">Волна в стиле</button>' : '') +

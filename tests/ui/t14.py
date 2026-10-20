@@ -13,6 +13,7 @@ async def main():
         await pg.fill('#search','Кино'); await pg.press('#search','Enter'); await pg.wait_for_timeout(600)
         await pg.click('.art-b [data-art=page]'); await pg.wait_for_timeout(600)
         print('вкладки:', await E("Array.from(document.querySelectorAll('.ar-tabs button')).map(b=>b.innerText.replace(/\\s+/g,' '))"))
+        print('теги/слушатели:', await E("Array.from(document.querySelectorAll('.ar-tags span')).map(x=>x.textContent).join(',')"), await E("document.querySelector('.arh .pm').textContent"))
         print('популярное строк:', await E("document.querySelectorAll('.ar-body .row').length"))
         await pg.screenshot(path='a_page.png')
         await pg.click('.ar-tabs [data-apt=album]'); await pg.wait_for_timeout(200)

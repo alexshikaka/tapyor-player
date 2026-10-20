@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, dialog, ipcMain, shell, nativeTheme, safeStorage, clipboard, globalShortcut, session } = require('electron');
 const ym = require('./yandex');
 const dz = require('./deezer');
+const lastfm = require('./lastfm');
 const match = require('./match');
 const ymweb = require('./ymweb');
 const ytauth = require('./ytauth');
@@ -900,9 +901,10 @@ app.whenReady().then(async () => {
       return id ? ym.artistInfo(tok, id) : null;
     })().catch((err) => { out.errors.push('Яндекс: ' + err.message); log('исполнитель: Яндекс — ' + err.message); return null; });
     const dzP = dz.artistPage(name).catch((err) => { out.errors.push('Deezer: ' + err.message); log('исполнитель: Deezer — ' + err.message); return null; });
-    const [y, d] = await Promise.all([ymP, dzP]);
-    out.ym = y; out.dz = d;
-    log('исполнитель «' + name + '»: Яндекс ' + (y ? y.albums.length + ' альб.' : 'нет') + ', Deezer ' + (d ? d.albums.length + ' альб.' : 'нет'));
+    const lfP = lastfm.configured() ? lastfm.artist(name).catch((err) => { out.errors.push(err.message); log('исполнитель: ' + err.message); return null; }) : Promise.resolve(null);
+    const [y, d, lf] = await Promise.all([ymP, dzP, lfP]);
+    out.ym = y; out.dz = d; out.lf = lf;
+    log('исполнитель «' + name + '»: Яндекс ' + (y ? y.albums.length + ' альб.' : 'нет') + ', Deezer ' + (d ? d.albums.length + ' альб.' : 'нет') + ', Last.fm ' + (lf ? 'есть' : (lastfm.configured() ? 'нет' : 'без ключа')));
     return out;
   });
   ipcMain.handle('dz-album', async (e, id) => {
