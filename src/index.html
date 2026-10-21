@@ -724,7 +724,11 @@
   .wchip.on-bg { border-color: var(--pri); color: var(--pri); }
 
   /* Настройки */
-  .set { flex: 1 1 auto; min-width: 0; overflow-y: auto; }
+  /* Полоса прокрутки не должна липнуть к краю окна: отступаем от него и держим свой жёлоб */
+  .set { flex: 1 1 auto; min-width: 0; overflow-y: auto; margin-right: 14px; padding-right: 2px; scrollbar-gutter: stable; }
+  .set::-webkit-scrollbar { width: 12px; }
+  /* В настройках ползунок виден всегда — его не надо искать наведением */
+  .set::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
   .set-in { display: flex; flex-wrap: wrap; gap: 32px; padding: 28px 24px 40px; max-width: 1180px; margin: 0 auto; box-sizing: border-box; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
