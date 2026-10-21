@@ -302,14 +302,20 @@
 
   /* Правая колонка: очередь */
   .splitter { flex: 0 0 10px; margin: 0; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; border-radius: var(--r-ctl); }
-  .splitter:hover, .splitter.drag { background: rgba(var(--acr),.35); }
+  /* Разделительной полосы больше нет: при изменении ширины светится край карточки очереди */
+  .splitter:hover, .splitter.drag { background: transparent; }
   body.resizing { cursor: col-resize; user-select: none; }
   .hsplitter { flex: 0 0 8px; margin: -7px 0; cursor: row-resize; border-radius: 4px; position: relative; z-index: 2; background: transparent; transition: background .12s; }
   .hsplitter::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 3px; border-radius: 2px; background: var(--ln3); transform: translate(-50%, -50%); }
   .hsplitter:hover, .hsplitter.drag { background: rgba(var(--acr),.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
   /* Очередь — отдельная карточка со скруглёнными углами: линия сверху не нужна */
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 10px; box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 10px; box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; transition: box-shadow .16s ease; }
+  /* Потянули за разделитель — вместо линии загорается левый край карточки и плавно сходит на нет вправо */
+  .splitter:hover ~ .queue-col, .splitter.drag ~ .queue-col {
+    background-image: linear-gradient(90deg, rgba(var(--acr),.34) 0%, rgba(var(--acr),.10) 26%, rgba(var(--acr),0) 62%);
+    box-shadow: inset 0 0 0 1px rgba(var(--acr),.28), inset 26px 0 36px -26px rgba(var(--acr),1);
+  }
   /* «Сцена»: свечение цветом обложки играющего трека */
   .qglow { position: absolute; left: 0; right: 0; top: 0; height: 600px; pointer-events: none; opacity: 0; transition: opacity .6s ease; z-index: 0; }
   /* Ничего не играет — сцена светится цветом темы */
