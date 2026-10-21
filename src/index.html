@@ -881,9 +881,8 @@
   .rq-sum .g { color: #4ADE9A; } .rq-sum .y { color: #FFD43B; } .rq-sum .r { color: #FF8A84; }
   .rq-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
   .rq { background: var(--bg2); border: 1px solid var(--ln2); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-  /* Активные заказы — зелёная подложка; тот, что играет сейчас, — как играющая строка в очереди */
+  /* Активные заказы — зелёная подложка (те, что ждут решения) */
   .rq.rq-act { background: rgba(74,222,154,.07); border-color: rgba(74,222,154,.34); }
-  .rq.rq-now { background: rgba(var(--acr),.12); border-color: var(--ac); }
   .rq.done { opacity: .55; }
   .rq-h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; color: var(--tx3); }
   .rq-h b { color: var(--tx); font-size: 14px; }
@@ -4077,37 +4076,16 @@
   function rqPending(r){ return r.state === 'dismissed' ? [] : (r.items || []).filter(function (it){ return !it.state; }); }
   // Лента сообщений хранится сутки
   var RQ_DAY = 24 * 3600 * 1000;
-  // Заказ выполнен, когда его трек доиграл или уже не звучит.
-  // Пока трек играет (он же текущий) — заказ остаётся в активных.
-  function rqPlayed(it){
-    if (it.state !== 'added' || !it.track) return false;
-    var cur = queue[current];
-    return queue.some(function (v){
-      if (!rqMatch(v, it.track)) return false;
-      if (v.finished) return true;   // доиграл до конца
-      return v.played && v !== cur;  // трек уже не текущий
-    });
-  }
-  // Заказ играет прямо сейчас — подсвечиваем как играющую строку в очереди
-  function rqNow(it){
-    var cur = queue[current];
-    return !!(cur && it.track && it.state === 'added' && rqMatch(cur, it.track));
-  }
+  // Заказ выполнен, как только попал в треклист (очередь)
+  function rqDoneIt(it){ return it.state === 'added' && !!it.track; }
   // Заказ определился точно (независимо от того, встал он уже в очередь или нет)
   function rqExact(it){
     if (!it.track || it.state === 'skip' || it.paid === false) return false;
     if (rqFlags(it).some(function (x){ return RQ_REJECT[x.k]; })) return false;
     return it.level === 'exact';
   }
-  // Активные заказы: точно определились и ещё не отыграли (в том числе уже стоящие в очереди)
-  function rqActive(it){ return rqExact(it) && !rqPlayed(it); }
-  // Трек этого заказа вообще есть в ленте очереди (включая уже сыгранные)
-  function rqInQueue(it){
-    if (!it.track) return false;
-    var cur = queue[current];
-    if (cur && rqMatch(cur, it.track)) return true;
-    return queue.some(function (v){ return rqMatch(v, it.track); });
-  }
+  // Активные заказы: точно определились и ещё НЕ попали в треклист
+  function rqActive(it){ return rqExact(it) && !it.state; }
   function rqMoney(r){ return (r.amount != null ? (Math.round(r.amount * 100) / 100) : '?') + ' ' + (CURSYM[r.currency] || r.currency || ''); }
   function rqAgo(t){ var m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад'; var h = Math.round(m / 60); if (h < 24) return h + ' ч назад'; return Math.round(h / 24) + ' дн назад'; }
   function rqSave(r){ A.reqUpdate && A.reqUpdate(r.key, { items: r.items, state: r.state }); }
@@ -4191,10 +4169,8 @@
     vis.forEach(function (r){
       (r.items || []).forEach(function (it, ii){
         it._id = r._ri + ':' + ii;
-        // трек убрали из очереди руками — заказ снова становится обычным
-        if (it.state === 'added' && !rqInQueue(it)) it.state = undefined;
-        if (rqPlayed(it)) done.push({ r: r, it: it });
-        else if (rqActive(it)) act.push({ r: r, it: it });
+        if (rqDoneIt(it)) done.push({ r: r, it: it });      // попал в треклист — сразу выполнен
+        else if (rqActive(it)) act.push({ r: r, it: it });  // точно определился и ждёт решения
       });
     });
     act.sort(function (a, b){ return (a.r.got || 0) - (b.r.got || 0); }); // кто раньше заказал — тот выше
@@ -4211,18 +4187,14 @@
     // 1. Активные заказы — то, что точно определилось и ещё не в очереди
     if (act.length) {
       h += '<div class="rq-sec">Активные заказы · ' + act.length + '</div>';
-      act.forEach(function (x){
-        // зелёным — только заказы, которые ждут решения; уже добавленные в очередь нейтральные,
-        // а тот, что звучит прямо сейчас, подсвечен как играющая строка в очереди
-        var cls = rqNow(x.it) ? 'rq-now' : (x.it.state ? '' : 'rq-act');
-        h += rqCardHtml(x.r, x.r._ri, x.it, cls);
-      });
+      // здесь только те, что ещё ждут решения — все на зелёной подложке
+      act.forEach(function (x){ h += rqCardHtml(x.r, x.r._ri, x.it, 'rq-act'); });
     }
 
     // 2. Общая лента сообщений за сутки
     if (vis.length) h += '<details class="rq-feed"' + (RQ.feedOpen === false ? '' : ' open') + '><summary>Лента сообщений · ' + vis.length + '</summary>' + vis.map(function (r){ return rqCardHtml(r, r._ri); }).join('') + '</details>';
 
-    // 3. Выполненные заказы — треки уже отыграли
+    // 3. Выполненные заказы — уже в треклисте
     if (done.length) h += '<details class="rq-done"' + (RQ.doneOpen ? ' open' : '') + '><summary>Выполненные заказы · ' + done.length + '</summary>' + done.map(function (x){ return rqDoneHtml(x.r, x.it); }).join('') + '</details>';
 
     list.innerHTML = h;
