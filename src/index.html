@@ -23,7 +23,7 @@
   ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ac) 70%, transparent) !important; border-width: 1px; }
   ::-webkit-scrollbar-thumb:active { background-color: var(--ac) !important; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg1); color: var(--tx);
+  body { margin: 0; background: var(--bg0); color: var(--tx);
     font-family: 'Onest', 'Segoe UI', system-ui, sans-serif;
     height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
   .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
@@ -31,6 +31,8 @@
 
   /* Шапка */
   header { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 12px; border-bottom: 1px solid var(--ln2); flex: 0 0 auto; -webkit-app-region: drag; }
+  /* В поиске полосы нет: очередь — карточка со скруглённым верхом, линия бы шла прямо по её краю */
+  body[data-tab="search"] header { border-bottom-color: transparent; }
   .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 -24px -10px; padding-left: 27px; /* ровно с левым краем первой кнопки вкладок */ display: flex; align-items: center; justify-content: flex-start; }
   header .tbrand img { -webkit-app-region: drag; }
   .tbrand { display: flex; align-items: center; gap: 8px; pointer-events: none; }
@@ -304,7 +306,8 @@
   .hsplitter::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 3px; border-radius: 2px; background: var(--ln3); transform: translate(-50%, -50%); }
   .hsplitter:hover, .hsplitter.drag { background: rgba(var(--acr),.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border-left: 0; box-shadow: inset 1px 0 0 var(--hov); background: var(--bg00); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; }
+  /* Очередь — отдельная карточка со скруглёнными углами: линия сверху не нужна */
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: 20px; margin: 0 10px 10px 0; box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; }
   /* «Сцена»: свечение цветом обложки играющего трека */
   .qglow { position: absolute; left: 0; right: 0; top: 0; height: 600px; pointer-events: none; opacity: 0; transition: opacity .6s ease; z-index: 0; }
   /* Ничего не играет — сцена светится цветом темы */
@@ -945,7 +948,7 @@
   .rq-test input:focus { border-color: var(--ac); }
 </style>
 </head>
-<body>
+<body data-tab="search">
   <header>
     <div class="titlebar-space"><div class="tbrand"><img class="logo" src="assets/icon.png" alt=""><span class="name">Тапёр</span></div></div>
     <div class="hrow hrow1">
@@ -1478,6 +1481,7 @@
   var curTab = 'search';
   function setTab(t){
     curTab = t;
+    document.body.dataset.tab = t; // нужно для оформления: в поиске полосы под шапкой нет
     var bs = document.querySelectorAll('#tabs button');
     for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('active', bs[k].dataset.tab === t);
     $('hrow2').hidden = t !== 'search';
