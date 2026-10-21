@@ -175,8 +175,8 @@
 
   /* Основная часть */
   main { flex: 1; display: flex; min-height: 0; padding: 0 10px 10px; }
-  /* Каждая вкладка — панель-карточка: одна верхняя линия, одно скругление, контент режется по углам */
-  .view { background: var(--bg1); border-radius: var(--r-panel); box-shadow: inset 0 0 0 1px var(--ln2); overflow: hidden; min-width: 0; }
+  /* Вкладки — просто области на фоне окна: без рамки и подложки. Карточка есть только у очереди справа */
+  .view { min-width: 0; }
   .results-col { flex: 1 1 auto; min-width: 0; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
   .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 4px; gap: 8px; flex-wrap: wrap; }
   .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--tx2); flex-shrink: 0; }
@@ -729,8 +729,8 @@
   .wchip.on-bg { border-color: var(--pri); color: var(--pri); }
 
   /* Настройки */
-  /* Настройки — карточка, которая прокручивается внутри и режется по скруглённым углам */
-  .set { flex: 1 1 auto; min-width: 0; overflow-y: auto; scrollbar-gutter: stable; }
+  /* Настройки прокручиваются внутри себя и для красоты режутся по скруглённым верхним углам */
+  .set { flex: 1 1 auto; min-width: 0; overflow-y: auto; scrollbar-gutter: stable; border-radius: var(--r-panel); }
   .set::-webkit-scrollbar { width: 12px; }
   /* В настройках ползунок виден всегда — его не надо искать наведением */
   .set::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
