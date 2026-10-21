@@ -67,7 +67,7 @@
   .searchtop { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
   .searchtop .searchwrap { max-width: none; }
   .searchtop[hidden] { display: none !important; }
-  .searchbar { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 1px solid var(--ln); border-radius: 12px; padding: 0 14px; height: 46px; }
+  .searchbar { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 1px solid var(--ln); border-radius: var(--r-panel); padding: 0 14px; height: 46px; }
   .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--tx); font-size: 15px; font-weight: 500; }
   .chips { display: flex; flex-wrap: wrap; gap: 7px; }
   .chip { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; }
@@ -104,7 +104,7 @@
   .br-addr input { flex: 1; min-width: 0; height: 32px; border-radius: 8px; border: 1px solid var(--ln); background: var(--bg0); color: var(--tx2); padding: 0 12px; font: 12.5px 'JetBrains Mono', Consolas, monospace; }
   .br-addr input:focus { outline: none; border-color: var(--ac); color: var(--tx); }
   .br-note { font-size: 12.5px; color: var(--tx4); line-height: 1.45; }
-  .br-wrap { flex: 1; min-height: 0; border-radius: var(--r-card); overflow: hidden; border: 1px solid var(--ln); background: #fff; display: flex; }
+  .br-wrap { flex: 1; min-height: 0; border-radius: var(--r-panel); overflow: hidden; border: 1px solid var(--ln); background: #fff; display: flex; }
   .br-web { flex: 1; width: 100%; height: 100%; border: 0; }
   .br-empty { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg1); color: var(--tx4); font-size: 14px; text-align: center; padding: 30px; line-height: 1.5; }
   /* Вход в YouTube */
@@ -572,7 +572,7 @@
   /* Вкладка «Моё» */
   .my-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0; padding: 0 20px; gap: 12px; }
   /* Плейлисты сверху: одна панель, подсвеченная акцентом — вкладки, действия, пилюли */
-  .my-side { flex: 0 0 auto; background: var(--bg3); border: 1px solid var(--ln); border-radius: var(--r-card); padding: 0 14px 12px; max-height: 40vh; overflow-y: auto; }
+  .my-side { flex: 0 0 auto; background: var(--bg3); border: 1px solid var(--ln); border-radius: var(--r-panel); padding: 0 14px 12px; max-height: 40vh; overflow-y: auto; }
   .my-main { flex: 1; min-width: 0; padding: 0; display: flex; flex-direction: column; min-height: 0; }
   .mytabs { display: flex; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--ln); position: sticky; top: 0; z-index: 1; background: inherit; }
   .myt { height: 44px; padding: 0 4px; margin-right: 18px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--tx3); font: 600 14px Onest, sans-serif; display: flex; align-items: center; gap: 7px; cursor: pointer; }
@@ -785,7 +785,7 @@
   html.theme-mono .al:hover, html.theme-mono .art-n.art-go:hover { color: var(--ac2); }
   html.theme-mono .upd-go { background: var(--pri); color: var(--prit); }
   /* Стартовый чеклист сервисов */
-  .ck { max-width: 560px; width: 100%; box-sizing: border-box; margin: 22px auto 10px; padding: 20px 22px 16px; border: 1px solid var(--ln2); border-radius: 18px; background: linear-gradient(180deg, var(--bg2), var(--bg1)); }
+  .ck { max-width: 560px; width: 100%; box-sizing: border-box; margin: 22px auto 10px; padding: 20px 22px 16px; border: 0; background: none; }
   .ck-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 3px; }
   .ck-h b { font-size: 15px; font-weight: 700; }
   .ck-h span { font: 11px 'JetBrains Mono', Consolas, monospace; color: var(--tx5); white-space: nowrap; }
@@ -1004,12 +1004,8 @@
           <button class="chip" data-f="lc" id="chipLc" hidden><span class="dot" style="background:#4ADE9A"></span>Мои файлы</button>
         </div>
       </div>
-      <div class="col-head">
-        <span class="hint" id="hint">Введи название, исполнителя или ссылку</span>
-      </div>
       <div class="results" id="results">
         <div class="ck-wrap" id="qcBox"></div>
-        <div class="muted" id="resEmpty">Здесь появятся найденные треки, волны и плейлисты.</div>
       </div>
       <div class="plview" id="searchPl" hidden></div>
     </section>
@@ -1440,6 +1436,7 @@
 <script>
   var A = window.app || {};
   function $(id){ return document.getElementById(id); }
+  function setHint(t){ var h = $('hint'); if (h) h.textContent = t; } // подсказки поиска необязательны
   function noop(){}
 
   if (A.getVersion) A.getVersion().then(function (v) { $('ver').textContent = 'версия ' + v; $('setVer').textContent = 'Тапёр ' + v; });
@@ -3357,12 +3354,12 @@
     curQuery = q; shownIds = new Set(); hasMoreYt = false; hasMoreYm = false; loadingMore = false; ymPage = 1;
     S.tracks = [];
     closeSearchList();
-    $('hint').textContent = 'Ищу…';
+    setHint('Ищу…');
     results.innerHTML = '<div class="muted">Ищу…</div>';
     renderSearchBack();
     results.scrollTop = 0;
     sgToken++; hideSuggest();
-    if (isTgLink(q)) { results.innerHTML = '<div class="muted">Ссылка Telegram — открываю во вкладке «Браузер»…</div>'; $('hint').textContent = ''; brOpen(/^https?:/i.test(q) ? q : 'https://' + q); return; }
+    if (isTgLink(q)) { results.innerHTML = '<div class="muted">Ссылка Telegram — открываю во вкладке «Браузер»…</div>'; setHint(''); brOpen(/^https?:/i.test(q) ? q : 'https://' + q); return; }
     if (isLink(q) && A.resolveLink) {
       var lr = await A.resolveLink(q);
       if (token !== searchToken) return;
@@ -3395,7 +3392,7 @@
     if (empty.textContent) results.appendChild(empty);
     results.appendChild(buildTrackArea());
     addTracks(ymTracks.concat(ytVideos), true);
-    $('hint').textContent = ytNote || '';
+    setHint(ytNote || '');
     hasMoreYt = ytUsable() && !yt.error; hasMoreYm = ymTracks.length >= 10;
     maybeLoadMore();
     // SoundCloud и Audius отвечают дольше — добавляем их в выдачу, когда придут
@@ -3406,8 +3403,8 @@
 
   function renderLinkResult(lr){
     results.innerHTML = '';
-    if (lr.error) { results.innerHTML = '<div class="muted">По ссылке: ' + esc(lr.error) + '</div>'; $('hint').textContent = ''; return; }
-    $('hint').textContent = 'Найдено по ссылке';
+    if (lr.error) { results.innerHTML = '<div class="muted">По ссылке: ' + esc(lr.error) + '</div>'; setHint(''); return; }
+    setHint('Найдено по ссылке');
     if (lr.list) results.appendChild(plsSection(lr.list.type === 'album' ? 'Альбом' : (lr.list.type === 'artist' ? 'Исполнитель' : 'Плейлист'), [lr.list]));
     if (lr.tracks && lr.tracks.length) {
       var l = document.createElement('div'); l.className = 'xlbl'; l.style.padding = '0 8px 4px'; l.textContent = 'Трек'; results.appendChild(l);
