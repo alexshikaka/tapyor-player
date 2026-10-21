@@ -31,6 +31,8 @@
 
   /* Шапка */
   header { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 12px; border-bottom: 1px solid var(--ln2); flex: 0 0 auto; -webkit-app-region: drag; }
+  /* В поиске под кнопками есть вторая строка (поиск и фильтры) — отделяем меню полосой, как в остальных вкладках */
+  header.tab-search .hrow1 { border-bottom: 1px solid var(--ln2); padding-bottom: 10px; }
   .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 -24px -10px; padding-left: 27px; /* ровно с левым краем первой кнопки вкладок */ display: flex; align-items: center; justify-content: flex-start; }
   header .tbrand img { -webkit-app-region: drag; }
   .tbrand { display: flex; align-items: center; gap: 8px; pointer-events: none; }
@@ -309,6 +311,12 @@
   #ytFrame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   #ytFrame iframe { width: 100%; height: 100%; border: 0; display: block; }
   #player { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; object-fit: contain; }
+  /* Заглушка в окне видео, пока ничего не играет */
+  .vidph { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; border-radius: 12px; background: radial-gradient(125% 90% at 50% 12%, var(--bg2), var(--bg0) 72%); }
+  .vidph-logo { width: 56px; height: 56px; border-radius: 15px; opacity: .38; }
+  .vidph-t { font-size: 14px; font-weight: 600; color: var(--tx3); }
+  .vidph-s { font-size: 12px; color: var(--tx5); }
+  .video.has-track .vidph { display: none; }
   .vmeta { padding: 12px 4px 2px; display: flex; align-items: flex-start; gap: 10px; }
   .vm-l { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
   .vmeta .clearq { margin-top: 2px; }
@@ -388,8 +396,11 @@
   /* Нижняя панель-плеер */
   footer { flex: 0 0 auto; display: flex; align-items: center; gap: 28px; padding: 14px 24px; border-top: 1px solid var(--ln2); background: var(--bg00); }
   .f-now { display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-width: 0; }
+  .f-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .f-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
   .f-now .t { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-artist { font-size: 12.5px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-artist[hidden] { display: none; }
   .f-now .s { font-size: 12px; color: var(--tx3); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .f-center { flex: 2 1 420px; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
   .controls { display: flex; align-items: center; gap: 14px; }
@@ -407,7 +418,9 @@
   .f-right { flex: 1 1 200px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; color: var(--tx3); }
   /* Громкость — рядом с кнопками управления; колёсико мыши меняет плавно */
   .controls { position: relative; }
-  .wtrk { position: absolute; right: 100%; top: 50%; transform: translateY(-50%); margin-right: 18px; height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx3); font: 500 12px Onest, sans-serif; display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+  /* Лайк и «Волна по треку» — слева от кнопок, ⏮ ▶ ⏭ остаются по центру */
+  .cleft { position: absolute; right: 100%; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; margin-right: 16px; }
+  .wtrk { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx3); font: 500 12px Onest, sans-serif; display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
   .wtrk:hover { color: var(--tx); background: var(--bg3); border-color: var(--ln3); }
   .wtrk[hidden] { display: none; }
   .volc { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; margin-left: 18px; color: var(--tx3); }
@@ -689,6 +702,10 @@
   .wv:hover { background: var(--bg3); }
   .wv.on { background: rgba(255,212,59,.1); border-color: rgba(255,212,59,.5); }
   .wv i { width: 22px; height: 22px; border-radius: 6px; flex: 0 0 auto; display: block; }
+  /* «Ещё» / «Свернуть» в списке плейлистов фоном */
+  .wv-more { color: var(--tx3); font-weight: 500; margin-top: 2px; }
+  .wv-more:hover { color: var(--tx); }
+  .wv-more .wv-chev { width: auto; height: auto; border-radius: 0; background: none !important; color: var(--tx4); font-size: 10px; }
   .wgen { display: flex; flex-wrap: wrap; gap: 5px; }
   .wgen .wlabel { width: 100%; margin-top: 4px; }
   .wchip.on-bg { border-color: var(--pri); color: var(--pri); }
@@ -967,7 +984,7 @@
     <section class="view brv" id="viewBrowser" hidden aria-label="Браузер">
       <div class="br-bar">
         <div class="br-seg" id="brSvc"><button data-svc="ym">Яндекс Музыка</button><button data-svc="yt">YouTube</button><button data-svc="tg">Telegram</button><button data-svc="web" hidden>Сайт</button></div>
-        <button class="br-ic" id="brBack" title="Назад" aria-label="Назад">←</button><button class="br-ic" id="brFwd" title="Вперёд" aria-label="Вперёд">→</button><button class="br-ic" id="brReload" title="Обновить" aria-label="Обновить">↻</button><button class="br-ic" id="brHome" title="На главную сервиса" aria-label="На главную">⌂</button>
+        <button class="br-ic" id="brBack" title="Назад" aria-label="Назад"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button><button class="br-ic" id="brFwd" title="Вперёд" aria-label="Вперёд"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button><button class="br-ic" id="brReload" title="Обновить" aria-label="Обновить"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.3-5.7L20 8"></path><path d="M20 3v5h-5"></path></svg></button>
         <button class="br-col" id="brCollect" title="Собрать названия песен с открытой страницы (ВКонтакте, Telegram, YouTube…) и найти их на площадках">Собрать песни</button>
         <form class="br-addr" id="brAddr" autocomplete="off"><input id="brUrl" type="text" spellcheck="false" placeholder="Адрес сайта или запрос для поиска" aria-label="Адрес"></form>
       </div>
@@ -1298,7 +1315,13 @@
       </div>
 
       <div class="nowcard">
-        <div class="video"><video id="player" playsinline></video><audio id="aud"></audio><audio id="aud2"></audio><div id="ytFrame" hidden></div></div>
+        <div class="video"><video id="player" playsinline></video><audio id="aud"></audio><audio id="aud2"></audio><div id="ytFrame" hidden></div>
+          <div class="vidph" id="vidPh">
+            <img class="vidph-logo" src="assets/icon.png" alt="">
+            <div class="vidph-t">Ничего не играет</div>
+            <div class="vidph-s">Найди трек — он появится здесь</div>
+          </div>
+        </div>
         <div class="vmeta">
           <div class="vm-l">
             <div class="nplabel" id="nplabel">Сейчас играет</div>
@@ -1335,15 +1358,18 @@
   <footer>
     <div class="f-now">
       <img class="f-cover" id="f-cover" alt="" style="display:none">
-      <div style="min-width:0">
+      <div class="f-meta">
         <div class="t" id="f-title">Ничего не играет</div>
+        <div class="f-artist" id="f-artist" hidden></div>
         <div class="s" id="f-sub">Найди трек и нажми play</div>
       </div>
-      <button class="likeb" id="likeBtn" hidden aria-pressed="false" title="В «Мне нравится» Яндекса"></button>
     </div>
     <div class="f-center">
       <div class="controls">
-        <button class="wtrk" id="waveTrackBtn" hidden title="Похожее на этот трек — волна Яндекса после него"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path></svg>Волна по треку</button>
+        <div class="cleft">
+          <button class="likeb" id="likeBtn" hidden aria-pressed="false" title="В «Мне нравится» Яндекса"></button>
+          <button class="wtrk" id="waveTrackBtn" hidden title="Похожее на этот трек — волна Яндекса после него"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"></path></svg>Волна по треку</button>
+        </div>
         <button class="cbtn side" id="prev" title="Назад (больше 3 секунд — в начало трека)" aria-label="Предыдущий"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 6h2v12H7zM20 6v12l-9-6z"></path></svg></button>
         <button class="cbtn play" id="playpause" title="Пауза / играть" aria-label="Пауза / играть"></button>
         <button class="cbtn side" id="next" title="Следующий" aria-label="Следующий"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM4 6v12l9-6z"></path></svg></button>
@@ -1420,6 +1446,7 @@
     var bs = document.querySelectorAll('#tabs button');
     for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('active', bs[k].dataset.tab === t);
     $('hrow2').hidden = t !== 'search';
+    document.querySelector('header').classList.toggle('tab-search', t === 'search');
     $('viewSearch').hidden = t !== 'search';
     $('viewMy').hidden = t !== 'my';
     $('viewReq').hidden = t !== 'req';
@@ -1738,6 +1765,7 @@
   var curTrack = null;
   function setNowPlaying(v){
     curTrack = v || null;
+    var vd = document.querySelector('.video'); if (vd) vd.classList.toggle('has-track', !!v); // заглушка прячется, когда есть трек
     var line = v ? ((v.author ? v.author + ' — ' : '') + v.title) : '';
     document.title = line || APP_TITLE;
     if (A.nowPlaying) A.nowPlaying(v ? { artist: v.author || '', title: v.title || '', album: v.album || '', source: srcName(v) } : null);
@@ -1816,7 +1844,10 @@
   function showTrack(v){
     $('card-title').textContent = v.title;
     $('f-title').textContent = v.title;
-    $('f-sub').innerHTML = subLine(v, v.bg ? bgLabel() : srcName(v)).replace(/^<div class="s sub">|<\/div>$/g, '');
+    // Внизу: название, под ним исполнитель, под ним источник или «Фон»/«Волна»
+    var fa = $('f-artist'), fs = $('f-sub');
+    if (fa) { fa.innerHTML = v.author ? artistLinks(v.author) : ''; fa.hidden = !v.author; }
+    if (fs) fs.innerHTML = srcDot(v) + '<span class="ss">' + esc(v.bg ? bgLabel() : srcName(v)) + '</span>';
     var fc = $('f-cover');
     if (v.thumb) { fc.src = v.thumb; fc.style.display = ''; } else { fc.style.display = 'none'; }
   }
@@ -2018,6 +2049,7 @@
     $('card-title').textContent = 'Ничего не играет';
     $('card-sub').textContent = 'Найди трек и запусти';
     $('f-title').textContent = 'Ничего не играет';
+    var fa = $('f-artist'); if (fa) { fa.hidden = true; fa.innerHTML = ''; }
     $('f-sub').textContent = 'Найди трек и нажми play';
     $('f-cover').style.display = 'none';
     setBar(0); $('tcur').textContent = '0:00'; $('tdur').textContent = '0:00';
@@ -2683,13 +2715,18 @@
     savedLists.filter(function (x){ return x.src !== 'tap'; }).forEach(function (p){ out.push({ m: p, n: p.title, c: srcColor(p) }); });
     return out.slice(0, 40);
   }
+  var wavePlsMore = false, WAVE_PLS_LIMIT = 6;
   function renderWavePls(){
     var box = $('wavePls'); if (!box) return;
     var list = wavePlsList(), cur = bgSel.kind === 'list' ? listId(bgSel.list) : '';
     box.innerHTML = '';
     if (!list.length) { box.innerHTML = '<span class="s" style="font-size:12px;color:var(--tx4)">Пока нет плейлистов — создай во вкладке «Плейлисты»</span>'; return; }
     if (!myLoaded && (ymLoggedIn || (typeof ytLogged === 'function' && ytLogged()))) loadMy(false).then(function(){ if (!$('waveSettings').hidden) renderWavePls(); }).catch(noop);
-    list.forEach(function (x){
+    // Сразу показываем только несколько, остальные — по кнопке «Ещё»
+    var shown = wavePlsMore ? list : list.slice(0, WAVE_PLS_LIMIT);
+    // Играющий фоном плейлист показываем всегда, даже если он за пределами списка
+    if (!wavePlsMore && cur) { var c = list.filter(function (x){ return listId(x.m) === cur; })[0]; if (c && shown.indexOf(c) < 0) shown = shown.concat([c]); }
+    shown.forEach(function (x){
       var b = document.createElement('button'); b.className = 'wv' + (listId(x.m) === cur ? ' on' : '');
       b.innerHTML = '<i style="background:' + x.c + '"></i>' + esc(x.n);
       b.title = 'Играть фоном вперемешку';
@@ -2705,6 +2742,13 @@
       };
       box.appendChild(b);
     });
+    if (list.length > WAVE_PLS_LIMIT) {
+      var mo = document.createElement('button');
+      mo.className = 'wv wv-more';
+      mo.innerHTML = wavePlsMore ? '<i class="wv-chev">▴</i>Свернуть' : '<i class="wv-chev">▾</i>Ещё · ' + (list.length - WAVE_PLS_LIMIT);
+      mo.onclick = function(){ wavePlsMore = !wavePlsMore; renderWavePls(); };
+      box.appendChild(mo);
+    }
   }
 
   // Варианты от Яндекса и волны по жанрам
@@ -2938,7 +2982,7 @@
     try { first = !localStorage.getItem('qcSeen'); localStorage.setItem('qcSeen', '1'); } catch (e) {}
     if (!probs.length && !first && !QC.fixLog.length) setTimeout(function(){ if (!QC.running && !qcProblems().length) { QC.open = false; renderQC(); } }, 1600);
     else QC.open = true;
-    renderQC(); renderHealthWarnQC();
+    renderQC(); renderHealthWarn();
     clearTimeout(qcRetry);
     if (QC.items.net && QC.items.net.state === 'bad') qcRetry = setTimeout(runQC, 30000);
     // Нашли проблему с воспроизведением — глубокая проверка (когда ничего не играет)
@@ -2951,17 +2995,42 @@
     var r = null; try { r = await A.autoFix(); } catch (e) {}
     QC.fixing = false;
     var q = A.qcGet ? await A.qcGet() : null; if (q && q.items) { QC.items = q.items; QC.at = q.at; }
-    renderQC(); renderHealthWarnQC();
+    renderQC(); renderHealthWarn();
     runQC(); // контрольная перепроверка после починки — лампочки по факту
     toast(r && !r.left ? 'Починил — всё работает' : 'Сделал, что мог — подробности в списке');
   }
-  if (A.onQcItem) A.onQcItem(function (it){ QC.items[it.id] = it; });
+  if (A.onQcItem) A.onQcItem(function (it){ QC.items[it.id] = it; renderHealthWarn(); });
   if (A.onFixStep) A.onFixStep(function (f){ QC.fixLog.push(f); renderQC(); });
-  // Значок ⚠ в шапке — и по быстрой проверке
-  function renderHealthWarnQC(){
-    var bad = qcProblems().filter(function (id){ return QC.items[id].state === 'bad' && id !== 'net'; });
-    var w = $('healthWarn'); if (!w || !bad.length) return;
-    if (w.hidden) { w.hidden = false; w.textContent = '⚠ Проблем: ' + bad.length; w.title = 'Нажми — список проверки'; w.onclick = function(){ setTab('search'); if (curQuery) { search.value = ''; } QC.open = true; renderQC(); }; }
+  // Значок ⚠ в шапке: и быстрая проверка, и глубокая — в одном месте
+  function healthWarnList(){
+    var ids = [], names = [];
+    qcProblems().forEach(function (id){
+      if (id === 'net') return; // «нет интернета» — это не про сервисы
+      var it = QC.items[id];
+      if (!it || (it.state !== 'bad' && it.state !== 'warn')) return;
+      ids.push(id);
+      var nm = null;
+      QC_GROUPS.forEach(function (g){ g[1].forEach(function (x){ if (x[0] === id) nm = g[0] + ' · ' + x[1]; }); });
+      names.push(nm || id);
+    });
+    var hs = (health && health.services) || {};
+    ['yandex', 'youtube'].forEach(function (k){
+      var st = hs[k];
+      var mine = { yandex: ['ym.svc', 'ym.acc', 'ym.play', 'ym.site'], youtube: ['yt.svc', 'yt.login', 'yt.dlp'] }[k] || [];
+      if (!st || (st.status !== 'fail' && st.status !== 'warn')) return;
+      if (mine.some(function (id){ return ids.indexOf(id) >= 0; })) return; // про это уже сказано в списке проверки
+      names.push((SVC_NAMES[k] || k) + ' — ' + (st.status === 'fail' ? 'не работает' : 'частично'));
+    });
+    return names;
+  }
+  // Показывает значок, когда проблемы есть, и ГАСИТ его, когда всё починилось
+  function renderHealthWarn(){
+    var w = $('healthWarn'); if (!w) return;
+    var bad = healthWarnList();
+    if (!bad.length) { w.hidden = true; w.textContent = ''; w.removeAttribute('title'); return; }
+    w.hidden = false;
+    w.textContent = '⚠ Проблем: ' + bad.length;
+    w.title = bad.join(' · ') + ' — нажми, чтобы открыть список проверки';
   }
   setTimeout(runQC, 600);
   // Отчёты: проверка отправки и что отправляется
@@ -5419,11 +5488,7 @@
     box.innerHTML = h;
     var c = $('hsCopy'); if (c) c.onclick = function(){ copyText(JSON.stringify(health, null, 2)); c.textContent = '✓ Скопировано'; };
     $('hsRun').disabled = healthBusy; $('hsRun').textContent = healthBusy ? 'Проверяю… (до минуты)' : 'Проверить сейчас';
-    // значок в шапке, если что-то сломано
-    var bad = health && ['yandex', 'youtube'].filter(function (k){ var s = health.services && health.services[k]; return s && (s.status === 'fail' || s.status === 'warn'); });
-    var w = $('healthWarn');
-    if (bad && bad.length) { var s0 = health.services[bad[0]]; w.hidden = false; w.textContent = '⚠ ' + SVC_NAMES[bad[0]] + ': ' + (s0.status === 'fail' ? 'не работает' : 'частично'); w.title = s0.title + ' — нажми, чтобы посмотреть'; }
-    else w.hidden = true;
+    renderHealthWarn(); // значок в шапке: быстрая и глубокая проверки вместе
   }
   async function runHealth(manual){
     if (healthBusy || !A.healthRun) return;
@@ -5442,7 +5507,16 @@
   }
   $('hsRun').onclick = function(){ runHealth(true); };
   $('healthBox').addEventListener('click', function(e){ var b = e.target.closest('[data-hs-browser]'); if (b) { setTab('browser'); brShow(b.dataset.hsBrowser); } });
-  $('healthWarn').onclick = function(){ setTab('settings'); var s = $('sHealth'); if (s) s.scrollIntoView({ block: 'start' }); };
+  // Нажатие на «⚠ Проблем»: открываем список проверки в поиске (раньше нажатие «молчало»,
+  // потому что чеклист не рисуется поверх выдачи — сбрасываем запрос)
+  $('healthWarn').onclick = function(){
+    if (curQuery) { curQuery = ''; search.value = ''; S.tracks = []; closeSearchList(); }
+    results.hidden = false;
+    QC.open = true;
+    setTab('search');
+    renderQC();
+    var b = $('qcBox'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
   if (A.healthGet) A.healthGet().then(function (h){ health = h; renderHealth(); });
   // Сама раз в сутки, когда ничего не играет (первый раз — через 3 минуты после запуска)
   function healthTick(){ if (!health || Date.now() - health.at > 20 * 3600 * 1000) runHealth(false); }
@@ -5532,11 +5606,26 @@
   }
   allEls().concat([ytx, ymx]).forEach(function (el){ el.addEventListener('play', function(){ if (el === master()) brPauseAll(); }); });
   $('brSvc').onclick = function(e){ var b = e.target.closest('button[data-svc]'); if (b && !b.disabled) brShow(b.dataset.svc); };
-  $('brBack').onclick = function(){ var w = brView(); if (w && w.canGoBack()) w.goBack(); };
-  $('brFwd').onclick = function(){ var w = brView(); if (w && w.canGoForward()) w.goForward(); };
-  $('brReload').onclick = function(){ var w = brView(); if (w) w.reload(); };
+  // Назад / вперёд / обновить. Через главный процесс: у <webview> в новых Electron этих методов
+  // уже нет, поэтому кнопки раньше молча ничего не делали.
+  function brNavFallback(w, action){
+    try {
+      if (action === 'reload') { if (w.reload) w.reload(); return true; }
+      var can = action === 'back' ? (w.canGoBack && w.canGoBack()) : (w.canGoForward && w.canGoForward());
+      if (can) { if (action === 'back') w.goBack(); else w.goForward(); return true; }
+    } catch (e) {}
+    return false;
+  }
+  function brNav(action){
+    var w = brView(); if (!w) return;
+    var id = 0; try { id = w.getWebContentsId(); } catch (e) {}
+    if (!id || !A.brNav) { brNavFallback(w, action); return; }
+    A.brNav(id, action).then(function (r){ if (!r || !r.ok) brNavFallback(w, action); }).catch(function(){ brNavFallback(w, action); });
+  }
+  $('brBack').onclick = function(){ brNav('back'); };
+  $('brFwd').onclick = function(){ brNav('forward'); };
+  $('brReload').onclick = function(){ brNav('reload'); };
   $('brCollect').onclick = brCollect;
-  $('brHome').onclick = function(){ var w = brView(); if (w) w.loadURL(BR_SVC[BR.cur].url); };
 
   // Запасной способ Яндекса: вход на сайте и проверка
   $('setYwLogin').onclick = async function(){

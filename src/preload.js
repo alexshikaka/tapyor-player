@@ -138,5 +138,6 @@ contextBridge.exposeInMainWorld('app', {
   siteGhDeviceStart: () => ipcRenderer.invoke('site-gh-device-start'),
   siteGhDeviceWait: () => ipcRenderer.invoke('site-gh-device-wait'),
   siteGhDeviceCancel: () => ipcRenderer.invoke('site-gh-device-cancel'),
-  openLink: (url) => ipcRenderer.invoke('open-link', url)
+  openLink: (url) => ipcRenderer.invoke('open-link', url),
+  brNav: (id, action) => ipcRenderer.invoke('br-nav', id, action)
 });

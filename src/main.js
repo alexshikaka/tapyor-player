@@ -1060,6 +1060,23 @@ app.whenReady().then(async () => {
     if (/^https:\/\/([a-z0-9-]+\.)*(donationalerts\.com|donatepay\.ru|donatepay\.eu|donatello\.to|yoomoney\.ru|boosty\.to|github\.com|github\.io|t\.me|twitch\.tv|youtube\.com|youtu\.be|vk\.com|vkvideo\.ru|kick\.com|music\.yandex\.ru|soundcloud\.com|developers\.sber\.ru)(\/|$)/i.test(u)) shell.openExternal(u);
     return true;
   });
+  // Вкладка «Браузер»: назад / вперёд / обновить.
+  // Делаем в главном процессе: у <webview> в Electron 33 методов canGoBack/goBack уже нет,
+  // поэтому кнопки в окне молча ничего не делали.
+  ipcMain.handle('br-nav', (e, id, action) => {
+    try {
+      const { webContents } = require('electron');
+      const wc = webContents.fromId(Number(id));
+      if (!wc) return { ok: false, error: 'окно браузера не найдено' };
+      const nh = wc.navigationHistory;
+      const canBack = nh ? nh.canGoBack() : (typeof wc.canGoBack === 'function' ? wc.canGoBack() : false);
+      const canFwd = nh ? nh.canGoForward() : (typeof wc.canGoForward === 'function' ? wc.canGoForward() : false);
+      if (action === 'back') { if (nh) nh.goBack(); else if (wc.canGoBack && wc.canGoBack()) wc.goBack(); }
+      else if (action === 'forward') { if (nh) nh.goForward(); else if (wc.canGoForward && wc.canGoForward()) wc.goForward(); }
+      else if (action === 'reload') wc.reload();
+      return { ok: true, canBack, canFwd };
+    } catch (err) { return { ok: false, error: String((err && err.message) || err) }; }
+  });
   ipcMain.handle('lib-status', () => library.status());
   ipcMain.handle('lib-all', () => library.all());
   ipcMain.handle('lib-search', (e, q, n) => (cfg('libInSearch') === false ? [] : library.search(q, n || 30)));
