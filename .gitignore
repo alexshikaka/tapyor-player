@@ -6,3 +6,5 @@ dist/
 resources/
 src/google-oauth.json
 src/lastfm.json
+src/da.json
+src/github-oauth.json

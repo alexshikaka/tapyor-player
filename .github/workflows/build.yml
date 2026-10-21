@@ -43,6 +43,21 @@ jobs:
         run: |
           if ($env:LASTFM_API_KEY) { Set-Content -Path src/lastfm.json -Value ('{"apiKey":"' + $env:LASTFM_API_KEY.Trim() + '"}') -Encoding utf8NoBOM; Write-Host "lastfm.json: есть" } else { Write-Host "lastfm.json: секрет не задан — страница исполнителя без Last.fm" }
 
+      - name: Ключи DonationAlerts (из секретов репозитория)
+        shell: pwsh
+        env:
+          DA_CLIENT_ID: ${{ secrets.DA_CLIENT_ID }}
+          DA_CLIENT_SECRET: ${{ secrets.DA_CLIENT_SECRET }}
+        run: |
+          if ($env:DA_CLIENT_ID) { Set-Content -Path src/da.json -Value (@{ clientId = $env:DA_CLIENT_ID.Trim(); clientSecret = "$($env:DA_CLIENT_SECRET)".Trim() } | ConvertTo-Json -Compress) -Encoding utf8NoBOM; Write-Host "da.json: есть" } else { Write-Host "da.json: секрет не задан — вход в DonationAlerts будет выключен" }
+
+      - name: Приложение GitHub для сайта-визитки (из секретов, необязательно)
+        shell: pwsh
+        env:
+          GH_OAUTH_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+        run: |
+          if ($env:GH_OAUTH_CLIENT_ID) { Set-Content -Path src/github-oauth.json -Value ('{"clientId":"' + $env:GH_OAUTH_CLIENT_ID.Trim() + '"}') -Encoding utf8NoBOM; Write-Host "github-oauth.json: есть" } else { Write-Host "github-oauth.json: нет — вход в GitHub по ключу" }
+
       - name: Собрать установщик и выложить в Releases
         run: npm run dist
         env:

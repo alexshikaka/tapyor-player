@@ -13,6 +13,15 @@
   html.theme-mono { --bg00: #070707; --bg0: #0F0F0F; --bg1: #161616; --bg2: #1A1A1A; --bg3: #202020; --bg4: #2D2D2D; --ln: #2F2F2F; --ln2: #262626; --ln3: #3E3E3E; --tx: #EDEDED; --tx2: #CBCBCB; --tx3: #A2A2A2; --tx4: #8E8E8E; --tx5: #818181; --ac: #D4D4D4; --ac2: #E6E6E6; --acr: 212,212,212; --acbg: #262626; --pri: #E8E8E8; --prit: #121212; }
 
   :root { color-scheme: dark; }
+  /* Полосы прокрутки — тонкие линии: почти незаметны, ярче при наведении на область */
+  /* (scrollbar-width/scrollbar-color не задаём: в Chromium они отключают тонкую настройку ниже) */
+  ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; border: 2px solid transparent; background-clip: padding-box; min-height: 32px; }
+  *:hover::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--tx) 18%, transparent); }
+  ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ac) 70%, transparent) !important; border-width: 1px; }
+  ::-webkit-scrollbar-thumb:active { background-color: var(--ac) !important; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg1); color: var(--tx);
     font-family: 'Onest', 'Segoe UI', system-ui, sans-serif;
@@ -816,6 +825,72 @@
   .pv .bt { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
   .pv .bt span { height: 24px; padding: 0 10px; border-radius: 12px; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; }
   .pv .tg { width: 30px; height: 17px; border-radius: 9px; position: relative; margin-left: auto; background: var(--ac); } .pv .tg::after { content: ''; position: absolute; right: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--bg0); }
+
+  /* ===== Заказы со стрима ===== */
+  #tabs .tbadge { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; font: 700 11px Onest, sans-serif; text-align: center; background: #FFD43B; color: #1a1a1a; vertical-align: 1px; }
+  #tabs .tbadge.ex { background: #4ADE9A; }
+  #tabs button.glow { animation: rqglow 1.6s ease-in-out 3; }
+  @keyframes rqglow { 50% { box-shadow: 0 0 0 3px rgba(74,222,154,.35); } }
+  .reqv { flex: 1 1 auto; min-width: 0; padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; }
+  .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .rq-acts .pbtn { height: 34px; font-size: 12.5px; }
+  .rq-sm { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
+  .rq-sm:hover { color: var(--tx); border-color: var(--ln3); }
+  .rq-sm.hl { background: rgba(var(--acr),.16); color: var(--ac2); border-color: transparent; }
+  .rq-svc { font-size: 12px; color: var(--tx4); display: flex; gap: 8px; align-items: center; }
+  .rq-svc i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; background: var(--tx5); }
+  .rq-svc i.ok { background: #4ADE9A; } .rq-svc i.bad { background: #FF5A52; }
+  .rq-sum { background: var(--bg3); border: 1px solid var(--bg4); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--tx2); line-height: 1.55; }
+  .rq-sum b { color: var(--tx); font-weight: 600; }
+  .rq-sum .g { color: #4ADE9A; } .rq-sum .y { color: #FFD43B; } .rq-sum .r { color: #FF8A84; }
+  .rq-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+  .rq { background: var(--bg2); border: 1px solid var(--ln2); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .rq.done { opacity: .55; }
+  .rq-h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; color: var(--tx3); }
+  .rq-h b { color: var(--tx); font-size: 14px; }
+  .rq-h .amt { color: #4ADE9A; font-weight: 700; }
+  .rq-h .miss { color: #FFB86B; }
+  .rq-h .hide { margin-left: auto; }
+  .rq-m { font-size: 14px; color: var(--tx2); word-break: break-word; }
+  .rq-it { display: flex; flex-direction: column; gap: 6px; border-left: 3px solid var(--ln3); padding: 4px 0 4px 10px; }
+  .rq-it.ex { border-color: #4ADE9A; } .rq-it.db { border-color: #FFD43B; } .rq-it.rj { border-color: #FF5A52; }
+  .rq-it.added { opacity: .6; }
+  .rq-lv { font: 700 11px Onest, sans-serif; letter-spacing: .04em; }
+  .rq-it.ex .rq-lv { color: #4ADE9A; } .rq-it.db .rq-lv { color: #FFD43B; } .rq-it.rj .rq-lv { color: #FF8A84; }
+  .rq-tr { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .rq-tr img, .rq-tr .ph { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--bg4); flex: 0 0 auto; }
+  .rq-tr .tm { min-width: 0; flex: 1; }
+  .rq-tr .tt { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rq-tr .ts { font-size: 12px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rq-fl { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rq-fl span { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: rgba(255,212,59,.14); color: #FFD43B; }
+  .rq-fl span.rj { background: rgba(255,90,82,.16); color: #FF8A84; }
+  .rq-fl span.pay { background: rgba(255,184,107,.14); color: #FFB86B; }
+  .rq-b { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .rq-alt { display: flex; flex-direction: column; gap: 4px; }
+  .rq-alt label { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--tx2); cursor: pointer; }
+  .rq-alt label input { accent-color: var(--ac); }
+  .rq-note { font-size: 12.5px; color: var(--tx3); }
+  .rq-txt summary { cursor: pointer; color: var(--tx3); font-size: 13px; padding: 6px 2px; }
+  .rq-txt .rq { margin-top: 8px; }
+  .rq-empty { color: var(--tx4); font-size: 14px; padding: 24px 6px; line-height: 1.6; }
+  .qrow .qs .rqtag { color: #4ADE9A; font-weight: 600; }
+  .st-ta { width: 100%; height: auto; padding: 10px 12px; margin-top: 8px; resize: vertical; font: 500 13px 'JetBrains Mono', monospace; line-height: 1.5; }
+  .st-dn { display: grid; grid-template-columns: 1fr; gap: 8px; width: 100%; }
+  .st-dn .rowi { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .st-dn .rowi .field { flex: 1 1 240px; min-width: 0; }
+  .st-dn .lab { font-size: 12px; color: var(--tx4); width: 110px; flex: 0 0 auto; }
+  .st-ok { color: #4ADE9A; } .st-bad { color: #FF8A84; }
+  .st-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; align-items: center; width: 100%; }
+  .st-grid .lab { font-size: 13px; color: var(--tx3); }
+  .st-grid .field { width: 100%; }
+  .site-ov { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; }
+  .site-ov .box { width: min(820px, 92vw); height: min(780px, 88vh); background: var(--bg1); border: 1px solid var(--ln); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+  .site-ov .bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--ln); font-weight: 600; }
+  .site-ov iframe { flex: 1; border: 0; background: #fff; }
+  .rq-test { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--bg3); border: 1px solid var(--bg4); border-radius: 12px; padding: 10px 12px; }
+  .rq-test input { height: 34px; border-radius: 9px; border: 1px solid var(--ln); background: var(--bg0); color: var(--tx); padding: 0 10px; font: 500 13px Onest, sans-serif; outline: none; }
+  .rq-test input:focus { border-color: var(--ac); }
 </style>
 </head>
 <body>
@@ -825,6 +900,7 @@
       <div class="brand">
         <nav id="tabs" aria-label="Разделы">
           <button class="active" data-tab="search">Поиск</button>
+          <button data-tab="req" id="tabReq">Заказы<span class="tbadge" id="reqBadge" hidden></span></button>
           <button data-tab="my">Плейлисты</button>
           <button data-tab="browser">Браузер</button>
           <button data-tab="settings">Настройки</button>
@@ -874,6 +950,15 @@
       <div class="plview" id="searchPl" hidden></div>
     </section>
 
+    <section class="view reqv" id="viewReq" hidden aria-label="Заказы со стрима">
+      <div class="col-head">
+        <h2>Заказы со стрима</h2>
+        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClean" title="Убрать разобранные и «просто текст»">Убрать разобранные</button></span>
+      </div>
+      <div class="rq-sum" id="rqSum" hidden></div>
+      <div class="rq-list" id="rqList"></div>
+    </section>
+
     <section class="my-col view" id="viewMy" hidden aria-label="Плейлисты">
       <div class="my-side" id="mySide"></div>
       <div class="my-main"><div class="plview" id="myPl"></div></div>
@@ -897,6 +982,7 @@
           <button data-go="sAcc">Аккаунты</button>
           <button data-go="sHealth">Состояние сервисов</button>
           <button data-go="sObs">OBS и стрим</button>
+          <button data-go="sStream">Стримерам</button>
           <button data-go="sLook">Оформление</button>
           <button data-go="sSearch">Поиск</button>
           <button data-go="sLocal">Музыка с компьютера</button>
@@ -963,6 +1049,35 @@
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" id="repPreview">Что отправляется</button><button class="btn ghost" id="repTest">Проверить отправку</button><button class="toggle" data-set-tg="reportsEnabled" aria-label="Отправлять отчёты об ошибках"><span></span></button></div>
               </div>
             </div>
+          </section>
+
+          <section id="sStream">
+            <div class="sec-h"><h2>Стримерам</h2><span>Заказы музыки за донаты и своя страница для зрителей</span></div>
+            <div class="card" id="stDon"></div>
+            <div class="sec-h" style="margin-top:18px"><h2 style="font-size:16px">Заказы</h2><span>Как Тапёр принимает песни из донатов</span></div>
+            <div class="card">
+              <div class="srow">
+                <div class="sl"><div class="st">Цена за трек</div><div class="sd">Сколько треков оплачено, Тапёр считает по сумме доната. Не хватает — песня помечается «не хватает суммы», решаешь ты</div></div>
+                <div style="display:flex;gap:8px"><input class="field" id="stPrice" type="number" min="0" step="10" style="width:110px"><select class="field" id="stCur" style="width:90px"><option>RUB</option><option>UAH</option><option>KZT</option><option>USD</option><option>EUR</option></select></div>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Самый длинный трек</div><div class="sd">Длиннее — пометка «длинный»: сам в очередь не попадёт</div></div>
+                <div style="display:flex;gap:8px;align-items:center"><input class="field" id="stMax" type="number" min="0" step="1" style="width:90px"><span class="sd">мин (0 — без ограничения)</span></div>
+              </div>
+              <div class="srow" style="align-items:flex-start">
+                <div class="sl"><div class="st">Стоп-лист</div><div class="sd">Слова, исполнители и треки, которые ты не ставишь — через запятую или с новой строки. Тапёр ищет их в названии, исполнителе и альбоме</div><textarea class="field st-ta" id="stStop" rows="4" spellcheck="false"></textarea><div><button class="btn ghost" id="stStopReset" style="margin-top:8px">Вернуть список по умолчанию</button></div></div>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Мат (18+) можно</div><div class="sd">Выключено — треки с пометкой Explicit ждут твоего решения</div></div>
+                <button class="toggle" id="stExplicit" aria-label="Мат можно"><span></span></button>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Точные — сразу в очередь</div><div class="sd">Песня найдена точно, без спорных пометок и сумма хватает — встаёт в очередь сама. Остальное ждёт тебя во вкладке «Заказы»</div></div>
+                <button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button>
+              </div>
+            </div>
+            <div class="sec-h" style="margin-top:18px"><h2 style="font-size:16px">Сайт-визитка</h2><span>Страница с кнопками доната и инструкцией, как заказать песню</span></div>
+            <div class="card" id="stSite"></div>
           </section>
 
           <section id="sObs">
@@ -1248,6 +1363,7 @@
   </footer>
 <script src="rank.js"></script>
 <script src="theme.js"></script>
+<script src="reqparse.js"></script>
 <script>
   var A = window.app || {};
   function $(id){ return document.getElementById(id); }
@@ -1306,10 +1422,12 @@
     $('hrow2').hidden = t !== 'search';
     $('viewSearch').hidden = t !== 'search';
     $('viewMy').hidden = t !== 'my';
+    $('viewReq').hidden = t !== 'req';
     $('viewBrowser').hidden = t !== 'browser';
     $('viewSettings').hidden = t !== 'settings';
     $('main').classList.toggle('no-queue', t === 'settings');
     if (t === 'my') loadMy(false);
+    if (t === 'req') rqOpen();
     if (t === 'settings') refreshSettings();
     if (t === 'browser' && !BR.cur) brShow('ym');
   }
@@ -1949,7 +2067,7 @@
             '<svg class="eq" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="10" width="3.5" height="10" rx="1"></rect><rect x="10.25" y="4" width="3.5" height="16" rx="1"></rect><rect x="16.5" y="8" width="3.5" height="12" rx="1"></rect></svg>' +
           '</span></div>' +
         '<div class="qm"><div class="qt">' + esc(v.title) + '</div>' +
-        subLine(v, srcName(v) + (v.bg ? ' · фон' : '')).replace('class="s sub"', 'class="qs sub"') + '</div>';
+        subLine(v, srcName(v) + (v.bg ? ' · фон' : '') + (v.req ? ' · ₽ ' + v.req.who : '')).replace('class="s sub"', 'class="qs sub"') + '</div>';
       var x = document.createElement('button'); x.className = 'x'; x.title = 'Убрать'; x.setAttribute('aria-label', 'Убрать');
       x.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
       x.onclick = function(){ removeAt(i); };
@@ -2742,7 +2860,8 @@
     ['Основа', [['net', 'Интернет'], ['app', 'Тапёр'], ['recipes', 'Рецепты сайтов']]],
     ['Яндекс Музыка', [['ym.svc', 'Сервис'], ['ym.acc', 'Аккаунт'], ['ym.play', 'Воспроизведение'], ['ym.site', 'Запасной путь (сайт)']]],
     ['YouTube', [['yt.svc', 'Сервис'], ['yt.login', 'Вход'], ['yt.dlp', 'Движок']]],
-    ['Другие площадки', [['sc', 'SoundCloud · Audius'], ['refs', 'Справочники · Deezer · Last.fm'], ['tg', 'Telegram (браузер)']]]
+    ['Другие площадки', [['sc', 'SoundCloud · Audius'], ['refs', 'Справочники · Deezer · Last.fm'], ['tg', 'Telegram (браузер)']]],
+    ['Стрим', [['don', 'Сервисы донатов']]]
   ];
   var QC_ACT = { 'ym-login': 'войти', 'yt-login': 'войти', update: 'обновить', vpn: 'что делать', fix: 'починить', retry: 'ещё раз' };
   var QC_HELP = {
@@ -2778,7 +2897,7 @@
       g[1].forEach(function (it){
         var x = QC.items[it[0]] || { state: QC.running ? 'run' : '', text: 'ждёт' };
         var st = x.state === 'off' ? '' : x.state;
-        h += '<div class="ck-r ' + st + '"><i class="lamp ' + st + '"></i><span class="n">' + esc(it[1]) + '</span><span class="v" title="' + esc(x.details || x.text || '') + '">' + esc(x.text || '') + (x.action && QC_ACT[x.action] && (x.state === 'bad' || x.state === 'warn' || x.state === 'off') ? '<button data-qa="' + x.action + '" data-qid="' + it[0] + '">' + QC_ACT[x.action] + '</button>' : '') + '</span></div>';
+        h += '<div class="ck-r ' + st + '"><i class="lamp ' + st + '"></i><span class="n">' + esc(it[1]) + '</span><span class="v" title="' + esc(noLib(x.details || x.text)) + '">' + esc(noLib(x.text)) + (x.action && QC_ACT[x.action] && (x.state === 'bad' || x.state === 'warn' || x.state === 'off') ? '<button data-qa="' + x.action + '" data-qid="' + it[0] + '">' + QC_ACT[x.action] + '</button>' : '') + '</span></div>';
       });
     });
     var notes = [];
@@ -3823,6 +3942,298 @@
     t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function(){ t.hidden = true; }, btn ? 7000 : 3000);
   }
   function bindBack(host){ var b = host.querySelector('[data-back]'); if (b) b.onclick = host._backFn || closeSearchList; }
+
+  // ===== Заказы со стрима: донаты с песнями =====
+  var RQ = { list: [], don: null, testOpen: false, altOpen: {} };
+  var RQ_REJECT = { long: 1, stop: 1, nonmusic: 1 };
+  var CURSYM = { RUB: '₽', UAH: '₴', KZT: '₸', USD: '$', EUR: '€' };
+  var DON_NAMES = { da: 'DonationAlerts', dp: 'DonatePay', dn: 'Donatello', test: 'пробный' };
+  function rqSame(v, t){ return v && t && String(v.id) === String(t.id) && srcOf(v) === srcOf(t); }
+  function rqFlags(it){
+    var f = (it.flags || []).slice();
+    if (it.track && it.state !== 'added') {
+      var cur = queue[current];
+      if (queue.some(function (v, i){ return i > current && !v.played && rqSame(v, it.track); }) || (cur && rqSame(cur, it.track))) f.push({ k: 'repeat', t: 'уже в очереди' });
+      else if (queue.some(function (v){ return v.played && rqSame(v, it.track); })) f.push({ k: 'repeat', t: 'уже играла сегодня' });
+    }
+    return f;
+  }
+  function rqCls(it){ if (it.state === 'added') return 'added'; var f = rqFlags(it); if (f.some(function (x){ return RQ_REJECT[x.k]; })) return 'rj'; return it.level === 'exact' && it.track ? 'ex' : 'db'; }
+  function rqAutoOk(it){ return it.level === 'exact' && it.track && !it.state && it.paid !== false && !rqFlags(it).length; }
+  function rqPending(r){ return r.state === 'dismissed' ? [] : (r.items || []).filter(function (it){ return !it.state; }); }
+  function rqMoney(r){ return (r.amount != null ? (Math.round(r.amount * 100) / 100) : '?') + ' ' + (CURSYM[r.currency] || r.currency || ''); }
+  function rqAgo(t){ var m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад'; var h = Math.round(m / 60); if (h < 24) return h + ' ч назад'; return Math.round(h / 24) + ' дн назад'; }
+  function rqSave(r){ A.reqUpdate && A.reqUpdate(r.key, { items: r.items, state: r.state }); }
+  function rqAdd(r, it, track, now){
+    var t = track || it.track; if (!t) return;
+    var c = copyTrack(t); c.req = { who: r.name || 'Аноним', amt: r.amount, cur: r.currency };
+    if (now) playNow(c); else addMany([c]);
+    it.state = 'added'; if (track && track !== it.track) { it.alts = [it.track].concat((it.alts || []).filter(function (x){ return x !== track; })).filter(Boolean); it.track = track; }
+    if (it.query && it.level !== 'exact' && A.reqRemember) A.reqRemember(it.query, t);
+    if (rqPending(r).length === 0 && r.state !== 'dismissed') r.state = 'done';
+    rqSave(r); rqRender();
+  }
+  function rqItemHtml(r, ri, it, ii){
+    var cls = rqCls(it), f = rqFlags(it), id = ri + ':' + ii;
+    var lv = it.state === 'added' ? '✓ ДОБАВЛЕНО' : it.state === 'skip' ? 'ПРОПУЩЕНО' : cls === 'rj' ? '⛔ НЕ ПРИНИМАЕТСЯ' : cls === 'ex' ? '✔ ТОЧНО' : '? ПОД СОМНЕНИЕМ';
+    var h = '<div class="rq-it ' + cls + '"><span class="rq-lv">' + lv + '</span>';
+    if (it.track) {
+      var t = it.track;
+      h += '<div class="rq-tr">' + (t.thumb ? '<img src="' + esc(t.thumb) + '" alt="" loading="lazy">' : '<span class="ph"></span>') + '<div class="tm"><div class="tt">' + esc(t.author ? t.author + ' — ' + t.title : t.title) + '</div><div class="ts">' + esc(srcName(t) + (t.duration ? ' · ' + t.duration : '') + (t.album ? ' · ' + t.album : '')) + '</div></div></div>';
+    } else if (it.note) h += '<div class="rq-note">' + esc(it.note) + (it.query ? ' · «' + esc(it.query) + '»' : '') + '</div>';
+    var chips = f.map(function (x){ return '<span class="' + (RQ_REJECT[x.k] ? 'rj' : '') + '">' + esc(x.t) + '</span>'; });
+    if (it.paid === false) chips.push('<span class="pay">не хватает суммы</span>');
+    if (chips.length) h += '<div class="rq-fl">' + chips.join('') + '</div>';
+    if (!it.state) {
+      var alts = [it.track].concat(it.alts || []).filter(Boolean);
+      if (RQ.altOpen[id] && alts.length > 1) {
+        h += '<div class="rq-alt">' + alts.map(function (t, k){ return '<label><input type="radio" name="rqa' + id + '" value="' + k + '"' + (k === 0 ? ' checked' : '') + '>' + esc((t.author ? t.author + ' — ' : '') + t.title) + ' <span style="color:var(--tx4)">' + esc(srcName(t) + (t.duration ? ' · ' + t.duration : '')) + '</span></label>'; }).join('') + '</div>';
+      }
+      h += '<div class="rq-b">';
+      if (it.track) h += '<button class="pbtn qadd" data-rq="add" data-id="' + id + '">＋ В очередь</button><button class="rq-sm" data-rq="now" data-id="' + id + '">▶ Сейчас</button>';
+      if (alts.length > 1) h += '<button class="rq-sm" data-rq="alts" data-id="' + id + '">' + (RQ.altOpen[id] ? 'Скрыть варианты' : 'Другие варианты (' + (alts.length - 1) + ')') + '</button>';
+      if (it.link) h += '<button class="rq-sm" data-rq="link" data-id="' + id + '">Открыть ссылку</button>';
+      h += '<button class="rq-sm" data-rq="find" data-id="' + id + '">Искать сам</button><button class="rq-sm" data-rq="skip" data-id="' + id + '">Не то</button></div>';
+    }
+    return h + '</div>';
+  }
+  function rqCardHtml(r, ri){
+    var h = '<div class="rq' + (r.state === 'done' ? ' done' : '') + '"><div class="rq-h"><b>' + esc(r.name || 'Аноним') + '</b><span class="amt">' + esc(rqMoney(r)) + '</span><span>' + esc(DON_NAMES[r.prov] || r.prov) + ' · ' + rqAgo(r.at || r.got) + '</span>' + (r.missed ? '<span class="miss">пришёл, пока Тапёр был закрыт</span>' : '') +
+      '<button class="rq-sm hide" data-rq="hide" data-ri="' + ri + '">Скрыть</button></div>' +
+      (r.text ? '<div class="rq-m">«' + esc(r.text) + '»</div>' : '');
+    (r.items || []).forEach(function (it, ii){ h += rqItemHtml(r, ri, it, ii); });
+    if (r.level === 'text') h += '<div class="rq-b"><button class="rq-sm" data-rq="textfind" data-ri="' + ri + '">Это заказ — искать</button></div>';
+    return h + '</div>';
+  }
+  function rqSummary(act){
+    var ex = [], db = [], rj = [], tx = 0;
+    act.forEach(function (r){ rqPending(r).forEach(function (it){ var c = rqCls(it), nm = it.track ? (it.track.author ? it.track.author + ' — ' : '') + it.track.title : '«' + (it.query || it.link || '') + '»'; if (c === 'ex') ex.push(nm); else if (c === 'rj') rj.push(nm + ' (' + rqFlags(it).filter(function (x){ return RQ_REJECT[x.k]; }).map(function (x){ return x.t; }).join(', ') + ')'); else db.push(nm); }); });
+    RQ.list.forEach(function (r){ if (r.level === 'text' && r.state !== 'dismissed' && Date.now() - (r.got || 0) < 6 * 3600 * 1000) tx++; });
+    var parts = [];
+    if (ex.length) parts.push('<b class="g">Точно:</b> ' + esc(ex.join(', ')));
+    if (db.length) parts.push('<b class="y">Под сомнением:</b> ' + esc(db.join(', ')));
+    if (rj.length) parts.push('<b class="r">Спорные:</b> ' + esc(rj.join('; ')));
+    if (tx) parts.push('<b>Просто текст:</b> ' + tx + ' ' + (tx === 1 ? 'донат' : tx < 5 ? 'доната' : 'донатов') + ' за 6 часов');
+    return { html: parts.join('<br>'), ex: ex.length, any: ex.length + db.length + rj.length };
+  }
+  function rqRender(){
+    var list = $('rqList'); if (!list) return;
+    var act = [], txt = [];
+    RQ.list.forEach(function (r, ri){ r._ri = ri; if (r.state === 'dismissed') return; if (r.level === 'text') txt.push(r); else act.push(r); });
+    act.sort(function (a, b){ var pa = rqPending(a).length ? 1 : 0, pb = rqPending(b).length ? 1 : 0; return pb - pa || (b.got || 0) - (a.got || 0); });
+    txt.sort(function (a, b){ return (b.got || 0) - (a.got || 0); });
+    var sm = rqSummary(act);
+    $('rqSum').hidden = !sm.html; $('rqSum').innerHTML = sm.html;
+    var nEx = 0; act.forEach(function (r){ rqPending(r).forEach(function (it){ if (rqCls(it) === 'ex' && it.paid !== false) nEx++; }); });
+    $('rqAddAll').hidden = !nEx; $('rqAddAll').textContent = '＋ Все точные в очередь (' + nEx + ')';
+    var h = '';
+    if (RQ.testOpen) h += '<div class="rq-test"><input id="rqtText" style="flex:1 1 280px" placeholder="Текст доната, например: Привет! Кино — Кукушка" value="' + esc(RQ.testText || '') + '"><input id="rqtAmt" type="number" style="width:100px" value="' + esc(RQ.testAmt || 100) + '" aria-label="Сумма"><button class="pbtn qadd" id="rqtGo">Разобрать</button><span class="sd" style="color:var(--tx4);font-size:12px">Пробный заказ не уходит никуда — только сюда</span></div>';
+    if (!act.length && !txt.length) h += '<div class="rq-empty">Пока заказов нет.<br>Подключи сервис донатов в <a href="#" data-rq="settings" style="color:var(--ac2)">Настройках → Стримерам</a> — и донаты с песнями будут появляться здесь: что найдено точно, что под сомнением, а что просто текст.<br>Проверить разбор можно кнопкой «Пробный заказ».</div>';
+    act.forEach(function (r){ h += rqCardHtml(r, r._ri); });
+    if (txt.length) h += '<details class="rq-txt"' + (RQ.txtOpen ? ' open' : '') + '><summary>Просто текст — ' + txt.length + '</summary>' + txt.slice(0, 60).map(function (r){ return rqCardHtml(r, r._ri); }).join('') + '</details>';
+    list.innerHTML = h;
+    var d = list.querySelector('.rq-txt'); if (d) d.ontoggle = function(){ RQ.txtOpen = d.open; };
+    var go = $('rqtGo'); if (go) { go.onclick = rqRunTest; $('rqtText').onkeydown = function(e){ if (e.key === 'Enter') rqRunTest(); }; }
+    rqBadge();
+  }
+  function rqBadge(){
+    var b = $('reqBadge'); if (!b) return;
+    var n = 0, ex = false;
+    RQ.list.forEach(function (r){ var p = rqPending(r); if (p.length && r.level !== 'text') { n++; if (p.some(function (it){ return rqCls(it) === 'ex'; })) ex = true; } });
+    b.hidden = !n; b.textContent = n; b.classList.toggle('ex', ex);
+  }
+  async function rqRunTest(){
+    var t = $('rqtText').value.trim(); if (!t) return;
+    RQ.testText = t; RQ.testAmt = Number($('rqtAmt').value) || 0;
+    var b = $('rqtGo'); b.disabled = true; b.textContent = 'Ищу…';
+    var r = await A.reqTest(t, RQ.testAmt).catch(function(){ return null; });
+    if (r) rqIncoming(r);
+    RQ.testText = ''; rqRender();
+  }
+  function rqIncoming(r){
+    if (RQ.list.some(function (x){ return x.key === r.key; })) return;
+    RQ.list.push(r);
+    var auto = RQ.auto;
+    if (auto) (r.items || []).forEach(function (it){ if (rqAutoOk(it)) rqAdd(r, it, null, false); });
+    if (curTab !== 'req' && r.level !== 'text') { var tb = $('tabReq'); tb.classList.remove('glow'); void tb.offsetWidth; tb.classList.add('glow'); }
+    rqRender();
+  }
+  function rqOpen(){ rqRender(); rqSvcLine(); }
+  function rqSvcLine(){
+    var s = RQ.don, box = $('rqSvc'); if (!box) return;
+    if (!s) { box.innerHTML = ''; return; }
+    var on = ['da', 'dp', 'dn'].filter(function (k){ return s[k] && s[k].connected; });
+    box.innerHTML = on.length ? on.map(function (k){ var x = s[k]; return '<span title="' + esc(x.error || 'на связи') + '"><i class="' + (x.ok === false ? 'bad' : x.ok ? 'ok' : '') + '"></i>' + esc(x.name) + '</span>'; }).join('') : '<a href="#" data-rq="settings" style="color:var(--ac2)">Подключить сервис донатов</a>';
+  }
+  $('viewReq').addEventListener('click', function(e){
+    var b = e.target.closest('[data-rq]'); if (!b) return;
+    e.preventDefault();
+    var a = b.dataset.rq;
+    if (a === 'settings') { setTab('settings'); setTimeout(function(){ $('sStream').scrollIntoView({ block: 'start' }); }, 50); return; }
+    var r, it;
+    if (b.dataset.id) { var p = b.dataset.id.split(':'); r = RQ.list[+p[0]]; it = r && r.items[+p[1]]; if (!it) return; }
+    if (b.dataset.ri != null) r = RQ.list[+b.dataset.ri];
+    if (a === 'add' || a === 'now') {
+      var pick = null;
+      if (RQ.altOpen[b.dataset.id]) { var ch = document.querySelector('input[name="rqa' + b.dataset.id + '"]:checked'); var alts = [it.track].concat(it.alts || []).filter(Boolean); if (ch) pick = alts[+ch.value]; }
+      delete RQ.altOpen[b.dataset.id];
+      rqAdd(r, it, pick, a === 'now');
+    } else if (a === 'alts') { RQ.altOpen[b.dataset.id] = !RQ.altOpen[b.dataset.id]; rqRender(); }
+    else if (a === 'skip') { it.state = 'skip'; if (!rqPending(r).length) r.state = 'done'; rqSave(r); rqRender(); }
+    else if (a === 'link') { A.openLink(it.link); }
+    else if (a === 'find' || a === 'textfind') {
+      var q = (it && (it.query || (it.track && ((it.track.author || '') + ' ' + it.track.title)))) || (r && r.text) || '';
+      setTab('search'); search.value = q.trim(); doSearch({ nav: true });
+    } else if (a === 'hide') { r.state = 'dismissed'; rqSave(r); rqRender(); }
+  });
+  $('rqAddAll').onclick = function(){
+    var list = [];
+    RQ.list.forEach(function (r){ if (r.state === 'dismissed') return; (r.items || []).forEach(function (it){ if (!it.state && rqCls(it) === 'ex' && it.paid !== false) list.push([r, it]); }); });
+    list.sort(function (x, y){ return (x[0].got || 0) - (y[0].got || 0); }).forEach(function (p){ rqAdd(p[0], p[1], null, false); });
+    toast('В очередь: ' + list.length);
+  };
+  $('rqTest').onclick = function(){ RQ.testOpen = !RQ.testOpen; rqRender(); if (RQ.testOpen) setTimeout(function(){ var i = $('rqtText'); if (i) i.focus(); }, 30); };
+  $('rqClean').onclick = function(){ RQ.list.forEach(function (r){ if (r.level === 'text' || !rqPending(r).length) r.state = 'dismissed'; }); if (A.reqClear) A.reqClear(); rqRender(); };
+  if (A.reqList) A.reqList().then(function (l){ RQ.list = l || []; rqRender(); });
+  if (A.onReqNew) A.onReqNew(rqIncoming);
+  if (A.getSetting) A.getSetting('reqAuto').then(function (v){ RQ.auto = !!v; });
+  document.addEventListener('click', function(e){ var t = e.target.closest('[data-set-tg="reqAuto"]'); if (t) setTimeout(function(){ RQ.auto = t.classList.contains('on'); }, 0); });
+  setInterval(function(){ if (curTab === 'req') rqRender(); }, 60000);
+
+  // ===== Настройки «Стримерам»: сервисы донатов, правила, сайт-визитка =====
+  var DON = { links: {}, keyBusy: {}, daWait: false };
+  var LINK_PH = { da: 'https://www.donationalerts.com/r/твой_ник', dp: 'https://new.donatepay.ru/@твой_ник', dn: 'https://donatello.to/твой_ник', yoomoney: 'https://yoomoney.ru/to/номер_кошелька', boosty: 'https://boosty.to/твой_ник', other: 'любая другая ссылка на донат' };
+  var KEY_HELP = { dp: ['https://donatepay.ru/page/api', 'На сайте DonatePay: «Настройки» → «API» → скопируй ключ'], dn: ['https://donatello.to/panel/doc-api', 'На сайте Donatello: раздел «API» → включи доступ и скопируй токен'] };
+  function donLinkRow(k, label){ return '<div class="rowi"><span class="lab">' + label + '</span><input class="field" data-dl="' + k + '" placeholder="' + esc(LINK_PH[k]) + '" value="' + esc(DON.links[k] || '') + '" spellcheck="false"></div>'; }
+  function renderStDon(){
+    var box = $('stDon'); if (!box) return;
+    var s = RQ.don || {}; var h = '';
+    ['da', 'dp', 'dn'].forEach(function (k){
+      var x = s[k] || { name: DON_NAMES[k] };
+      var state = x.connected ? (x.ok === false ? '<span class="st-bad">⚠ ' + esc(x.error || 'нет связи') + '</span>' : '<span class="st-ok">✓ Подключён' + (x.account && x.account.name ? ' как ' + esc(x.account.name) : '') + (x.ok ? ' · на связи' : '') + '</span>') : 'Не подключён';
+      var btn = '';
+      if (k === 'da') {
+        if (x.connected) btn = '<button class="btn ghost" data-don="off" data-k="da">Отключить</button>';
+        else if (s.da && s.da.configured === false) state = 'Не подключён · вход в DonationAlerts в этой сборке не настроен';
+        else btn = DON.daWait ? '<button class="btn ghost" data-don="dacancel">Отмена (жду входа в браузере…)</button>' : '<button class="btn" data-don="da">Подключить</button>';
+      } else btn = x.connected ? '<button class="btn ghost" data-don="off" data-k="' + k + '">Отключить</button>' : '';
+      h += '<div class="srow" style="align-items:flex-start"><div class="sl"><div class="st">' + esc(x.name || DON_NAMES[k]) + '</div><div class="sd">' + state + '</div><div class="st-dn">' + donLinkRow(k, 'Ссылка на донат') +
+        (k !== 'da' && !x.connected ? '<div class="rowi"><span class="lab">' + (k === 'dp' ? 'API-ключ' : 'Токен') + '</span><input class="field" type="password" data-dk="' + k + '" placeholder="' + esc(KEY_HELP[k][1]) + '" spellcheck="false" autocomplete="off"><button class="btn" data-don="key" data-k="' + k + '">' + (DON.keyBusy[k] ? 'Проверяю…' : 'Подключить') + '</button></div><div class="sd"><a href="#" data-don="help" data-k="' + k + '" style="color:var(--ac2)">Где взять?</a> Ключ хранится зашифрованно на этом компьютере. Тапёр только читает донаты — вывести деньги им нельзя</div>' : '') +
+        '</div></div>' + (btn ? '<div style="display:flex;gap:8px">' + btn + '</div>' : '') + '</div>';
+    });
+    h += '<div class="srow" style="align-items:flex-start"><div class="sl"><div class="st">Другие ссылки на донат</div><div class="sd">Только для кнопок на сайте-визитке: донаты отсюда Тапёр сам не видит</div><div class="st-dn">' + donLinkRow('yoomoney', 'ЮMoney') + donLinkRow('boosty', 'Boosty') + donLinkRow('other', 'Другое') + '</div></div></div>';
+    box.innerHTML = h;
+  }
+  $('stDon').addEventListener('input', function(e){ var i = e.target.closest('[data-dl]'); if (!i) return; DON.links[i.dataset.dl] = i.value.trim(); clearTimeout(DON.lt); DON.lt = setTimeout(function(){ A.setSetting('donLinks', DON.links); }, 400); });
+  $('stDon').addEventListener('click', async function(e){
+    var b = e.target.closest('[data-don]'); if (!b) return; e.preventDefault();
+    var a = b.dataset.don, k = b.dataset.k;
+    if (a === 'help') { A.openLink(KEY_HELP[k][0]); return; }
+    if (a === 'off') { await A.donDisconnect(k); RQ.don = await A.donStatus(); renderStDon(); rqSvcLine(); return; }
+    if (a === 'dacancel') { A.donDaCancel(); return; }
+    if (a === 'da') {
+      DON.daWait = true; renderStDon();
+      var r = await A.donDaLogin(); DON.daWait = false;
+      if (r && r.error && r.error !== 'cancelled') toast(r.error === 'not-configured' ? 'Вход в DonationAlerts в этой сборке не настроен' : 'DonationAlerts: ' + r.error);
+      if (r && r.ok) toast('DonationAlerts подключён');
+      RQ.don = await A.donStatus(); renderStDon(); rqSvcLine(); return;
+    }
+    if (a === 'key') {
+      var inp = document.querySelector('[data-dk="' + k + '"]'); var v = inp && inp.value.trim(); if (!v) { inp && inp.focus(); return; }
+      DON.keyBusy[k] = true; renderStDon();
+      var r2 = await A.donSetKey(k, v); DON.keyBusy[k] = false;
+      if (r2 && r2.error) toast(DON_NAMES[k] + ': ' + r2.error); else toast(DON_NAMES[k] + ' подключён');
+      RQ.don = await A.donStatus(); renderStDon(); rqSvcLine();
+    }
+  });
+  if (A.onDonStatus) A.onDonStatus(function (s){ RQ.don = s; rqSvcLine(); if (!$('viewSettings').hidden && !document.activeElement.closest('#stDon')) renderStDon(); });
+  // Правила заказов
+  var REQ_RULES = {};
+  function saveRules(){ A.setSetting('reqRules', REQ_RULES); }
+  function stopToText(a){ return (a || []).join(', '); }
+  function textToStop(t){ return String(t || '').split(/[,\n;]+/).map(function (x){ return x.trim(); }).filter(Boolean); }
+  async function initStream(){
+    if (!A.getSetting) return;
+    DON.links = (await A.getSetting('donLinks')) || {};
+    REQ_RULES = (await A.getSetting('reqRules')) || {};
+    var defStop = (window.TapReq && TapReq.DEFAULT_STOP) || [];
+    $('stPrice').value = (await A.getSetting('reqPrice')) || 100;
+    $('stCur').value = (await A.getSetting('reqCurrency')) || 'RUB';
+    $('stMax').value = REQ_RULES.maxSec == null ? 7 : Math.round(REQ_RULES.maxSec / 60);
+    $('stStop').value = stopToText(Array.isArray(REQ_RULES.stopWords) ? REQ_RULES.stopWords : defStop);
+    setTg($('stExplicit'), !!REQ_RULES.explicitOk);
+    if (A.donStatus) RQ.don = await A.donStatus();
+    renderStDon(); rqSvcLine(); await siteInit();
+  }
+  $('stPrice').onchange = function(){ A.setSetting('reqPrice', Math.max(0, Number(this.value) || 0)); siteDirty(); };
+  $('stCur').onchange = function(){ A.setSetting('reqCurrency', this.value); siteDirty(); };
+  $('stMax').onchange = function(){ REQ_RULES.maxSec = Math.max(0, Number(this.value) || 0) * 60; saveRules(); };
+  $('stStop').onchange = function(){ REQ_RULES.stopWords = textToStop(this.value); saveRules(); };
+  $('stStopReset').onclick = function(){ delete REQ_RULES.stopWords; saveRules(); $('stStop').value = stopToText((window.TapReq && TapReq.DEFAULT_STOP) || []); };
+  $('stExplicit').onclick = function(){ REQ_RULES.explicitOk = !this.classList.contains('on'); setTg(this, REQ_RULES.explicitOk); saveRules(); };
+
+  // Сайт-визитка
+  var SITE = { d: {}, st: null, busy: false, dev: null, tokOpen: false };
+  var SITE_DEF_INSTR = 'Нажми любую кнопку доната выше.\nВ сообщении напиши песню: `Исполнитель — Название` или ссылку (YouTube, Яндекс Музыка, VK, SoundCloud).\nНесколько песен — через запятую или с новой строки. Цена — за каждую.\nПривет и пожелания пиши там же: песню программа найдёт сама.';
+  var SITE_DEF_RULES = 'Не играю длинные треки (больше 7 минут) и ролики не про музыку. Стример может пропустить любой заказ.';
+  var SITE_FIELDS = [['nick', 'Ник'], ['about', 'О себе'], ['avatar', 'Аватарка (ссылка)'], ['ch_twitch', 'Twitch'], ['ch_youtube', 'YouTube'], ['ch_vk', 'VK Видео'], ['ch_kick', 'Kick'], ['ch_telegram', 'Telegram']];
+  function siteDirty(){ SITE.dirty = true; renderStSite(); }
+  function siteColors(){ var cs = getComputedStyle(document.documentElement); var g = function (n){ return toHex(cs.getPropertyValue(n).trim()); }; return { bg: g('--bg1'), card: g('--bg3'), tx: g('--tx'), tx2: g('--tx3'), ac: g('--ac'), pri: g('--pri') }; }
+  function toHex(c){ if (/^#[0-9a-f]{6}$/i.test(c)) return c; var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c); if (m) return '#' + [m[1], m[2], m[3]].map(function (x){ return ('0' + (+x).toString(16)).slice(-2); }).join(''); var d = document.createElement('div'); d.style.color = c; document.body.appendChild(d); var r = getComputedStyle(d).color; d.remove(); m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(r); return m ? '#' + [m[1], m[2], m[3]].map(function (x){ return ('0' + (+x).toString(16)).slice(-2); }).join('') : ''; }
+  function siteParams(){
+    var d = SITE.d, ch = {};
+    ['twitch', 'youtube', 'vk', 'kick', 'telegram'].forEach(function (k){ ch[k] = d['ch_' + k] || ''; });
+    return { nick: d.nick || '', about: d.about || '', avatar: d.avatar || '', channels: ch, donate: DON.links, price: Number($('stPrice').value) || 0, currency: $('stCur').value, instr: d.instr == null ? SITE_DEF_INSTR : d.instr, rules: d.rules == null ? SITE_DEF_RULES : d.rules, qrCaption: d.qrCaption || 'Заказать песню', colors: siteColors() };
+  }
+  function renderStSite(){
+    var box = $('stSite'); if (!box) return;
+    var st = SITE.st || {}, d = SITE.d, h = '';
+    h += '<div class="srow" style="align-items:flex-start"><div class="sl"><div class="st">Что на странице</div><div class="sd">Кнопки доната берутся из ссылок выше. Цвета — из твоей темы Тапёра</div><div class="st-grid" style="margin-top:10px">' +
+      SITE_FIELDS.map(function (f){ return '<span class="lab">' + f[1] + '</span><input class="field" data-sf="' + f[0] + '" value="' + esc(d[f[0]] || '') + '" spellcheck="false">'; }).join('') +
+      '<span class="lab">Как заказать</span><textarea class="field st-ta" data-sf="instr" rows="5">' + esc(d.instr == null ? SITE_DEF_INSTR : d.instr) + '</textarea>' +
+      '<span class="lab">Правила</span><textarea class="field st-ta" data-sf="rules" rows="2">' + esc(d.rules == null ? SITE_DEF_RULES : d.rules) + '</textarea>' +
+      '<span class="lab">Подпись под QR</span><input class="field" data-sf="qrCaption" value="' + esc(d.qrCaption || 'Заказать песню') + '"></div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" data-site="preview">Посмотреть</button><button class="btn ghost" data-site="save">Сохранить как файл…</button></div></div></div>';
+    // GitHub
+    var gh = '';
+    if (st.connected) gh = '<span class="st-ok">✓ GitHub: ' + esc((st.account && st.account.login) || 'подключён') + '</span>';
+    else if (SITE.dev) gh = 'Открылась страница GitHub — введи там код <b style="font:700 18px \'JetBrains Mono\',monospace;color:var(--tx);letter-spacing:.1em">' + esc(SITE.dev.user_code) + '</b> и нажми «Authorize». Тапёр ждёт…';
+    else gh = 'Сайт лежит в твоём аккаунте GitHub (бесплатно, адрес вида <code>ник.github.io/tapyor-page</code>). Нет аккаунта — зарегистрируйся на github.com за минуту.';
+    var btns = '';
+    if (!st.connected) {
+      if (SITE.dev) btns = '<button class="btn ghost" data-site="devcopy">Скопировать код</button><button class="btn ghost" data-site="devcancel">Отмена</button>';
+      else if (st.configured) btns = '<button class="btn" data-site="dev">Войти в GitHub</button>';
+      else btns = '<button class="btn" data-site="tok">' + (SITE.tokOpen ? 'Скрыть' : 'Подключить GitHub') + '</button>';
+    } else btns = '<button class="btn" data-site="publish"' + (SITE.busy ? ' disabled' : '') + '>' + (SITE.busy ? 'Выкладываю…' : (st.url ? 'Обновить сайт' : 'Выложить сайт')) + '</button><button class="btn ghost" data-site="ghoff">Отключить GitHub</button>';
+    h += '<div class="srow" style="align-items:flex-start"><div class="sl"><div class="st">Выложить в интернет</div><div class="sd">' + gh + '</div>' +
+      (!st.connected && !st.configured && SITE.tokOpen ? '<div class="sd" style="margin-top:8px">1. Нажми «Открыть GitHub» — откроется страница нового ключа, всё уже заполнено.<br>2. Внизу нажми «Generate token» и скопируй ключ (начинается на ghp_).<br>3. Вставь его сюда. Ключ хранится зашифрованно и даёт Тапёру доступ только к публичным репозиториям.</div><div class="st-dn" style="margin-top:8px"><div class="rowi"><button class="btn ghost" data-site="tokopen">Открыть GitHub</button><input class="field" type="password" id="siteTok" placeholder="ghp_…" spellcheck="false" autocomplete="off"><button class="btn" data-site="tokset">Подключить</button></div></div>' : '') +
+      (st.url ? '<div class="sd" style="margin-top:10px">Адрес сайта — для описания канала и чат-бота:</div><div class="path">' + esc(st.url) + '</div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" data-site="copy">Скопировать</button><button class="btn ghost" data-site="open">Открыть</button></div>' +
+        '<div class="sd" style="margin-top:10px">QR-код для OBS: источник «Браузер», ширина 260, высота 300, адрес:</div><div class="path">' + esc(st.url + 'qr.html') + '</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn ghost" data-site="copyqr">Скопировать</button><button class="btn ghost" data-site="openqr">Открыть</button></div>' +
+        (SITE.dirty ? '<div class="sd" style="margin-top:8px;color:#FFD43B">Есть изменения — нажми «Обновить сайт». Страница обновится через 1–2 минуты</div>' : '') : '') +
+      '</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + btns + '</div></div>';
+    box.innerHTML = h;
+  }
+  async function siteInit(){ SITE.d = (await A.getSetting('site')) || {}; SITE.st = A.siteStatus ? await A.siteStatus() : {}; renderStSite(); }
+  $('stSite').addEventListener('input', function(e){ var i = e.target.closest('[data-sf]'); if (!i) return; SITE.d[i.dataset.sf] = i.value; SITE.dirty = true; clearTimeout(SITE.t); SITE.t = setTimeout(function(){ A.setSetting('site', SITE.d); }, 400); });
+  $('stSite').addEventListener('click', async function(e){
+    var b = e.target.closest('[data-site]'); if (!b) return; e.preventDefault();
+    var a = b.dataset.site, st = SITE.st || {};
+    if (a === 'preview') { var html = await A.sitePreview(siteParams()); var ov = document.createElement('div'); ov.className = 'site-ov'; ov.innerHTML = '<div class="box"><div class="bar">Так увидят зрители<button class="btn ghost" data-x>Закрыть</button></div><iframe sandbox="" title="Предпросмотр сайта"></iframe></div>'; ov.querySelector('iframe').srcdoc = html; ov.onclick = function(ev){ if (ev.target === ov || ev.target.closest('[data-x]')) ov.remove(); }; document.body.appendChild(ov); return; }
+    if (a === 'save') { await A.siteSave(siteParams()); return; }
+    if (a === 'tok') { SITE.tokOpen = !SITE.tokOpen; renderStSite(); return; }
+    if (a === 'tokopen') { A.openLink('https://github.com/settings/tokens/new?scopes=public_repo&description=Tapyor%20page'); return; }
+    if (a === 'tokset') { var v = $('siteTok').value.trim(); if (!v) return; var r = await A.siteGhToken(v); if (r && r.error) toast('GitHub: ' + r.error); SITE.st = await A.siteStatus(); SITE.tokOpen = false; renderStSite(); return; }
+    if (a === 'dev') { var d = await A.siteGhDeviceStart(); if (!d || d.error) { toast('GitHub: ' + ((d && d.error) || 'не получилось')); return; } SITE.dev = d; copyText(d.user_code); renderStSite(); var w = await A.siteGhDeviceWait(); SITE.dev = null; if (w && w.error && w.error !== 'cancelled') toast('GitHub: ' + w.error); SITE.st = await A.siteStatus(); renderStSite(); return; }
+    if (a === 'devcopy') { copyText(SITE.dev && SITE.dev.user_code); toast('Код скопирован'); return; }
+    if (a === 'devcancel') { A.siteGhDeviceCancel(); return; }
+    if (a === 'ghoff') { await A.siteGhToken(''); SITE.st = await A.siteStatus(); renderStSite(); return; }
+    if (a === 'publish') { SITE.busy = true; renderStSite(); var p = await A.sitePublish(siteParams()); SITE.busy = false; if (p && p.error) toast('Сайт: ' + p.error); else { SITE.dirty = false; toast('Сайт выложен — откроется через 1–2 минуты'); } SITE.st = await A.siteStatus(); renderStSite(); return; }
+    if (a === 'copy') { copyText(st.url); toast('Ссылка скопирована'); return; }
+    if (a === 'copyqr') { copyText(st.url + 'qr.html'); toast('Адрес скопирован'); return; }
+    if (a === 'open') { A.openLink(st.url); return; }
+    if (a === 'openqr') { A.openLink(st.url + 'qr.html'); return; }
+  });
+  initStream();
 
   // ===== Музыка с компьютера =====
   var LIB = { count: 0, folders: [], tracks: null, scanning: null };
@@ -4983,6 +5394,8 @@
     var h = Math.round(m / 60); if (h < 24) return h + ' ч назад';
     return Math.round(h / 24) + ' дн назад';
   }
+  // В окне не показываем названия внутренних библиотек (yt-dlp, hls.js и т.п.)
+  function noLib(t){ return String(t == null ? '' : t).replace(/\s*\(поток HLS\)/g, '').replace(/\b(yt-?dlp(\.exe)?|ytdl(-core)?|yt-search|hls\.js|hls)\b/gi, 'движок').replace(/движок:\s*движок/gi, 'движок'); }
   function renderHealth(){
     var box = $('healthBox'); if (!box) return;
     var h = '';
@@ -4990,11 +5403,11 @@
     else {
       ['yandex', 'youtube', 'soundcloud', 'audius'].forEach(function (k){
         var s = health.services && health.services[k]; if (!s) return;
-        h += '<div class="hs-svc"><div class="hs-head"><b>' + SVC_NAMES[k] + '</b><span class="hs-pill ' + s.status + '">' + ST_TEXT[s.status] + '</span><span class="hs-title">' + esc(s.title || '') + '</span>' +
+        h += '<div class="hs-svc"><div class="hs-head"><b>' + SVC_NAMES[k] + '</b><span class="hs-pill ' + s.status + '">' + ST_TEXT[s.status] + '</span><span class="hs-title">' + esc(noLib(s.title)) + '</span>' +
           ((s.status === 'fail' || s.status === 'warn') && (k === 'yandex' || k === 'youtube') ? '<button class="btn ghost" data-hs-browser="' + (k === 'yandex' ? 'ym' : 'yt') + '">Слушать на сайте</button>' : '') + '</div>';
         (s.steps || []).forEach(function (st){
           var ic = st.ok === true ? '<span class="hs-ic ok">✓</span>' : (st.ok === false ? '<span class="hs-ic bad">✕</span>' : '<span class="hs-ic">–</span>');
-          h += '<div class="hs-step">' + ic + '<span class="hs-n">' + esc(st.name) + '</span><span class="hs-t">' + esc(st.text || '') + '</span></div>';
+          h += '<div class="hs-step">' + ic + '<span class="hs-n">' + esc(noLib(st.name)) + '</span><span class="hs-t">' + esc(noLib(st.text)) + '</span></div>';
         });
         h += '</div>';
       });

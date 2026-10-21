@@ -9,6 +9,9 @@ const ytoauth = require('./ytoauth');
 const recipes = require('./recipes');
 const library = require('./library');
 const importers = require('./importers');
+const reqp = require('./reqparse');
+const donations = require('./donations');
+const sitepage = require('./sitepage');
 const crypto = require('crypto');
 nativeTheme.themeSource = 'dark'; // тёмные системные окна и диалоги
 const path = require('path');
@@ -49,6 +52,7 @@ const DEFAULTS = {
   normalize: true, crossfade: 6,
   ytEnabled: true, ymWebFallback: true, ytUseCookies: false, scEnabled: true, auEnabled: true,
   preferLocal: true, libInSearch: true,
+  reqPrice: 100, reqCurrency: 'RUB', reqAuto: false,
   mediaKeys: true,
   hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
@@ -459,7 +463,7 @@ function startServer() {
     // Свои файлы с компьютера: только из списка Тапёра и только для окна Тапёра (метка в cookie)
     if (p.startsWith('/lfile/') || p.startsWith('/lcover/')) { serveLocal(req, res, p); return; }
     const file = path.normalize(path.join(root, p));
-    if (!file.startsWith(root)) { res.writeHead(403); res.end('forbidden'); return; }
+    if (!file.startsWith(root) || /^(da|github-oauth|google-oauth|lastfm)\.json$/i.test(path.basename(file))) { res.writeHead(403); res.end('forbidden'); return; }
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404); res.end('not found'); return; }
       const hd = { 'Content-Type': types[path.extname(file).toLowerCase()] || 'application/octet-stream' };
@@ -956,6 +960,106 @@ app.whenReady().then(async () => {
   const libSend = (ch, d) => { try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(ch, d); } catch (e) {} };
   const libScan = () => library.scan((pr) => libSend('lib-progress', pr)).then((r) => { libSend('lib-changed', library.status()); return r; });
   setTimeout(() => { if (library.status().folders.length || library.status().extras) libScan().catch((e) => log('музыка с компьютера: ' + e.message)); }, 4000);
+
+  // ===== Заказы со стрима: донаты → поиск песен в сообщении → вкладка «Заказы» =====
+  const reqFile = () => path.join(app.getPath('userData'), 'requests.json');
+  let requests = []; try { requests = JSON.parse(fs.readFileSync(reqFile(), 'utf8')) || []; } catch (e) { requests = []; }
+  const saveReq = () => { try { requests = requests.slice(-300); fs.writeFileSync(reqFile(), JSON.stringify(requests)); } catch (e) { log('заказы: не сохранить ' + e.message); } };
+  function reqRules() { const r = cfg('reqRules') || {}; return { maxSec: r.maxSec == null ? 420 : Number(r.maxSec) || 0, stopWords: Array.isArray(r.stopWords) ? r.stopWords : reqp.DEFAULT_STOP, explicitOk: !!r.explicitOk }; }
+  async function reqSearch(q) {
+    const out = [];
+    if (cfg('preferLocal') !== false) { try { out.push.apply(out, library.search(q, 4)); } catch (e) {} }
+    try { out.push.apply(out, (await ym.searchTracksPage(q, 0, getYmToken())).slice(0, 6)); } catch (e) { log('заказ: поиск в Яндексе — ' + e.message); }
+    return out;
+  }
+  async function reqSearchYt(q) {
+    try { const y = await ytsT(q, 8000); return (y.videos || []).slice(0, 5).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail })); }
+    catch (e) { return []; }
+  }
+  async function processDonation(d) {
+    const p = reqp.plan(d.text);
+    const items = [];
+    for (const u of p.links.slice(0, 3)) {
+      let r = null; try { r = await resolveLinkFn(u); } catch (e) {}
+      const tr = r && r.tracks && r.tracks[0];
+      if (tr) items.push({ level: 'exact', track: tr, alts: [], link: u });
+      else items.push({ level: 'doubt', track: null, alts: [], link: u, note: /t\.me\//i.test(u) ? 'ссылка на Telegram — открой и найди песню сам' : 'ссылку не удалось открыть' });
+    }
+    const groups = {};
+    p.queries.forEach((q) => { const g = q.kind === 'dash' ? 'c' + q.chunk : q.kind; (groups[g] = groups[g] || []).push(q); });
+    for (const g of Object.keys(groups).slice(0, 3)) {
+      const qs = groups[g], latin = qs[0].kind === 'latin';
+      let best = null; const doubts = []; const seenK = new Set();
+      const consider = (list) => {
+        for (const t of list) {
+          const k = (t.src || '') + ':' + t.id; if (seenK.has(k)) continue; seenK.add(k);
+          const j = reqp.judge(d.text, t);
+          if (j.level === 'exact') { if (!best) best = t; }
+          else if (j.level === 'doubt' && !latin) doubts.push({ t, s: j.t * 2 + j.a });
+        }
+      };
+      for (const q of qs.slice(0, 4)) { consider(await reqSearch(q.query)); if (best) break; }
+      if (!best && !latin && cfg('ytEnabled') !== false) consider(await reqSearchYt(qs[0].query));
+      doubts.sort((a, b) => b.s - a.s);
+      if (best) items.push({ level: 'exact', track: best, alts: doubts.slice(0, 3).map((x) => x.t), query: qs[0].query });
+      else if (doubts.length) items.push({ level: 'doubt', track: doubts[0].t, alts: doubts.slice(1, 3).map((x) => x.t), query: qs[0].query });
+      else if (!latin && p.signal !== 'latin') items.push({ level: 'doubt', track: null, alts: [], query: qs[0].query, note: 'похоже на заказ, но песня не нашлась' });
+    }
+    const rules = reqRules();
+    items.forEach((it) => { it.flags = it.track ? reqp.flags(it.track, d.text, rules) : []; });
+    const price = Number(cfg('reqPrice')) || 0, cur = cfg('reqCurrency') || 'RUB';
+    const amt = d.amountMain != null ? d.amountMain : (String(d.currency || '').toUpperCase() === cur ? d.amount : null);
+    const paid = reqp.paidCount(amt, price);
+    items.forEach((it, i) => { it.paid = i < paid; });
+    const level = items.some((i) => i.level === 'exact') ? 'exact' : items.length ? 'doubt' : 'text';
+    return Object.assign({}, d, { key: d.prov + ':' + d.id, items, level, signal: p.signal, amtMain: amt, paidN: paid === Infinity ? null : paid, state: 'new', got: Date.now() });
+  }
+  let reqChain = Promise.resolve();
+  function onDonation(d) {
+    reqChain = reqChain.then(async () => {
+      let r;
+      try { r = await processDonation(d); } catch (e) { log('заказы: ошибка разбора ' + e.message); r = Object.assign({}, d, { key: d.prov + ':' + d.id, items: [], level: 'text', state: 'new', got: Date.now() }); }
+      if (requests.some((x) => x.key === r.key)) return;
+      requests.push(r); saveReq();
+      log('заказы: донат ' + (donations.NAMES[d.prov] || d.prov) + ' → ' + r.level + (r.items.length ? ' (' + r.items.map((i) => i.level + (i.track ? ' ' + i.track.author + ' — ' + i.track.title : '')).join('; ') + ')' : ''));
+      libSend('req-new', r);
+    });
+    return reqChain;
+  }
+  donations.setup({ log, store: settingsStore, onDonation, onStatus: () => libSend('don-status', donations.status()) });
+  donations.start();
+  sitepage.setup({ log, store: settingsStore });
+  ipcMain.handle('req-list', () => requests);
+  ipcMain.handle('req-update', (e, key, patch) => { const r = requests.find((x) => x.key === key); if (r && patch) { Object.assign(r, patch); saveReq(); } return !!r; });
+  ipcMain.handle('req-clear', () => { requests = requests.filter((x) => x.state === 'new' && x.level !== 'text'); saveReq(); return requests; });
+  ipcMain.handle('req-test', async (e, text, amount) => { const d = { prov: 'test', id: 't' + Date.now(), name: 'Пробный заказ', text: String(text || ''), amount: Number(amount) || 0, currency: cfg('reqCurrency') || 'RUB', amountMain: Number(amount) || 0, at: Date.now() }; await onDonation(d); return requests.find((x) => x.key === 'test:' + d.id) || null; });
+  ipcMain.handle('req-reparse', async (e, key) => { const i = requests.findIndex((x) => x.key === key); if (i < 0) return null; const r = await processDonation(requests[i]); r.state = requests[i].state; requests[i] = r; saveReq(); return r; });
+  ipcMain.handle('req-remember', (e, line, track) => { if (track && track.id) memSet(line, '', track); return true; });
+  ipcMain.handle('don-status', () => donations.status());
+  ipcMain.handle('don-da-login', () => donations.daLogin());
+  ipcMain.handle('don-da-cancel', () => { donations.daCancel(); return true; });
+  ipcMain.handle('don-set-key', (e, p, key) => donations.setKey(p, key));
+  ipcMain.handle('don-disconnect', (e, p) => donations.disconnect(p));
+  ipcMain.handle('don-redirect', () => donations.DA_REDIRECT);
+  // Сайт-визитка
+  ipcMain.handle('site-status', () => sitepage.status());
+  ipcMain.handle('site-preview', (e, p) => sitepage.build(p || {}));
+  ipcMain.handle('site-publish', (e, p) => sitepage.publish(p || {}));
+  ipcMain.handle('site-gh-token', (e, tok) => sitepage.setToken(tok));
+  ipcMain.handle('site-gh-device-start', () => sitepage.deviceStart().catch((err) => ({ error: err.message })));
+  ipcMain.handle('site-gh-device-wait', () => sitepage.deviceWait().catch((err) => ({ error: err.message })));
+  ipcMain.handle('site-gh-device-cancel', () => { sitepage.deviceCancel(); return true; });
+  ipcMain.handle('site-save', async (e, p) => {
+    const r = await dialog.showSaveDialog(mainWindow, { title: 'Сохранить страницу', defaultPath: 'index.html', filters: [{ name: 'Страница', extensions: ['html'] }] });
+    if (r.canceled || !r.filePath) return { cancelled: true };
+    fs.writeFileSync(r.filePath, sitepage.build(p || {}), 'utf8'); shell.showItemInFolder(r.filePath); return { ok: true, path: r.filePath };
+  });
+  // Ссылки для стримерской части: сервисы донатов, GitHub, своя страница
+  ipcMain.handle('open-link', (e, url) => {
+    const u = String(url || '');
+    if (/^https:\/\/([a-z0-9-]+\.)*(donationalerts\.com|donatepay\.ru|donatepay\.eu|donatello\.to|yoomoney\.ru|boosty\.to|github\.com|github\.io|t\.me|twitch\.tv|youtube\.com|youtu\.be|vk\.com|vkvideo\.ru|kick\.com|music\.yandex\.ru|soundcloud\.com|developers\.sber\.ru)(\/|$)/i.test(u)) shell.openExternal(u);
+    return true;
+  });
   ipcMain.handle('lib-status', () => library.status());
   ipcMain.handle('lib-all', () => library.all());
   ipcMain.handle('lib-search', (e, q, n) => (cfg('libInSearch') === false ? [] : library.search(q, n || 30)));
@@ -1416,7 +1520,7 @@ app.whenReady().then(async () => {
     const ok = Array.isArray(r) && r.length > 0;
     steps.push(step('Поиск на SoundCloud', ok, ok ? 'работает' : 'не работает', r && r.error ? r.error : ''));
     let st = false;
-    if (ok) { const s2 = await urlStream(r[0].id); st = !!(s2 && s2.audioUrl); steps.push(step('Воспроизведение', st, st ? 'работает' + (s2.hls ? ' (поток HLS)' : '') : 'не работает', s2 && s2.error ? s2.error : '')); }
+    if (ok) { const s2 = await urlStream(r[0].id); st = !!(s2 && s2.audioUrl); steps.push(step('Воспроизведение', st, st ? 'работает' : 'не работает', s2 && s2.error ? s2.error : '')); }
     return { status: ok && st ? 'ok' : (ok ? 'warn' : 'fail'), title: ok && st ? 'Работает' : (ok ? 'Поиск работает, воспроизведение — нет' : 'Не работает'), steps };
   }
   async function checkAudius() {
@@ -1487,7 +1591,7 @@ app.whenReady().then(async () => {
         put('net', 'bad', 'нет связи', { action: 'retry' });
       });
       if (!online) {
-        ['app', 'recipes', 'ym.svc', 'ym.acc', 'ym.play', 'ym.site', 'yt.svc', 'yt.login', 'yt.dlp', 'sc', 'refs', 'tg'].forEach((id) => put(id, 'off', 'нет интернета'));
+        ['app', 'recipes', 'ym.svc', 'ym.acc', 'ym.play', 'ym.site', 'yt.svc', 'yt.login', 'yt.dlp', 'sc', 'refs', 'tg', 'don'].forEach((id) => put(id, 'off', 'нет интернета'));
       } else {
         await Promise.all([
           job('app', async () => {
@@ -1546,6 +1650,12 @@ app.whenReady().then(async () => {
             const res = await Promise.allSettled([ping('https://api.deezer.com/genre'), lastfm.configured() ? ping('https://ws.audioscrobbler.com/2.0/') : Promise.reject(new Error('нет ключа'))]);
             const dz = res[0].status === 'fulfilled', lf = res[1].status === 'fulfilled';
             put('refs', dz && lf ? 'ok' : (dz || lf ? 'warn' : 'bad'), dz && lf ? 'доступны' : (dz ? (lastfm.configured() ? 'Last.fm не отвечает' : 'Last.fm без ключа') : (lf ? 'Deezer не отвечает' : 'не отвечают')));
+          }),
+          job('don', async () => {
+            const st = donations.status(); const on = Object.keys(st).filter((k) => st[k].connected);
+            if (!on.length) { put('don', 'off', 'не подключены'); return; }
+            const r = await donations.check(); const bad = on.filter((k) => !(r[k] && r[k].ok));
+            put('don', bad.length ? (bad.length === on.length ? 'bad' : 'warn') : 'ok', bad.length ? bad.map((k) => st[k].name + ': ' + ((r[k] && r[k].error) || 'нет связи')).join(' · ') : on.map((k) => st[k].name).join(' · ') + ' на связи');
           }),
           job('tg', async () => { try { const r = await ping('https://web.telegram.org/a/'); put('tg', r.status < 500 ? 'ok' : 'warn', 'сайт доступен'); } catch (e) { put('tg', 'warn', 'сайт не отвечает'); } })
         ]);

@@ -57,6 +57,7 @@ function mapTrack(t) {
     cover: cover(cu, '600x600'),
     album: album.title || '',
     available: t.available !== false,
+    explicit: t.contentWarning === 'explicit' || t.explicit === true || undefined,
     // громкость трека (EBU R128) и точки затухания — для ровной громкости и плавных переходов
     lufs: t.r128 && typeof t.r128.i === 'number' ? t.r128.i : undefined,
     fadeOut: t.fade && typeof t.fade.outStart === 'number' ? t.fade.outStart : undefined
