@@ -67,8 +67,8 @@
   .searchtop[hidden] { display: none !important; }
   .searchbar { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 1px solid var(--ln); border-radius: 12px; padding: 0 14px; height: 46px; }
   .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--tx); font-size: 15px; font-weight: 500; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; cursor: pointer; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; }
   .chip.active { background: var(--tx); color: var(--bg0); border-color: transparent; font-weight: 600; }
   .chip.soon { opacity: .5; cursor: default; }
   /* Состояние сервисов, предупреждение, вкладка «Браузер» */
@@ -429,14 +429,14 @@
   .seek-fill { position: absolute; left: 0; top: 0; height: 8px; border-radius: 4px; background: var(--ac); width: 0%; }
   .seek-knob { position: absolute; top: 50%; left: 0%; width: 16px; height: 16px; border-radius: 8px; background: #fff; transform: translate(-50%, -50%); box-shadow: 0 1px 4px rgba(0,0,0,.5); }
   .f-right { flex: 1 1 200px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; color: var(--tx3); }
-  /* Громкость — рядом с кнопками управления; колёсико мыши меняет плавно */
-  .controls { position: relative; }
-  /* Лайк и «Волна по треку» — слева от кнопок, ⏮ ▶ ⏭ остаются по центру */
-  .cleft { position: absolute; right: 100%; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; margin-right: 16px; }
+  /* Кнопки управления — в той же ширине, что и полоса трека (560): лайк слева ровно над временем, громкость справа */
+  .controls { position: relative; display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; max-width: 560px; }
+  .cleft { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; }
   .wtrk { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx3); font: 500 12px Onest, sans-serif; display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
   .wtrk:hover { color: var(--tx); background: var(--bg3); border-color: var(--ln3); }
   .wtrk[hidden] { display: none; }
-  .volc { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; margin-left: 18px; color: var(--tx3); }
+  /* Громкость справа в той же ширине, что и полоса трека */
+  .volc { position: absolute; right: 0; left: auto; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; color: var(--tx3); }
   .volc input { width: 110px; accent-color: var(--ac); cursor: pointer; }
   .volc .vbtn { width: 34px; height: 34px; }
   .volc .vbtn.muted { color: var(--tx5); }
@@ -860,11 +860,11 @@
   /* Счётчик заказов: без кружка — просто цифра зелёным со свечением */
   #tabs .tbadge { display: inline-block; font: 700 12.5px Onest, sans-serif; color: #4ADE9A; text-shadow: 0 0 8px rgba(74,222,154,.8); line-height: 1; }
   #tabs .tbadge[hidden] { display: none; }
-  /* Появились заказы — вкладка плавно «дышит» зелёным */
-  #tabs button.has-req { animation: tabReq 2.8s ease-in-out infinite; }
+  /* Вкладка с заказами не мигает, а плавно загорается и тухнет */
+  #tabs button.has-req { animation: tabReq 4.6s ease-in-out infinite; }
   @keyframes tabReq {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,154,0); }
-    50% { box-shadow: inset 0 0 0 1px rgba(74,222,154,.5), 0 0 12px 0 rgba(74,222,154,.42); }
+    0%, 100% { box-shadow: inset 0 0 0 0 rgba(74,222,154,0), 0 0 0 0 rgba(74,222,154,0); }
+    45% { box-shadow: inset 0 0 0 1px rgba(74,222,154,.30), 0 0 14px 1px rgba(74,222,154,.18); }
   }
   @media (prefers-reduced-motion: reduce) { #tabs button.has-req { animation: none; color: #4ADE9A; } }
   .reqv { flex: 1 1 auto; min-width: 0; padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; }
@@ -890,7 +890,19 @@
   .rq-m { font-size: 14px; color: var(--tx2); word-break: break-word; }
   .rq-it { display: flex; flex-direction: column; gap: 6px; border-left: 3px solid var(--ln3); padding: 4px 0 4px 10px; }
   .rq-it.ex { border-color: #4ADE9A; } .rq-it.db { border-color: #FFD43B; } .rq-it.rj { border-color: #FF5A52; }
-  .rq-it.added { opacity: .6; }
+  /* Добавленное в очередь не тускнеет — только полоска слева становится серой */
+  .rq-it.added { border-color: var(--ln3); }
+  .rq-it.added > .rq-lv { color: var(--tx4); }
+  /* Лента сообщений и выполненные заказы — сворачиваемые разделы */
+  .rq-sec { font: 700 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 0; }
+  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+  .rq-feed > summary, .rq-done > summary { cursor: pointer; font: 600 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 6px; list-style: none; }
+  .rq-feed > summary::-webkit-details-marker, .rq-done > summary::-webkit-details-marker { display: none; }
+  .rq-feed > summary::before, .rq-done > summary::before { content: '▸ '; }
+  .rq-feed[open] > summary::before, .rq-done[open] > summary::before { content: '▾ '; }
+  .rq-feed > summary:hover, .rq-done > summary:hover { color: var(--tx2); }
+  .rq-done-it .rq-tr { opacity: .5; }
+  .rq-done-it .rq-tr .tt { font-weight: 500; }
   .rq-lv { font: 700 11px Onest, sans-serif; letter-spacing: .04em; }
   .rq-it.ex .rq-lv { color: #4ADE9A; } .rq-it.db .rq-lv { color: #FFD43B; } .rq-it.rj .rq-lv { color: #FF8A84; }
   .rq-tr { display: flex; gap: 10px; align-items: center; min-width: 0; }
@@ -907,8 +919,6 @@
   .rq-alt label { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--tx2); cursor: pointer; }
   .rq-alt label input { accent-color: var(--ac); }
   .rq-note { font-size: 12.5px; color: var(--tx3); }
-  .rq-txt summary { cursor: pointer; color: var(--tx3); font-size: 13px; padding: 6px 2px; }
-  .rq-txt .rq { margin-top: 8px; }
   .rq-empty { color: var(--tx4); font-size: 14px; padding: 24px 6px; line-height: 1.6; }
   .qrow .qs .rqtag { color: #4ADE9A; font-weight: 600; }
   .st-ta { width: 100%; height: auto; padding: 10px 12px; margin-top: 8px; resize: vertical; font: 500 13px 'JetBrains Mono', monospace; line-height: 1.5; }
@@ -966,7 +976,7 @@
           <div class="suggest" id="suggest"></div>
         </div>
         <div class="chips" id="chips">
-          <button class="chip active" data-f="all">Везде</button>
+          <button class="chip active" data-f="all"><span class="dot" style="background:currentColor"></span>Везде</button>
           <button class="chip" data-f="ym"><span class="dot" style="background:#FFD43B"></span>Яндекс</button>
           <button class="chip" data-f="yt"><span class="dot" style="background:#FF5A52"></span>YouTube</button>
           <button class="chip soon" disabled title="Скоро"><span class="dot" style="background:#3BA8F0"></span>Telegram</button>
@@ -4039,7 +4049,7 @@
   function bindBack(host){ var b = host.querySelector('[data-back]'); if (b) b.onclick = host._backFn || closeSearchList; }
 
   // ===== Заказы со стрима: донаты с песнями =====
-  var RQ = { list: [], don: null, testOpen: false, altOpen: {} };
+  var RQ = { list: [], don: null, testOpen: false, altOpen: {}, feedOpen: true, doneOpen: false };
   var RQ_REJECT = { long: 1, stop: 1, nonmusic: 1 };
   var CURSYM = { RUB: '₽', UAH: '₴', KZT: '₸', USD: '$', EUR: '€' };
   var DON_NAMES = { da: 'DonationAlerts', dp: 'DonatePay', dn: 'Donatello', test: 'пробный' };
@@ -4056,6 +4066,17 @@
   function rqCls(it){ if (it.state === 'added') return 'added'; var f = rqFlags(it); if (f.some(function (x){ return RQ_REJECT[x.k]; })) return 'rj'; return it.level === 'exact' && it.track ? 'ex' : 'db'; }
   function rqAutoOk(it){ return it.level === 'exact' && it.track && !it.state && it.paid !== false && !rqFlags(it).length; }
   function rqPending(r){ return r.state === 'dismissed' ? [] : (r.items || []).filter(function (it){ return !it.state; }); }
+  // Лента сообщений хранится сутки
+  var RQ_DAY = 24 * 3600 * 1000;
+  // Заказ выполнен, когда его трек уже отыграл в очереди
+  function rqPlayed(it){
+    if (it.state !== 'added' || !it.track) return false;
+    var cur = queue[current];
+    if (cur && rqSame(cur, it.track)) return false; // играет прямо сейчас — ещё не выполнен
+    return queue.some(function (v){ return v.played && rqSame(v, it.track); });
+  }
+  // Активные заказы — те, что определились точно и ещё не встали в очередь
+  function rqActive(it){ return !it.state && it.track && rqCls(it) === 'ex' && it.paid !== false; }
   function rqMoney(r){ return (r.amount != null ? (Math.round(r.amount * 100) / 100) : '?') + ' ' + (CURSYM[r.currency] || r.currency || ''); }
   function rqAgo(t){ var m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад'; var h = Math.round(m / 60); if (h < 24) return h + ' ч назад'; return Math.round(h / 24) + ' дн назад'; }
   function rqSave(r){ A.reqUpdate && A.reqUpdate(r.key, { items: r.items, state: r.state }); }
@@ -4092,51 +4113,89 @@
     }
     return h + '</div>';
   }
-  function rqCardHtml(r, ri){
-    var h = '<div class="rq' + (r.state === 'done' ? ' done' : '') + '"><div class="rq-h"><b>' + esc(r.name || 'Аноним') + '</b><span class="amt">' + esc(rqMoney(r)) + '</span><span>' + esc(DON_NAMES[r.prov] || r.prov) + ' · ' + rqAgo(r.at || r.got) + '</span>' + (r.missed ? '<span class="miss">пришёл, пока Тапёр был закрыт</span>' : '') +
-      '<button class="rq-sm hide" data-rq="hide" data-ri="' + ri + '">Скрыть</button></div>' +
+  function rqCardHtml(r, ri, only){
+    var items = only ? [only] : (r.items || []);
+    var h = '<div class="rq' + (r.state === 'done' ? ' done' : '') + '"><div class="rq-h"><b>' + esc(r.name || 'Аноним') + '</b><span class="amt">' + esc(rqMoney(r)) + '</span><span>' + esc(DON_NAMES[r.prov] || r.prov) + ' · ' + rqAgo(r.at || r.got) + '</span>' + (r.missed ? '<span class="miss">пришёл, пока Тапёр был закрыт</span>' : '') + '</div>' +
       (r.text ? '<div class="rq-m">«' + esc(r.text) + '»</div>' : '');
-    (r.items || []).forEach(function (it, ii){ h += rqItemHtml(r, ri, it, ii); });
-    if (r.level === 'text') h += '<div class="rq-b"><button class="rq-sm" data-rq="textfind" data-ri="' + ri + '">Это заказ — искать</button></div>';
+    items.forEach(function (it){ h += rqItemHtml(r, ri, it, (r.items || []).indexOf(it)); });
+    if (!only && r.level === 'text') h += '<div class="rq-b"><button class="rq-sm" data-rq="textfind" data-ri="' + ri + '">Это заказ — искать</button></div>';
     return h + '</div>';
   }
-  function rqSummary(act){
-    var ex = [], db = [], rj = [], tx = 0;
-    act.forEach(function (r){ rqPending(r).forEach(function (it){ var c = rqCls(it), nm = it.track ? (it.track.author ? it.track.author + ' — ' : '') + it.track.title : '«' + (it.query || it.link || '') + '»'; if (c === 'ex') ex.push(nm); else if (c === 'rj') rj.push(nm + ' (' + rqFlags(it).filter(function (x){ return RQ_REJECT[x.k]; }).map(function (x){ return x.t; }).join(', ') + ')'); else db.push(nm); }); });
-    RQ.list.forEach(function (r){ if (r.level === 'text' && r.state !== 'dismissed' && Date.now() - (r.got || 0) < 6 * 3600 * 1000) tx++; });
+  // Карточка выполненного заказа: трек затемнён, есть «вернуть в заказы»
+  function rqDoneHtml(r, it){
+    var t = it.track || {};
+    return '<div class="rq-it added rq-done-it"><div class="rq-tr">' + (t.thumb ? '<img src="' + esc(t.thumb) + '" alt="" loading="lazy">' : '<span class="ph"></span>') +
+      '<div class="tm"><div class="tt">' + esc(t.author ? t.author + ' — ' + t.title : t.title) + '</div><div class="ts">' + esc((r.name || 'Аноним') + ' · ' + rqMoney(r) + ' · ' + srcName(t)) + '</div></div></div>' +
+      '<div class="rq-b"><button class="rq-sm" data-rq="return" data-id="' + it._id + '">↩ Вернуть в заказы</button></div></div>';
+  }
+  function rqSummary(vis){
+    var ex = [], db = [], rj = [];
+    vis.forEach(function (r){ (r.items || []).forEach(function (it){
+      if (it.state) return;
+      var c = rqCls(it);
+      var nm = it.track ? (it.track.author ? it.track.author + ' — ' : '') + it.track.title : '«' + (it.query || it.link || '') + '»';
+      if (c === 'ex') ex.push(nm);
+      else if (c === 'rj') rj.push(nm + ' (' + rqFlags(it).filter(function (x){ return RQ_REJECT[x.k]; }).map(function (x){ return x.t; }).join(', ') + ')');
+      else db.push(nm);
+    }); });
     var parts = [];
     if (ex.length) parts.push('<b class="g">Точно:</b> ' + esc(ex.join(', ')));
     if (db.length) parts.push('<b class="y">Под сомнением:</b> ' + esc(db.join(', ')));
     if (rj.length) parts.push('<b class="r">Спорные:</b> ' + esc(rj.join('; ')));
-    if (tx) parts.push('<b>Просто текст:</b> ' + tx + ' ' + (tx === 1 ? 'донат' : tx < 5 ? 'доната' : 'донатов') + ' за 6 часов');
     return { html: parts.join('<br>'), ex: ex.length, any: ex.length + db.length + rj.length };
   }
   function rqRender(){
     var list = $('rqList'); if (!list) return;
-    var act = [], txt = [];
-    RQ.list.forEach(function (r, ri){ r._ri = ri; if (r.state === 'dismissed') return; if (r.level === 'text') txt.push(r); else act.push(r); });
-    act.sort(function (a, b){ var pa = rqPending(a).length ? 1 : 0, pb = rqPending(b).length ? 1 : 0; return pb - pa || (b.got || 0) - (a.got || 0); });
-    txt.sort(function (a, b){ return (b.got || 0) - (a.got || 0); });
-    var sm = rqSummary(act);
+    // В ленте живут только сообщения за последние сутки
+    var t0 = Date.now() - RQ_DAY;
+    RQ.list = RQ.list.filter(function (r){ return (r.got || r.at || 0) > t0; });
+    RQ.list.forEach(function (r, i){ r._ri = i; });
+    var vis = RQ.list.filter(function (r){ return r.state !== 'dismissed'; });
+    vis.sort(function (a, b){ return (b.got || 0) - (a.got || 0); });
+
+    // Раскладываем песни из сообщений: активные наверх, отыгранные — в «выполненные»
+    var act = [], done = [];
+    vis.forEach(function (r){
+      (r.items || []).forEach(function (it, ii){
+        it._id = r._ri + ':' + ii;
+        if (rqActive(it)) act.push({ r: r, it: it });
+        else if (rqPlayed(it)) done.push({ r: r, it: it });
+      });
+    });
+    act.sort(function (a, b){ return (a.r.got || 0) - (b.r.got || 0); }); // кто раньше заказал — тот выше
+
+    var sm = rqSummary(vis);
     $('rqSum').hidden = !sm.html; $('rqSum').innerHTML = sm.html;
-    var nEx = 0; act.forEach(function (r){ rqPending(r).forEach(function (it){ if (rqCls(it) === 'ex' && it.paid !== false) nEx++; }); });
-    $('rqAddAll').hidden = !nEx; $('rqAddAll').textContent = '＋ Все точные в очередь (' + nEx + ')';
+    $('rqAddAll').hidden = !act.length; $('rqAddAll').textContent = '＋ Все точные в очередь (' + act.length + ')';
+
     var h = '';
     if (RQ.testOpen) h += '<div class="rq-test"><input id="rqtText" style="flex:1 1 280px" placeholder="Текст доната, например: Привет! Кино — Кукушка" value="' + esc(RQ.testText || '') + '"><input id="rqtAmt" type="number" style="width:100px" value="' + esc(RQ.testAmt || 100) + '" aria-label="Сумма"><button class="pbtn qadd" id="rqtGo">Разобрать</button><span class="sd" style="color:var(--tx4);font-size:12px">Пробный заказ не уходит никуда — только сюда</span></div>';
-    if (!act.length && !txt.length) h += '<div class="rq-empty">Пока заказов нет.<br>Подключи сервис донатов в <a href="#" data-rq="settings" style="color:var(--ac2)">Настройках → Стримерам</a> — и донаты с песнями будут появляться здесь: что найдено точно, что под сомнением, а что просто текст.<br>Проверить разбор можно кнопкой «Пробный заказ».</div>';
-    act.forEach(function (r){ h += rqCardHtml(r, r._ri); });
-    if (txt.length) h += '<details class="rq-txt"' + (RQ.txtOpen ? ' open' : '') + '><summary>Просто текст — ' + txt.length + '</summary>' + txt.slice(0, 60).map(function (r){ return rqCardHtml(r, r._ri); }).join('') + '</details>';
+    if (!vis.length) h += '<div class="rq-empty">Пока заказов нет.<br>Подключи сервис донатов в <a href="#" data-rq="settings" style="color:var(--ac2)">Настройках → Стримерам</a> — и донаты появятся здесь общей лентой за сутки: что нашлось точно, что под сомнением, а что просто текст.<br>Проверить разбор можно кнопкой «Пробный заказ».</div>';
+
+    // 1. Активные заказы — то, что точно определилось и ещё не в очереди
+    if (act.length) {
+      h += '<div class="rq-sec">Активные заказы · ' + act.length + '</div>';
+      act.forEach(function (x){ h += rqCardHtml(x.r, x.r._ri, x.it); });
+    }
+
+    // 2. Общая лента сообщений за сутки
+    if (vis.length) h += '<details class="rq-feed"' + (RQ.feedOpen === false ? '' : ' open') + '><summary>Лента сообщений · ' + vis.length + '</summary>' + vis.map(function (r){ return rqCardHtml(r, r._ri); }).join('') + '</details>';
+
+    // 3. Выполненные заказы — треки уже отыграли
+    if (done.length) h += '<details class="rq-done"' + (RQ.doneOpen ? ' open' : '') + '><summary>Выполненные заказы · ' + done.length + '</summary>' + done.map(function (x){ return rqDoneHtml(x.r, x.it); }).join('') + '</details>';
+
     list.innerHTML = h;
-    var d = list.querySelector('.rq-txt'); if (d) d.ontoggle = function(){ RQ.txtOpen = d.open; };
+    var fb = list.querySelector('.rq-feed'); if (fb) fb.ontoggle = function(){ RQ.feedOpen = fb.open; };
+    var db = list.querySelector('.rq-done'); if (db) db.ontoggle = function(){ RQ.doneOpen = db.open; };
     var go = $('rqtGo'); if (go) { go.onclick = rqRunTest; $('rqtText').onkeydown = function(e){ if (e.key === 'Enter') rqRunTest(); }; }
     rqBadge();
   }
   function rqBadge(){
     var b = $('reqBadge'); if (!b) return;
     var n = 0;
-    RQ.list.forEach(function (r){ var p = rqPending(r); if (p.length && r.level !== 'text') n++; });
+    RQ.list.forEach(function (r){ if (r.state === 'dismissed') return; (r.items || []).forEach(function (it){ if (rqActive(it)) n++; }); });
     b.hidden = !n; b.textContent = n ? n : '';
-    var tab = $('tabReq'); if (tab) tab.classList.toggle('has-req', !!n); // вкладка плавно моргает, пока есть заказы
+    var tab = $('tabReq'); if (tab) tab.classList.toggle('has-req', !!n); // вкладка плавно загорается, пока есть заказы
   }
   async function rqRunTest(){
     var t = $('rqtText').value.trim(); if (!t) return;
@@ -4151,7 +4210,6 @@
     RQ.list.push(r);
     var auto = RQ.auto;
     if (auto) (r.items || []).forEach(function (it){ if (rqAutoOk(it)) rqAdd(r, it, null, false); });
-    if (curTab !== 'req' && r.level !== 'text') { var tb = $('tabReq'); tb.classList.remove('glow'); void tb.offsetWidth; tb.classList.add('glow'); }
     rqRender();
   }
   function rqOpen(){ rqRender(); rqSvcLine(); }
@@ -4180,7 +4238,7 @@
     else if (a === 'find' || a === 'textfind') {
       var q = (it && (it.query || (it.track && ((it.track.author || '') + ' ' + it.track.title)))) || (r && r.text) || '';
       setTab('search'); search.value = q.trim(); doSearch({ nav: true });
-    } else if (a === 'hide') { r.state = 'dismissed'; rqSave(r); rqRender(); }
+    } else if (a === 'return') { it.state = undefined; if (r.state === 'done') r.state = undefined; rqSave(r); rqRender(); }
   });
   $('rqAddAll').onclick = function(){
     var list = [];
