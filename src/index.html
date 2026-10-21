@@ -12,7 +12,9 @@
     /* Единая шкала скруглений: панели вкладок, карточки внутри, мелкие кнопки */
     --r-panel: 20px; --r-card: 14px; --r-ctl: 10px;
     /* Шкала отступов: 4 / 8 / 12 / 16 / 20 / 24 */
-    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; }
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+    /* Поле вокруг рабочей области: одинаковое слева, справа и между колонками */
+    --gutter: 16px; }
   /* Тема «Монохром»: чёрный, белый и серые — под чёрно-белый логотип. Обложки остаются цветными */
   html.theme-mono { --bg00: #070707; --bg0: #0F0F0F; --bg1: #161616; --bg2: #1A1A1A; --bg3: #202020; --bg4: #2D2D2D; --ln: #2F2F2F; --ln2: #262626; --ln3: #3E3E3E; --tx: #EDEDED; --tx2: #CBCBCB; --tx3: #A2A2A2; --tx4: #8E8E8E; --tx5: #818181; --ac: #D4D4D4; --ac2: #E6E6E6; --acr: 212,212,212; --acbg: #262626; --pri: #E8E8E8; --prit: #121212; }
 
@@ -34,8 +36,8 @@
   input::placeholder { color: var(--tx5); }
 
   /* Шапка */
-  header { display: flex; flex-direction: column; gap: var(--sp-3); padding: 0 var(--sp-5) var(--sp-3); flex: 0 0 auto; -webkit-app-region: drag; }
-  .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 calc(-1 * var(--sp-5)) calc(-1 * var(--sp-3)); padding-left: 23px; /* ровно с левым краем первой кнопки вкладок */ display: flex; align-items: center; justify-content: flex-start; }
+  header { display: flex; flex-direction: column; gap: var(--sp-3); padding: 0 var(--gutter) var(--sp-3); flex: 0 0 auto; -webkit-app-region: drag; }
+  .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 calc(-1 * var(--gutter)) calc(-1 * var(--sp-3)); padding-left: 19px; /* ровно с левым краем первой кнопки вкладок */ display: flex; align-items: center; justify-content: flex-start; }
   header .tbrand img { -webkit-app-region: drag; }
   .tbrand { display: flex; align-items: center; gap: 8px; pointer-events: none; }
   .tbrand .logo { width: 20px; height: 20px; border-radius: 6px; }
@@ -95,7 +97,7 @@
   .hs-foot { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
   .hs-det summary { cursor: pointer; font-size: 12.5px; color: var(--tx4); }
   .hs-det pre { max-height: 220px; overflow: auto; background: var(--bg0); border: 1px solid var(--ln); border-radius: 10px; padding: 10px; font: 11.5px 'JetBrains Mono', Consolas, monospace; color: var(--tx3); white-space: pre-wrap; word-break: break-word; }
-  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 var(--sp-5); gap: var(--sp-3); }
+  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 0 0 var(--gutter); gap: var(--sp-3); }
   .br-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .br-seg { display: flex; background: var(--bg0); border: 1px solid var(--ln); border-radius: 10px; padding: 3px; gap: 2px; }
   .br-seg button { height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--tx2); font: 500 13px Onest, sans-serif; cursor: pointer; }
@@ -176,10 +178,10 @@
   .badge { font-size: 11px; color: var(--ac); border: 1px solid var(--ac); border-radius: 5px; padding: 2px 6px; flex: 0 0 auto; }
 
   /* Основная часть */
-  main { flex: 1; display: flex; min-height: 0; padding: 0 var(--sp-3) 0 0; }
+  main { flex: 1; display: flex; min-height: 0; padding: 0 var(--gutter) 0 0; }
   /* Вкладки — просто области на фоне окна: без рамки и подложки. Карточка есть только у очереди справа */
   .view { min-width: 0; }
-  .results-col { flex: 1 1 auto; min-width: 0; padding: 0 var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
+  .results-col { flex: 1 1 auto; min-width: 0; padding: 0 0 0 var(--gutter); display: flex; flex-direction: column; gap: var(--sp-3); }
   .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 0 var(--sp-2); gap: var(--sp-2); flex-wrap: wrap; }
   .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--tx2); flex-shrink: 0; }
   .col-head .hint { font-size: 13px; color: var(--tx4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -303,7 +305,7 @@
   .add:hover { background: rgba(var(--acr),.3); color: #E4DDFF; }
 
   /* Правая колонка: очередь */
-  .splitter { flex: 0 0 var(--sp-3); margin: 0; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; border-radius: var(--r-ctl); }
+  .splitter { flex: 0 0 var(--gutter); margin: 0; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; border-radius: var(--r-ctl); }
   /* Разделительной полосы больше нет: при изменении ширины светится край карточки очереди */
   .splitter:hover, .splitter.drag { background: transparent; }
   body.resizing { cursor: col-resize; user-select: none; }
@@ -312,7 +314,7 @@
   .hsplitter:hover, .hsplitter.drag { background: rgba(var(--acr),.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
   /* Очередь — отдельная карточка со скруглёнными углами: линия сверху не нужна */
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 var(--sp-3); box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); min-height: 0; position: relative; transition: box-shadow .16s ease; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 var(--gutter); box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); min-height: 0; position: relative; transition: box-shadow .16s ease; }
   /* Потянули за разделитель — вместо линии загорается левый край карточки и плавно сходит на нет вправо */
   .splitter:hover ~ .queue-col, .splitter.drag ~ .queue-col {
     background-image: linear-gradient(90deg, rgba(var(--acr),.34) 0%, rgba(var(--acr),.10) 26%, rgba(var(--acr),0) 62%);
@@ -420,7 +422,7 @@
   .muted { color: var(--tx4); font-size: 13px; text-align: center; padding: 16px 0; }
 
   /* Нижняя панель-плеер */
-  footer { flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-6); padding: var(--sp-4) var(--sp-5); background: var(--bg00); }
+  footer { flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-6); padding: var(--sp-4) var(--gutter); background: var(--bg00); }
   .f-now { display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-width: 0; }
   .f-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .f-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
@@ -572,7 +574,7 @@
   .plrows { display: flex; flex-direction: column; gap: 4px; }
 
   /* Вкладка «Моё» */
-  .my-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0; padding: 0 var(--sp-5); gap: var(--sp-3); }
+  .my-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0; padding: 0 0 0 var(--gutter); gap: var(--sp-3); }
   /* Плейлисты сверху: одна панель, подсвеченная акцентом — вкладки, действия, пилюли */
   .my-side { flex: 0 0 auto; background: var(--bg3); border: 1px solid var(--ln); border-radius: var(--r-panel); padding: 0 14px 12px; max-height: 40vh; overflow-y: auto; }
   .my-main { flex: 1; min-width: 0; padding: 0; display: flex; flex-direction: column; min-height: 0; }
@@ -744,7 +746,7 @@
   .set::-webkit-scrollbar { width: 12px; }
   /* В настройках ползунок виден всегда — его не надо искать наведением */
   .set::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
-  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--sp-5); max-width: 1180px; margin: 0 auto; box-sizing: border-box; }
+  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--gutter); max-width: 1180px; margin: 0 auto; box-sizing: border-box; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
   @media (min-width: 880px) { .set-side { position: sticky; top: 0; align-self: flex-start; max-height: calc(100vh - 170px); overflow-y: auto; } }
@@ -886,7 +888,7 @@
     45% { box-shadow: inset 0 0 0 1px rgba(74,222,154,.30), 0 0 14px 1px rgba(74,222,154,.18); }
   }
   @media (prefers-reduced-motion: reduce) { #tabs button.has-req { animation: none; color: #4ADE9A; } }
-  .reqv { flex: 1 1 auto; min-width: 0; padding: 0 var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
+  .reqv { flex: 1 1 auto; min-width: 0; padding: 0 0 0 var(--gutter); display: flex; flex-direction: column; gap: var(--sp-3); }
   .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .rq-acts .pbtn { height: 34px; font-size: 12.5px; }
   .rq-sm { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
