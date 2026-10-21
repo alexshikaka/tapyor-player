@@ -10,7 +10,8 @@ const path = require('path');
 const DA_PORT = 47219; // адрес возврата, записанный в приложении DonationAlerts: http://127.0.0.1:47219/da-callback
 const DA_REDIRECT = 'http://127.0.0.1:' + DA_PORT + '/da-callback';
 const DA_SCOPES = 'oauth-user-show oauth-donation-index';
-const POLL = { da: 12000, dp: 25000, dn: 20000 }; // DonatePay просит не чаще раза в 20 с
+const POLL = { da: 12000, dp: 30000, dn: 20000 }; // DonatePay просит не чаще раза в 20 с — берём с запасом
+const MAX_BACKOFF = 300000; // при 429 ждём максимум 5 минут
 const NAMES = { da: 'DonationAlerts', dp: 'DonatePay', dn: 'Donatello' };
 
 let log = () => {};
@@ -36,7 +37,13 @@ async function getJson(url, opts) {
   const r = await fetch(url, Object.assign({ signal: AbortSignal.timeout(15000) }, opts || {}));
   const txt = await r.text();
   let j = null; try { j = JSON.parse(txt); } catch (e) {}
-  if (!r.ok) { const err = new Error('HTTP ' + r.status + (j && (j.message || j.error) ? ': ' + (j.message || j.error) : '')); err.status = r.status; throw err; }
+  if (!r.ok) {
+    const err = new Error('HTTP ' + r.status + (j && (j.message || j.error) ? ': ' + (j.message || j.error) : ''));
+    err.status = r.status;
+    const ra = r.headers.get('retry-after');           // сколько сервис просит подождать (в секундах или датой)
+    if (ra) { const n = /^\d+$/.test(ra.trim()) ? Number(ra) : Math.round((Date.parse(ra) - Date.now()) / 1000); if (isFinite(n) && n > 0) err.retryAfter = n; }
+    throw err;
+  }
   if (j == null) throw new Error('сервис ответил не JSON');
   return j;
 }
@@ -130,10 +137,16 @@ async function setKey(p, key) {
     setSecret(p, { key });
     store.set('donAccounts', Object.assign({}, store.get('donAccounts') || {}, { [p]: { name: (me && (me.name || me.nickname || me.login)) || NAMES[p], avatar: (me && (me.avatar || me.avatarUrl)) || '' } }));
     log('Донаты: ' + NAMES[p] + ' подключён');
-    await markAllSeen(p).catch(() => {});
-    startPoll(p); onStatus();
+    // Отметку старых донатов делает первый опрос (отдельный запрос не нужен — DonatePay ругается на частые)
+    startPoll(p, 'mark'); onStatus();
     return { ok: true, name: me && (me.name || me.nickname) };
-  } catch (e) { log('Донаты: ' + NAMES[p] + ' — ключ не подошёл (' + e.message + ')'); return { error: e.status === 401 || e.status === 403 ? 'ключ не подошёл' : e.message }; }
+  } catch (e) {
+    log('Донаты: ' + NAMES[p] + ' — ключ не подошёл (' + e.message + ')');
+    const err = e.status === 401 || e.status === 403 ? 'ключ не подошёл'
+      : e.status === 429 ? 'DonatePay ограничил частоту запросов — подожди минуту и попробуй снова'
+      : e.message;
+    return { error: err };
+  }
 }
 function disconnect(p) {
   setSecret(p, null); stopPoll(p); state[p] = {};
@@ -147,32 +160,57 @@ function seen() { return store.get('donSeen') || {}; }
 function addSeen(p, ids) { const s = seen(); const cur = s[p] || []; ids.forEach((id) => { if (cur.indexOf(id) < 0) cur.push(id); }); s[p] = cur.slice(-400); store.set('donSeen', s); }
 async function markAllSeen(p) { const list = await LIST[p](); addSeen(p, list.map((d) => d.id)); }
 
-async function poll(p, first) {
+async function poll(p, mode) {
   try {
     const list = await LIST[p]();
+    if (mode === 'mark') { // сразу после подключения: запомнить уже существующие донаты, не показывать их заново
+      addSeen(p, list.map((d) => d.id));
+      state[p] = { ok: true, at: Date.now() };
+      onStatus(); return;
+    }
     const was = seen()[p] || [];
     const fresh = list.filter((d) => was.indexOf(d.id) < 0).sort((a, b) => a.at - b.at);
-    state[p] = { ok: true, at: Date.now() };
+    state[p] = { ok: true, at: Date.now() }; // успех — счётчик ошибок и паузу сбрасываем
     if (fresh.length) {
       addSeen(p, fresh.map((d) => d.id));
       // после запуска Тапёра — только за последние сутки, с пометкой «до запуска»
-      fresh.forEach((d) => { if (first) { if (Date.now() - d.at > 24 * 3600 * 1000) return; d.missed = true; } onDonation(d); });
+      fresh.forEach((d) => { if (mode === 'missed') { if (Date.now() - d.at > 24 * 3600 * 1000) return; d.missed = true; } onDonation(d); });
     }
   } catch (e) {
-    const msg = e.status === 401 || e.status === 403 ? 'вход устарел — подключи заново' : e.message;
-    if (state[p].error !== msg) log('Донаты: ' + NAMES[p] + ' — ' + msg);
-    state[p] = { ok: false, error: msg, at: Date.now() };
+    const prev = state[p] || {};
+    let msg = e.status === 401 || e.status === 403 ? 'вход устарел — подключи заново' : e.message;
+    let waitUntil = 0, n429 = prev.n429 || 0;
+    if (e.status === 429) {
+      // сервис ограничил частоту: ждём по Retry-After или удваиваем паузу
+      n429 += 1;
+      const ra = Number(e.retryAfter) || 0;
+      const delay = Math.min(Math.max(ra * 1000, POLL[p] * Math.pow(2, n429)), MAX_BACKOFF);
+      waitUntil = Date.now() + delay;
+      msg = 'слишком частые запросы — подожду ' + Math.round(delay / 1000) + ' с';
+      if (!prev.n429) log('Донаты: ' + NAMES[p] + ' ограничил частоту запросов, перехожу на паузу');
+    }
+    if (prev.error !== msg) log('Донаты: ' + NAMES[p] + ' — ' + msg);
+    state[p] = { ok: false, error: msg, at: Date.now(), waitUntil: waitUntil, n429: n429 };
   }
   onStatus();
 }
-function startPoll(p) {
+function startPoll(p, mode) {
   stopPoll(p);
-  let first = true;
-  const tick = async () => { await poll(p, first); first = false; timers[p] = setTimeout(tick, POLL[p]); };
-  timers[p] = setTimeout(tick, 1500);
+  let first = mode || 'missed';
+  const tick = async () => {
+    await poll(p, first); first = null;
+    let wait = POLL[p];
+    const st = state[p] || {};
+    if (st.waitUntil && st.waitUntil > Date.now()) wait = Math.max(wait, st.waitUntil - Date.now());
+    // лёгкий разброс, чтобы запросы не приходили ровно в одну и ту же секунду
+    wait = Math.max(5000, Math.round(wait * (0.92 + Math.random() * 0.16)));
+    timers[p] = setTimeout(tick, wait);
+  };
+  // DonatePay не любит частые запросы: первый опрос после подключения — не раньше 15 с
+  timers[p] = setTimeout(tick, p === 'dp' ? 15000 : 1500);
 }
 function stopPoll(p) { if (timers[p]) clearTimeout(timers[p]); timers[p] = null; }
-function start() { ['da', 'dp', 'dn'].forEach((p) => { if (secret(p)) startPoll(p); }); }
+function start() { ['da', 'dp', 'dn'].forEach((p) => { if (secret(p)) startPoll(p, 'missed'); }); }
 
 function status() {
   const acc = store.get('donAccounts') || {};
@@ -183,9 +221,14 @@ function status() {
   out.da.configured = !!daConfig();
   return out;
 }
-async function check() { // для самопроверки
+// Для самопроверки: своих запросов НЕ делаем (DonatePay ругается на частые) — отдаём результат опроса
+async function check() {
   const r = {};
-  for (const p of ['da', 'dp', 'dn']) { if (!secret(p)) continue; try { await LIST[p](); r[p] = { ok: true }; } catch (e) { r[p] = { ok: false, error: e.message }; } }
+  for (const p of ['da', 'dp', 'dn']) {
+    if (!secret(p)) continue;
+    const st = state[p] || {};
+    r[p] = st.at ? { ok: !!st.ok, error: st.error || '', at: st.at, cached: true } : { ok: null, pending: true };
+  }
   return r;
 }
 

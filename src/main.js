@@ -1679,8 +1679,12 @@ app.whenReady().then(async () => {
           job('don', async () => {
             const st = donations.status(); const on = Object.keys(st).filter((k) => st[k].connected);
             if (!on.length) { put('don', 'off', 'не подключены'); return; }
-            const r = await donations.check(); const bad = on.filter((k) => !(r[k] && r[k].ok));
-            put('don', bad.length ? (bad.length === on.length ? 'bad' : 'warn') : 'ok', bad.length ? bad.map((k) => st[k].name + ': ' + ((r[k] && r[k].error) || 'нет связи')).join(' · ') : on.map((k) => st[k].name).join(' · ') + ' на связи');
+            const r = await donations.check(); const bad = on.filter((k) => !(r[k] && (r[k].ok || r[k].pending)));
+            const pend = on.filter((k) => r[k] && r[k].pending);
+            put('don', bad.length ? (bad.length === on.length ? 'bad' : 'warn') : 'ok',
+              bad.length ? bad.map((k) => st[k].name + ': ' + ((r[k] && r[k].error) || 'нет связи')).join(' · ')
+                : pend.length === on.length ? on.map((k) => st[k].name).join(' · ') + ' — первый опрос идёт'
+                : on.map((k) => st[k].name).join(' · ') + ' на связи');
           }),
           job('tg', async () => { try { const r = await ping('https://web.telegram.org/a/'); put('tg', r.status < 500 ? 'ok' : 'warn', 'сайт доступен'); } catch (e) { put('tg', 'warn', 'сайт не отвечает'); } })
         ]);
