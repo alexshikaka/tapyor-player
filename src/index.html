@@ -999,7 +999,7 @@
     <section class="view reqv" id="viewReq" hidden aria-label="Заказы со стрима">
       <div class="col-head">
         <h2>Заказы со стрима</h2>
-        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClean" title="Убрать разобранные и «просто текст»">Убрать разобранные</button></span>
+        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button></span>
       </div>
       <div class="rq-sum" id="rqSum" hidden></div>
       <div class="rq-list" id="rqList"></div>
@@ -1975,6 +1975,7 @@
     previewT = null;
     current = i; var v = queue[i];
     v.played = true;
+    rqSync(); // заказ заиграл — сразу переносим его в «выполненные», когда доиграет
     // в сыгранном — без повторов: та же песня раньше в ленте убирается, остаётся последняя
     var vk = srcOf(v) + ':' + v.id;
     for (var dk = current - 1; dk >= 0; dk--) { var dq = queue[dk]; if (dq && dq.played && srcOf(dq) + ':' + dq.id === vk) { queue.splice(dk, 1); current--; } }
@@ -2073,6 +2074,7 @@
     var v = queue[current];
     if (v && v.bg && bgSel.kind === 'wave' && srcOf(v) === 'ym') A.ymWaveFeedback('trackFinished', ymKey(v), aud.duration || 0);
     advance(true);
+    rqSync(); // трек доиграл — обновляем «выполненные заказы»
   }
   function stopVideo(){
     xf.el = null; xf.inSec = 0;
@@ -4068,15 +4070,28 @@
   function rqPending(r){ return r.state === 'dismissed' ? [] : (r.items || []).filter(function (it){ return !it.state; }); }
   // Лента сообщений хранится сутки
   var RQ_DAY = 24 * 3600 * 1000;
-  // Заказ выполнен, когда его трек уже отыграл в очереди
+  // Заказ выполнен, когда его трек уже отыграл в очереди (пока играет — висит в активных)
   function rqPlayed(it){
     if (it.state !== 'added' || !it.track) return false;
     var cur = queue[current];
-    if (cur && rqSame(cur, it.track)) return false; // играет прямо сейчас — ещё не выполнен
+    if (cur && rqSame(cur, it.track) && !isIdle()) return false; // играет прямо сейчас — ещё не выполнен
     return queue.some(function (v){ return v.played && rqSame(v, it.track); });
   }
-  // Активные заказы — те, что определились точно и ещё не встали в очередь
-  function rqActive(it){ return !it.state && it.track && rqCls(it) === 'ex' && it.paid !== false; }
+  // Заказ определился точно (независимо от того, встал он уже в очередь или нет)
+  function rqExact(it){
+    if (!it.track || it.state === 'skip' || it.paid === false) return false;
+    if (rqFlags(it).some(function (x){ return RQ_REJECT[x.k]; })) return false;
+    return it.level === 'exact';
+  }
+  // Активные заказы: точно определились и ещё не отыграли (в том числе уже стоящие в очереди)
+  function rqActive(it){ return rqExact(it) && !rqPlayed(it); }
+  // Трек этого заказа вообще есть в ленте очереди (включая уже сыгранные)
+  function rqInQueue(it){
+    if (!it.track) return false;
+    var cur = queue[current];
+    if (cur && rqSame(cur, it.track)) return true;
+    return queue.some(function (v){ return rqSame(v, it.track); });
+  }
   function rqMoney(r){ return (r.amount != null ? (Math.round(r.amount * 100) / 100) : '?') + ' ' + (CURSYM[r.currency] || r.currency || ''); }
   function rqAgo(t){ var m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад'; var h = Math.round(m / 60); if (h < 24) return h + ' ч назад'; return Math.round(h / 24) + ' дн назад'; }
   function rqSave(r){ A.reqUpdate && A.reqUpdate(r.key, { items: r.items, state: r.state }); }
@@ -4144,6 +4159,8 @@
     if (rj.length) parts.push('<b class="r">Спорные:</b> ' + esc(rj.join('; ')));
     return { html: parts.join('<br>'), ex: ex.length, any: ex.length + db.length + rj.length };
   }
+  // Перерисовать вкладку заказов сразу, если она открыта (трек заиграл или доиграл)
+  function rqSync(){ if (curTab === 'req') rqRender(); }
   function rqRender(){
     var list = $('rqList'); if (!list) return;
     // В ленте живут только сообщения за последние сутки
@@ -4158,8 +4175,10 @@
     vis.forEach(function (r){
       (r.items || []).forEach(function (it, ii){
         it._id = r._ri + ':' + ii;
-        if (rqActive(it)) act.push({ r: r, it: it });
-        else if (rqPlayed(it)) done.push({ r: r, it: it });
+        // трек убрали из очереди руками — заказ снова становится обычным
+        if (it.state === 'added' && !rqInQueue(it)) it.state = undefined;
+        if (rqPlayed(it)) done.push({ r: r, it: it });
+        else if (rqActive(it)) act.push({ r: r, it: it });
       });
     });
     act.sort(function (a, b){ return (a.r.got || 0) - (b.r.got || 0); }); // кто раньше заказал — тот выше
@@ -4247,7 +4266,6 @@
     toast('В очередь: ' + list.length);
   };
   $('rqTest').onclick = function(){ RQ.testOpen = !RQ.testOpen; rqRender(); if (RQ.testOpen) setTimeout(function(){ var i = $('rqtText'); if (i) i.focus(); }, 30); };
-  $('rqClean').onclick = function(){ RQ.list.forEach(function (r){ if (r.level === 'text' || !rqPending(r).length) r.state = 'dismissed'; }); if (A.reqClear) A.reqClear(); rqRender(); };
   if (A.reqList) A.reqList().then(function (l){ RQ.list = l || []; rqRender(); });
   if (A.onReqNew) A.onReqNew(rqIncoming);
   if (A.getSetting) A.getSetting('reqAuto').then(function (v){ RQ.auto = !!v; });
