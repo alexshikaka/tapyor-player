@@ -488,7 +488,7 @@ function createWindow() {
     autoHideMenuBar: true,
     // Тёмная верхняя полоса в цвет оформления; системные кнопки остаются
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: themeColors().bg, symbolColor: themeColors().sym, height: 36 },
+    titleBarOverlay: { color: '#00000000', symbolColor: themeColors().sym, height: 36 }, // прозрачная панель кнопок окна
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -517,7 +517,7 @@ function createWindow() {
 // Цвета системной полосы окна под тему оформления
 function themeColors() { const t = cfg('theme'); if (t === 'mono') return { bg: '#161616', sym: '#CBCBCB' }; if (t && t !== 'violet') { const b = cfg('themeBar'); if (b && /^#[0-9a-f]{6}$/i.test(b.bg) && /^#[0-9a-f]{6}$/i.test(b.sym)) return b; } return { bg: '#15161C', sym: '#C9CBD4' }; }
 function applyThemeWindow() {
-  try { if (mainWindow && !mainWindow.isDestroyed()) { const c = themeColors(); mainWindow.setBackgroundColor(c.bg); mainWindow.setTitleBarOverlay({ color: c.bg, symbolColor: c.sym, height: 36 }); } } catch (e) { log('тема: ' + e.message); }
+  try { if (mainWindow && !mainWindow.isDestroyed()) { const c = themeColors(); mainWindow.setBackgroundColor(c.bg); mainWindow.setTitleBarOverlay({ color: '#00000000', symbolColor: c.sym, height: 36 }); } } catch (e) { log('тема: ' + e.message); }
 }
 // ===== Отчёты об ошибках: анонимно, без личного, один и тот же «отпечаток» не чаще раза в сутки =====
 const REPORT_URL = 'https://functions.yandexcloud.net/d4ehsmee0l5joni3fbkf';
