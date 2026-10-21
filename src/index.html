@@ -10,7 +10,9 @@
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
     --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; --hov: rgba(255,255,255,.05); --hov2: rgba(255,255,255,.07); --hov3: rgba(255,255,255,.09);
     /* Единая шкала скруглений: панели вкладок, карточки внутри, мелкие кнопки */
-    --r-panel: 20px; --r-card: 14px; --r-ctl: 10px; }
+    --r-panel: 20px; --r-card: 14px; --r-ctl: 10px;
+    /* Шкала отступов: 4 / 8 / 12 / 16 / 20 / 24 */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; }
   /* Тема «Монохром»: чёрный, белый и серые — под чёрно-белый логотип. Обложки остаются цветными */
   html.theme-mono { --bg00: #070707; --bg0: #0F0F0F; --bg1: #161616; --bg2: #1A1A1A; --bg3: #202020; --bg4: #2D2D2D; --ln: #2F2F2F; --ln2: #262626; --ln3: #3E3E3E; --tx: #EDEDED; --tx2: #CBCBCB; --tx3: #A2A2A2; --tx4: #8E8E8E; --tx5: #818181; --ac: #D4D4D4; --ac2: #E6E6E6; --acr: 212,212,212; --acbg: #262626; --pri: #E8E8E8; --prit: #121212; }
 
@@ -32,8 +34,8 @@
   input::placeholder { color: var(--tx5); }
 
   /* Шапка */
-  header { display: flex; flex-direction: column; gap: 10px; padding: 0 24px 12px; flex: 0 0 auto; -webkit-app-region: drag; }
-  .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 -24px -10px; padding-left: 27px; /* ровно с левым краем первой кнопки вкладок */ display: flex; align-items: center; justify-content: flex-start; }
+  header { display: flex; flex-direction: column; gap: var(--sp-3); padding: 0 var(--sp-5) var(--sp-3); flex: 0 0 auto; -webkit-app-region: drag; }
+  .titlebar-space { height: 36px; flex: 0 0 auto; margin: 0 calc(-1 * var(--sp-5)) calc(-1 * var(--sp-3)); padding-left: 23px; /* ровно с левым краем первой кнопки вкладок */ display: flex; align-items: center; justify-content: flex-start; }
   header .tbrand img { -webkit-app-region: drag; }
   .tbrand { display: flex; align-items: center; gap: 8px; pointer-events: none; }
   .tbrand .logo { width: 20px; height: 20px; border-radius: 6px; }
@@ -64,12 +66,12 @@
   .searchwrap { flex: 1 1 auto; min-width: 0; max-width: 820px; display: flex; flex-direction: column; }
   /* Поиск и фильтры живут в самой вкладке «Поиск»: шапка тогда одной строки,
      и очередь воспроизведения начинается на том же уровне, что и в остальных вкладках */
-  .searchtop { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+  .searchtop { display: flex; flex-direction: column; gap: var(--sp-3); }
   .searchtop .searchwrap { max-width: none; }
   .searchtop[hidden] { display: none !important; }
   .searchbar { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 1px solid var(--ln); border-radius: var(--r-panel); padding: 0 14px; height: 46px; }
   .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--tx); font-size: 15px; font-weight: 500; }
-  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
   .chip { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; }
   .chip.active { background: var(--tx); color: var(--bg0); border-color: transparent; font-weight: 600; }
   .chip.soon { opacity: .5; cursor: default; }
@@ -93,7 +95,7 @@
   .hs-foot { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
   .hs-det summary { cursor: pointer; font-size: 12.5px; color: var(--tx4); }
   .hs-det pre { max-height: 220px; overflow: auto; background: var(--bg0); border: 1px solid var(--ln); border-radius: 10px; padding: 10px; font: 11.5px 'JetBrains Mono', Consolas, monospace; color: var(--tx3); white-space: pre-wrap; word-break: break-word; }
-  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 20px; gap: 10px; }
+  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 var(--sp-5); gap: var(--sp-3); }
   .br-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .br-seg { display: flex; background: var(--bg0); border: 1px solid var(--ln); border-radius: 10px; padding: 3px; gap: 2px; }
   .br-seg button { height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--tx2); font: 500 13px Onest, sans-serif; cursor: pointer; }
@@ -174,15 +176,15 @@
   .badge { font-size: 11px; color: var(--ac); border: 1px solid var(--ac); border-radius: 5px; padding: 2px 6px; flex: 0 0 auto; }
 
   /* Основная часть */
-  main { flex: 1; display: flex; min-height: 0; padding: 0 10px 0 0; }
+  main { flex: 1; display: flex; min-height: 0; padding: 0 var(--sp-3) 0 0; }
   /* Вкладки — просто области на фоне окна: без рамки и подложки. Карточка есть только у очереди справа */
   .view { min-width: 0; }
-  .results-col { flex: 1 1 auto; min-width: 0; padding: 0 20px; display: flex; flex-direction: column; gap: 8px; }
-  .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px 4px; gap: 8px; flex-wrap: wrap; }
+  .results-col { flex: 1 1 auto; min-width: 0; padding: 0 var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
+  .col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 0 var(--sp-2); gap: var(--sp-2); flex-wrap: wrap; }
   .col-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--tx2); flex-shrink: 0; }
   .col-head .hint { font-size: 13px; color: var(--tx4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .row { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: var(--r-card); cursor: pointer; position: relative; }
+  .row { display: flex; align-items: center; gap: 12px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-card); cursor: pointer; position: relative; }
   .row:hover { background: var(--hov); }
   .cover-wrap { position: relative; width: 40px; height: 40px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; background: #222; }
   .cover { width: 40px; height: 40px; object-fit: cover; display: block; }
@@ -226,7 +228,7 @@
   .ar-simc > span:last-child { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; max-width: 100%; line-height: 1.3; }
   .ar-simc:hover { background: var(--bg2); }
   .ar-simc img, .ar-simc .ph { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; background: var(--bg4); display: block; }
-  .frow { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: var(--r-card); min-height: 40px; }
+  .frow { display: flex; align-items: center; gap: 12px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-card); min-height: 40px; }
   .frow .fn { width: 26px; text-align: center; color: var(--tx5); font-size: 12px; flex: 0 0 auto; }
   .frow .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .frow .meta .t { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx3); }
@@ -301,7 +303,7 @@
   .add:hover { background: rgba(var(--acr),.3); color: #E4DDFF; }
 
   /* Правая колонка: очередь */
-  .splitter { flex: 0 0 10px; margin: 0; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; border-radius: var(--r-ctl); }
+  .splitter { flex: 0 0 var(--sp-3); margin: 0; cursor: col-resize; position: relative; z-index: 2; background: transparent; transition: background .12s; border-radius: var(--r-ctl); }
   /* Разделительной полосы больше нет: при изменении ширины светится край карточки очереди */
   .splitter:hover, .splitter.drag { background: transparent; }
   body.resizing { cursor: col-resize; user-select: none; }
@@ -310,7 +312,7 @@
   .hsplitter:hover, .hsplitter.drag { background: rgba(var(--acr),.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
   /* Очередь — отдельная карточка со скруглёнными углами: линия сверху не нужна */
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 10px; box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; position: relative; transition: box-shadow .16s ease; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 var(--sp-3); box-shadow: inset 0 0 0 1px var(--ln2); background: var(--bg1); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); min-height: 0; position: relative; transition: box-shadow .16s ease; }
   /* Потянули за разделитель — вместо линии загорается левый край карточки и плавно сходит на нет вправо */
   .splitter:hover ~ .queue-col, .splitter.drag ~ .queue-col {
     background-image: linear-gradient(90deg, rgba(var(--acr),.34) 0%, rgba(var(--acr),.10) 26%, rgba(var(--acr),0) 62%);
@@ -405,7 +407,7 @@
   .qrow.done { opacity: .45; }
   .qrow.done:hover { opacity: .8; }
   .qrow.done .qt { font-weight: 500; }
-  .qrow { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; }
+  .qrow { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-ctl); }
   .qrow.playing { background: rgba(var(--acr),0.12); }
   .qrow .n { font-size: 13px; color: var(--tx5); width: 16px; text-align: center; flex: 0 0 auto; }
   .qrow .qm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -418,7 +420,7 @@
   .muted { color: var(--tx4); font-size: 13px; text-align: center; padding: 16px 0; }
 
   /* Нижняя панель-плеер */
-  footer { flex: 0 0 auto; display: flex; align-items: center; gap: 28px; padding: 14px 24px; background: var(--bg00); }
+  footer { flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-6); padding: var(--sp-4) var(--sp-5); background: var(--bg00); }
   .f-now { display: flex; align-items: center; gap: 12px; flex: 1 1 220px; min-width: 0; }
   .f-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
   .f-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #222; flex: 0 0 auto; }
@@ -570,7 +572,7 @@
   .plrows { display: flex; flex-direction: column; gap: 4px; }
 
   /* Вкладка «Моё» */
-  .my-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0; padding: 0 20px; gap: 12px; }
+  .my-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0; padding: 0 var(--sp-5); gap: var(--sp-3); }
   /* Плейлисты сверху: одна панель, подсвеченная акцентом — вкладки, действия, пилюли */
   .my-side { flex: 0 0 auto; background: var(--bg3); border: 1px solid var(--ln); border-radius: var(--r-panel); padding: 0 14px 12px; max-height: 40vh; overflow-y: auto; }
   .my-main { flex: 1; min-width: 0; padding: 0; display: flex; flex-direction: column; min-height: 0; }
@@ -742,18 +744,18 @@
   .set::-webkit-scrollbar { width: 12px; }
   /* В настройках ползунок виден всегда — его не надо искать наведением */
   .set::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
-  .set-in { display: flex; flex-wrap: wrap; gap: 32px; padding: 0 20px; max-width: 1180px; margin: 0 auto; box-sizing: border-box; }
+  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--sp-5); max-width: 1180px; margin: 0 auto; box-sizing: border-box; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
   @media (min-width: 880px) { .set-side { position: sticky; top: 0; align-self: flex-start; max-height: calc(100vh - 170px); overflow-y: auto; } }
   .set-side .cap { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 0 12px 8px; }
   .set-side button { display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: transparent; color: var(--tx2); font: 500 14px Onest, sans-serif; cursor: pointer; text-align: left; }
   .set-side button:hover { background: var(--bg2); color: var(--tx); }
-  .set-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 32px; }
+  .set-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
   .set .sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
   .set .sec-h h2 { margin: 0; font-size: 18px; font-weight: 700; }
   .set .sec-h span { font-size: 13px; color: var(--tx4); }
-  .set .card { background: var(--bg3); border: 1px solid var(--bg4); border-radius: var(--r-card); padding: 6px 20px; display: flex; flex-direction: column; }
+  .set .card { background: var(--bg3); border: 1px solid var(--bg4); border-radius: var(--r-card); padding: var(--sp-2) var(--sp-5); display: flex; flex-direction: column; }
   .set .srow { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--bg3); flex-wrap: wrap; }
   .set .srow:last-child { border-bottom: 0; }
   .set .sl { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -884,7 +886,7 @@
     45% { box-shadow: inset 0 0 0 1px rgba(74,222,154,.30), 0 0 14px 1px rgba(74,222,154,.18); }
   }
   @media (prefers-reduced-motion: reduce) { #tabs button.has-req { animation: none; color: #4ADE9A; } }
-  .reqv { flex: 1 1 auto; min-width: 0; padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+  .reqv { flex: 1 1 auto; min-width: 0; padding: 0 var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
   .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .rq-acts .pbtn { height: 34px; font-size: 12.5px; }
   .rq-sm { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--ln); background: transparent; color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
