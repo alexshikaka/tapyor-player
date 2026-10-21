@@ -976,6 +976,8 @@ app.whenReady().then(async () => {
     try { const y = await ytsT(q, 8000); return (y.videos || []).slice(0, 5).map((v) => ({ src: 'yt', id: v.videoId, title: v.title, author: (v.author && v.author.name) || '', duration: (v.duration && v.duration.timestamp) || '', seconds: (v.duration && v.duration.seconds) || 0, thumb: v.thumbnail })); }
     catch (e) { return []; }
   }
+  // Нормализация для сравнения слов в заказах: нижний регистр, ё→е, без знаков
+  const rqNorm = (s) => String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   async function processDonation(d) {
     const p = reqp.plan(d.text);
     const items = [];
@@ -988,20 +990,26 @@ app.whenReady().then(async () => {
     const groups = {};
     p.queries.forEach((q) => { const g = q.kind === 'dash' ? 'c' + q.chunk : q.kind; (groups[g] = groups[g] || []).push(q); });
     for (const g of Object.keys(groups).slice(0, 3)) {
-      const qs = groups[g], latin = qs[0].kind === 'latin';
+      const qs = groups[g], latin = qs[0].kind === 'latin', combo = qs[0].kind === 'combo';
       let best = null; const doubts = []; const seenK = new Set();
+      let qWords = []; // слова текущего запроса — для проверки «все слова есть в песне»
+      const covered = (t) => { const words = rqNorm((t.author || '') + ' ' + (t.title || '')).split(' ').filter(Boolean); return qWords.length > 0 && qWords.every((w) => words.indexOf(w) >= 0); };
       const consider = (list) => {
         for (const t of list) {
           const k = (t.src || '') + ':' + t.id; if (seenK.has(k)) continue; seenK.add(k);
           const j = reqp.judge(d.text, t);
-          if (j.level === 'exact') { if (!best) best = t; }
-          else if (j.level === 'doubt' && !latin) doubts.push({ t, s: j.t * 2 + j.a });
+          // слова без тире («кино печаль») засчитываем, только если в сообщении есть и название, и исполнитель,
+          // и каждое слово запроса нашлось в самой песне — иначе «Выкати Исакова и Москву» станет музыкой
+          if (j.level === 'exact' && (!combo || (j.a > 0 && covered(t)))) { if (!best) best = t; }
+          else if (j.level === 'doubt' && !latin && !combo) doubts.push({ t, s: j.t * 2 + j.a });
         }
       };
-      for (const q of qs.slice(0, 4)) { consider(await reqSearch(q.query)); if (best) break; }
-      if (!best && !latin && cfg('ytEnabled') !== false) consider(await reqSearchYt(qs[0].query));
+      for (const q of qs.slice(0, combo ? 3 : 4)) { qWords = rqNorm(q.query).split(' ').filter(Boolean); consider(await reqSearch(q.query)); if (best) break; }
+      if (!best && !latin && !combo && cfg('ytEnabled') !== false) consider(await reqSearchYt(qs[0].query));
       doubts.sort((a, b) => b.s - a.s);
-      if (best) items.push({ level: 'exact', track: best, alts: doubts.slice(0, 3).map((x) => x.t), query: qs[0].query });
+      // сочетания слов без тире — всегда «под сомнением»: пусть стример посмотрит и решит
+      if (best) items.push({ level: combo ? 'doubt' : 'exact', track: best, alts: doubts.slice(0, 3).map((x) => x.t), query: qs[0].query });
+      else if (combo) { /* без тире и слов про музыку не нашлось — оставляем сообщение просто текстом */ }
       else if (doubts.length) items.push({ level: 'doubt', track: doubts[0].t, alts: doubts.slice(1, 3).map((x) => x.t), query: qs[0].query });
       else if (!latin && p.signal !== 'latin') items.push({ level: 'doubt', track: null, alts: [], query: qs[0].query, note: 'похоже на заказ, но песня не нашлась' });
     }

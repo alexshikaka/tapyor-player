@@ -4060,6 +4060,9 @@
   var CURSYM = { RUB: '₽', UAH: '₴', KZT: '₸', USD: '$', EUR: '€' };
   var DON_NAMES = { da: 'DonationAlerts', dp: 'DonatePay', dn: 'Donatello', test: 'пробный' };
   function rqSame(v, t){ return v && t && String(v.id) === String(t.id) && srcOf(v) === srcOf(t); }
+  // Трек мог замениться на другой источник при сбое воспроизведения — тогда сравниваем по «исполнитель — название»
+  function rqName(t){ return t ? String((t.author || '') + ' ' + (t.title || '')).toLowerCase().replace(/ё/g, 'е').replace(/[^\p{L}\p{N}]+/gu, ' ').trim() : ''; }
+  function rqMatch(v, t){ if (rqSame(v, t)) return true; var a = rqName(v), b = rqName(t); return !!a && a === b; }
   function rqFlags(it){
     var f = (it.flags || []).slice();
     if (it.track && it.state !== 'added') {
@@ -4080,7 +4083,7 @@
     if (it.state !== 'added' || !it.track) return false;
     var cur = queue[current];
     return queue.some(function (v){
-      if (!rqSame(v, it.track)) return false;
+      if (!rqMatch(v, it.track)) return false;
       if (v.finished) return true;   // доиграл до конца
       return v.played && v !== cur;  // трек уже не текущий
     });
@@ -4088,7 +4091,7 @@
   // Заказ играет прямо сейчас — подсвечиваем как играющую строку в очереди
   function rqNow(it){
     var cur = queue[current];
-    return !!(cur && it.track && it.state === 'added' && rqSame(cur, it.track));
+    return !!(cur && it.track && it.state === 'added' && rqMatch(cur, it.track));
   }
   // Заказ определился точно (независимо от того, встал он уже в очередь или нет)
   function rqExact(it){
@@ -4102,8 +4105,8 @@
   function rqInQueue(it){
     if (!it.track) return false;
     var cur = queue[current];
-    if (cur && rqSame(cur, it.track)) return true;
-    return queue.some(function (v){ return rqSame(v, it.track); });
+    if (cur && rqMatch(cur, it.track)) return true;
+    return queue.some(function (v){ return rqMatch(v, it.track); });
   }
   function rqMoney(r){ return (r.amount != null ? (Math.round(r.amount * 100) / 100) : '?') + ' ' + (CURSYM[r.currency] || r.currency || ''); }
   function rqAgo(t){ var m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return m + ' мин назад'; var h = Math.round(m / 60); if (h < 24) return h + ' ч назад'; return Math.round(h / 24) + ' дн назад'; }
