@@ -1002,7 +1002,7 @@
     <section class="view reqv" id="viewReq" hidden aria-label="Заказы со стрима">
       <div class="col-head">
         <h2>Заказы со стрима</h2>
-        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button></span>
+        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
       </div>
       <div class="rq-sum" id="rqSum" hidden></div>
       <div class="rq-list" id="rqList"></div>
@@ -4198,7 +4198,8 @@
 
     var sm = rqSummary(vis);
     $('rqSum').hidden = !sm.html; $('rqSum').innerHTML = sm.html;
-    $('rqAddAll').hidden = !act.length; $('rqAddAll').textContent = '＋ Все точные в очередь (' + act.length + ')';
+    var nPend = act.filter(function (x){ return !x.it.state; }).length; // ждут решения
+    $('rqAddAll').hidden = !nPend; $('rqAddAll').textContent = '＋ Все точные в очередь (' + nPend + ')';
 
     var h = '';
     if (RQ.testOpen) h += '<div class="rq-test"><input id="rqtText" style="flex:1 1 280px" placeholder="Текст доната, например: Привет! Кино — Кукушка" value="' + esc(RQ.testText || '') + '"><input id="rqtAmt" type="number" style="width:100px" value="' + esc(RQ.testAmt || 100) + '" aria-label="Сумма"><button class="pbtn qadd" id="rqtGo">Разобрать</button><span class="sd" style="color:var(--tx4);font-size:12px">Пробный заказ не уходит никуда — только сюда</span></div>';
@@ -4229,8 +4230,9 @@
   }
   function rqBadge(){
     var b = $('reqBadge'); if (!b) return;
+    // Счётчик — сколько заказов ждут решения (ещё не встали в очередь)
     var n = 0;
-    RQ.list.forEach(function (r){ if (r.state === 'dismissed') return; (r.items || []).forEach(function (it){ if (rqActive(it)) n++; }); });
+    RQ.list.forEach(function (r){ if (r.state === 'dismissed') return; (r.items || []).forEach(function (it){ if (rqExact(it) && !it.state) n++; }); });
     b.hidden = !n; b.textContent = n ? n : '';
     var tab = $('tabReq'); if (tab) tab.classList.toggle('has-req', !!n); // вкладка плавно загорается, пока есть заказы
   }
@@ -4284,6 +4286,16 @@
     toast('В очередь: ' + list.length);
   };
   $('rqTest').onclick = function(){ RQ.testOpen = !RQ.testOpen; rqRender(); if (RQ.testOpen) setTimeout(function(){ var i = $('rqtText'); if (i) i.focus(); }, 30); };
+  // Очистить всю историю заказов: сообщения, активные и выполненные (очередь не трогаем)
+  $('rqClear').onclick = async function(){
+    if (!RQ.list.length) { toast('История заказов уже пуста'); return; }
+    var ok = await askDlg({ title: 'Очистить историю заказов?', text: 'Удалятся все сообщения, активные заказы и выполненные. Музыка в очереди и лента прослушивания останутся.', ok: 'Очистить' });
+    if (!ok) return;
+    RQ.list = [];
+    if (A.reqClear) A.reqClear();
+    rqRender();
+    toast('История заказов очищена');
+  };
   if (A.reqList) A.reqList().then(function (l){ RQ.list = l || []; rqRender(); });
   if (A.onReqNew) A.onReqNew(rqIncoming);
   if (A.getSetting) A.getSetting('reqAuto').then(function (v){ RQ.auto = !!v; });
