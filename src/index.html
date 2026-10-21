@@ -881,6 +881,9 @@
   .rq-sum .g { color: #4ADE9A; } .rq-sum .y { color: #FFD43B; } .rq-sum .r { color: #FF8A84; }
   .rq-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
   .rq { background: var(--bg2); border: 1px solid var(--ln2); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  /* Активные заказы — зелёная подложка; тот, что играет сейчас, — как играющая строка в очереди */
+  .rq.rq-act { background: rgba(74,222,154,.07); border-color: rgba(74,222,154,.34); }
+  .rq.rq-act.rq-now { background: rgba(var(--acr),.12); border-color: var(--ac); }
   .rq.done { opacity: .55; }
   .rq-h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 13px; color: var(--tx3); }
   .rq-h b { color: var(--tx); font-size: 14px; }
@@ -4070,12 +4073,18 @@
   function rqPending(r){ return r.state === 'dismissed' ? [] : (r.items || []).filter(function (it){ return !it.state; }); }
   // Лента сообщений хранится сутки
   var RQ_DAY = 24 * 3600 * 1000;
-  // Заказ выполнен, когда его трек уже отыграл в очереди (пока играет — висит в активных)
+  // Заказ выполнен, когда его трек уже отыграл в очереди.
+  // Пока трек звучит — заказ остаётся в активных (иначе счётчик уменьшался бы раньше времени).
   function rqPlayed(it){
     if (it.state !== 'added' || !it.track) return false;
     var cur = queue[current];
-    if (cur && rqSame(cur, it.track) && !isIdle()) return false; // играет прямо сейчас — ещё не выполнен
+    if (cur && rqSame(cur, it.track)) return !!(master() && master().ended); // текущий: только когда доиграл
     return queue.some(function (v){ return v.played && rqSame(v, it.track); });
+  }
+  // Заказ играет прямо сейчас — подсвечиваем как играющую строку в очереди
+  function rqNow(it){
+    var cur = queue[current];
+    return !!(cur && it.track && it.state === 'added' && rqSame(cur, it.track));
   }
   // Заказ определился точно (независимо от того, встал он уже в очередь или нет)
   function rqExact(it){
@@ -4128,9 +4137,9 @@
     }
     return h + '</div>';
   }
-  function rqCardHtml(r, ri, only){
+  function rqCardHtml(r, ri, only, cls){
     var items = only ? [only] : (r.items || []);
-    var h = '<div class="rq' + (r.state === 'done' ? ' done' : '') + '"><div class="rq-h"><b>' + esc(r.name || 'Аноним') + '</b><span class="amt">' + esc(rqMoney(r)) + '</span><span>' + esc(DON_NAMES[r.prov] || r.prov) + ' · ' + rqAgo(r.at || r.got) + '</span>' + (r.missed ? '<span class="miss">пришёл, пока Тапёр был закрыт</span>' : '') + '</div>' +
+    var h = '<div class="rq' + (r.state === 'done' ? ' done' : '') + (cls ? ' ' + cls : '') + '"><div class="rq-h"><b>' + esc(r.name || 'Аноним') + '</b><span class="amt">' + esc(rqMoney(r)) + '</span><span>' + esc(DON_NAMES[r.prov] || r.prov) + ' · ' + rqAgo(r.at || r.got) + '</span>' + (r.missed ? '<span class="miss">пришёл, пока Тапёр был закрыт</span>' : '') + '</div>' +
       (r.text ? '<div class="rq-m">«' + esc(r.text) + '»</div>' : '');
     items.forEach(function (it){ h += rqItemHtml(r, ri, it, (r.items || []).indexOf(it)); });
     if (!only && r.level === 'text') h += '<div class="rq-b"><button class="rq-sm" data-rq="textfind" data-ri="' + ri + '">Это заказ — искать</button></div>';
@@ -4194,7 +4203,7 @@
     // 1. Активные заказы — то, что точно определилось и ещё не в очереди
     if (act.length) {
       h += '<div class="rq-sec">Активные заказы · ' + act.length + '</div>';
-      act.forEach(function (x){ h += rqCardHtml(x.r, x.r._ri, x.it); });
+      act.forEach(function (x){ h += rqCardHtml(x.r, x.r._ri, x.it, 'rq-act' + (rqNow(x.it) ? ' rq-now' : '')); });
     }
 
     // 2. Общая лента сообщений за сутки
