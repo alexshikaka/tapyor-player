@@ -700,6 +700,12 @@ function createWindow() {
 
   mainWindow.loadURL(appUrl || ('file://' + path.join(__dirname, 'index.html')));
 
+  // Масштаб интерфейса из настроек — применяем до первой отрисовки, без «прыжка»
+  mainWindow.webContents.on('did-finish-load', () => {
+    const z = Math.min(1.4, Math.max(0.6, Number(cfg('uiZoom')) || 1));
+    if (z !== 1) mainWindow.webContents.setZoomFactor(z);
+  });
+
   // Не открывать новые окна (ссылки и т.п.) — всё остаётся в программе
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
@@ -906,6 +912,18 @@ if (!gotTheLock) {
 
 app.whenReady().then(async () => {
   ipcMain.handle('get-version', () => app.getVersion());
+
+  // Масштаб интерфейса: колесо/ползунок в шапке меняет zoomFactor окна
+  ipcMain.handle('ui-zoom', (e, f) => {
+    const w = BrowserWindow.fromWebContents(e.sender); if (!w) return 1;
+    const z = Math.min(1.4, Math.max(0.6, Number(f) || 1));
+    w.webContents.setZoomFactor(z);
+    return w.webContents.getZoomFactor();
+  });
+  ipcMain.handle('ui-zoom-get', (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    return w ? w.webContents.getZoomFactor() : 1;
+  });
 
   const port = await startServer(Number(cfg('widgetPort')) || 0);
   log('панель для OBS: http://127.0.0.1:' + port + '/widget');

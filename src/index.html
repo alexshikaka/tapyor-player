@@ -193,6 +193,15 @@
   .chip.down .dot { background: var(--tx5) !important; }
   .dot { width: 7px; height: 7px; border-radius: 4px; flex: 0 0 auto; display: inline-block; }
   .badge { font-size: 11px; color: var(--ac); border: 1px solid var(--ac); border-radius: 5px; padding: 2px 6px; flex: 0 0 auto; }
+  .zoomb { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; background: transparent; font: inherit; color: inherit; -webkit-app-region: no-drag; }
+  .zoomb:hover { background: var(--hov); }
+  .zoom-pop { position: fixed; -webkit-app-region: no-drag; z-index: 120; width: 238px; padding: 12px; border-radius: 14px; background: var(--bg2); border: 1px solid var(--ln); box-shadow: 0 20px 44px rgba(0,0,0,.4); }
+  .zoom-pop .zp-t { font-size: 12px; color: var(--tx3); margin-bottom: 8px; }
+  .zoom-pop input[type=range] { width: 100%; }
+  .zoom-pop .zp-r { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--tx2); }
+  .zoom-pop .zp-reset { border: 0; background: var(--bg4); color: var(--tx2); border-radius: 8px; padding: 4px 8px; cursor: pointer; font: inherit; font-size: 11px; }
+  .zoom-pop .zp-reset:hover { background: var(--bg3); }
+  .zoom-pop .zp-note { font-size: 11px; color: var(--tx5); margin-top: 8px; }
 
   /* Основная часть */
   main { flex: 1; display: flex; min-height: 0; padding: 0 var(--gutter) 0 0; }
@@ -1234,11 +1243,22 @@
       <button class="acct" id="acctYt" aria-label="YouTube"></button>
       <div class="upd">
         <span class="badge" id="ver">версия…</span>
+        <button class="badge zoomb" id="zoomBtn" title="Масштаб интерфейса" aria-label="Масштаб интерфейса" aria-haspopup="dialog" aria-expanded="false">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+          <span id="zoomLbl">100%</span>
+        </button>
         <span class="upd-area" id="updArea" aria-live="polite"></span>
         <button class="upd-check" id="updCheck" data-tip="Проверить обновления" aria-label="Проверить обновления"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.3-5.7L20 8"></path><path d="M20 3v5h-5"></path></svg></button>
       </div>
     </div>
   </header>
+
+<div class="zoom-pop" id="zoomPop" hidden role="dialog" aria-label="Масштаб интерфейса">
+  <div class="zp-t">Масштаб интерфейса</div>
+  <input type="range" id="zoomRange" min="60" max="140" step="5" value="100" aria-label="Масштаб интерфейса">
+  <div class="zp-r"><b id="zoomVal">100%</b><button class="zp-reset" id="zoomReset">Сбросить</button></div>
+  <div class="zp-note">Для маленьких и вертикальных мониторов</div>
+</div>
 
   <main id="main">
     <section class="results-col view" id="viewSearch" aria-label="Результаты поиска">
@@ -7339,6 +7359,36 @@ setInterval(function(){ pushWidget(false); }, 1500);
 
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // Масштаб интерфейса: кнопка рядом с версией + ползунок
+  (function(){
+    var btn = $('zoomBtn'), pop = $('zoomPop'), rng = $('zoomRange'), val = $('zoomVal'), lbl = $('zoomLbl');
+    if (!btn || !pop || !rng) return;
+    function put(z, save){
+      var pct = Math.min(140, Math.max(60, Math.round((Number(z) || 1) * 100)));
+      rng.value = pct; if (val) val.textContent = pct + '%'; if (lbl) lbl.textContent = pct + '%';
+      if (A.uiZoom) A.uiZoom(pct / 100);
+      if (save && A.setSetting) A.setSetting('uiZoom', pct / 100);
+    }
+    function openPop(){
+      var rc = btn.getBoundingClientRect();
+      pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+      var w = pop.offsetWidth || 238;
+      pop.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, rc.right - w)) + 'px';
+      pop.style.top = (rc.bottom + 8) + 'px';
+    }
+    function closePop(){ pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+    btn.onclick = function(e){ e.stopPropagation(); pop.hidden ? openPop() : closePop(); };
+    rng.oninput = function(){ put(this.value / 100, false); };
+    rng.onchange = function(){ put(this.value / 100, true); };
+    $('zoomReset').onclick = function(){ put(1, true); };
+    document.addEventListener('mousedown', function(e){
+      if (!pop.hidden && !e.target.closest('#zoomPop') && !e.target.closest('#zoomBtn')) closePop();
+    });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !pop.hidden) closePop(); });
+    window.addEventListener('resize', function(){ if (!pop.hidden) openPop(); });
+    if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) put(z, false); });
+  })();
 </script>
 <!-- Современное окно выбора цвета (вместо системного диалога) -->
 <div class="colv" id="colv" hidden>
