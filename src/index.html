@@ -1017,7 +1017,7 @@
     --ln:#808080; --ln2:#a8a8a8; --ln3:#ffffff; --tx:#000000; --tx2:#101010; --tx3:#2a2a2a; --tx4:#4a4a4a; --tx5:#5c5c5c;
     --ac:#000080; --ac2:#1084d0; --acr:0,0,128; --acbg:#9CA5B9; --pri:#c0c0c0; --prit:#000000; --hov:rgba(0,0,0,.08); }
   html.skin-dos *, html.skin-dos body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
-  html.skin-dos h1, html.skin-dos h2, html.skin-dos .tbrand .name, html.skin-dos .sec-h h2 { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  html.skin-dos h1, html.skin-dos h2, html.skin-dos .tbrand .name, html.skin-dos .sec-h h2 { font-family: 'JetBrains Mono', monospace !important; font-weight: 700; }
   html.skin-dos .card, html.skin-dos .queue-col, html.skin-dos .searchbar, html.skin-dos .set-main {
     box-shadow: inset -2px -2px 0 #000000, inset 2px 2px 0 #ffffff; }
   html.skin-dos .pbtn, html.skin-dos .rq-sm, html.skin-dos .chip, html.skin-dos .set-side button {
@@ -1112,13 +1112,26 @@
   /* Сетка-дизеринг на «рабочем столе» */
   html.skin-retro body::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .35;
     background-image: repeating-conic-gradient(#1f1f23 0 25%, #17171a 0 50%); background-size: 4px 4px; }
-  html.skin-retro .app-shell { position: relative; z-index: 1; }  /* Наборы шрифтов: можно взять шрифт одной оболочки, оставив другую */
-  html.font-onest *, html.font-onest body { font-family: Onest, 'Segoe UI', system-ui, sans-serif !important; }
-  html.font-mono *, html.font-mono body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
-  html.font-retro *, html.font-retro body { font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; }
-  html.font-pixel *, html.font-pixel body { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace !important; }
-  html.font-pixel h1, html.font-pixel h2, html.font-pixel .tbrand .name, html.font-pixel .sec-h h2 {
+  html.skin-retro .app-shell { position: relative; z-index: 1; }
+  /* Наборы шрифтов: можно взять шрифт одной оболочки, оставив другую.
+     Двойной класс нужен, чтобы перебить правила кожи по специфичности. */
+  html.font-onest.font-onest *, html.font-onest.font-onest body { font-family: Onest, 'Segoe UI', system-ui, sans-serif !important; }
+  html.font-mono.font-mono *, html.font-mono.font-mono body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
+  html.font-retro.font-retro *, html.font-retro.font-retro body { font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; }
+  html.font-pixel.font-pixel *, html.font-pixel.font-pixel body { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace !important; }
+  html.font-pixel.font-pixel h1, html.font-pixel.font-pixel h2,
+  html.font-pixel.font-pixel .tbrand .name, html.font-pixel.font-pixel .sec-h h2 {
     font-family: 'Press Start 2P', 'Pixelify Sans', monospace !important; }
+  /* Заголовки: у кожи своё правило с большим весом — перебиваем его так же */
+  html.font-onest.font-onest h1, html.font-onest.font-onest h2,
+  html.font-onest.font-onest .tbrand .name, html.font-onest.font-onest .sec-h h2 {
+    font-family: Onest, 'Segoe UI', system-ui, sans-serif !important; }
+  html.font-mono.font-mono h1, html.font-mono.font-mono h2,
+  html.font-mono.font-mono .tbrand .name, html.font-mono.font-mono .sec-h h2 {
+    font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
+  html.font-retro.font-retro h1, html.font-retro.font-retro h2,
+  html.font-retro.font-retro .tbrand .name, html.font-retro.font-retro .sec-h h2 {
+    font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; }
   .adj-font { margin-top: 10px; }
   /* Блок цветовой темы — под карточками, с отбивкой */
   #lookThemes { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ln2); }
