@@ -1372,8 +1372,6 @@
                 <div class="adj adj-font"><span>Шрифт</span><select class="field skin-font-sel" id="skinFontSel" aria-label="Шрифт оболочки"></select></div>
                 <div class="presets">
                   <button data-preset="100,100,100">Как в дизайне</button>
-                  <button data-preset="100,75,88">Мягко</button>
-                  <button data-preset="72,55,82">Ночь</button>
                 </div>
               </div>
 
@@ -1738,7 +1736,7 @@
     { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' },
     { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca' }
   ];
-  var curSkin = '', skinAdj = { b: 100, s: 78, c: 90 };
+  var curSkin = '', skinAdj = { b: 100, s: 100, c: 100 };
   // Набор шрифтов: '' — как в оболочке, иначе один из наборов
   var SKIN_FONTS = [
     { id: '', name: 'Как в оболочке' },
@@ -3674,7 +3672,7 @@
     if (sk) applySkin(sk, false);
     var adj = (A.getSetting ? await A.getSetting('skinAdj') : null);
     if (!adj || typeof adj !== 'object') { try { adj = JSON.parse(localStorage.getItem('tapSkinAdj') || 'null'); } catch (e) { adj = null; } }
-    applySkinAdj(adj || { b: 100, s: 78, c: 90 }, false);
+    applySkinAdj(adj || { b: 100, s: 100, c: 100 }, false);
     var fnt = (A.getSetting ? await A.getSetting('skinFont') : '') || (function (){ try { return localStorage.getItem('tapSkinFont') || ''; } catch (e) { return ''; } })();
     applySkinFont(fnt, false);
   })();
