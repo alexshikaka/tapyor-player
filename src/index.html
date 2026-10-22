@@ -281,9 +281,10 @@
   .rbadge { display: inline-block; margin-right: 6px; height: 18px; line-height: 16px; padding: 0 7px; border-radius: 9px; border: 1px solid var(--ln3); background: transparent; color: var(--tx3); font: 500 11px Onest, sans-serif; vertical-align: middle; }
   button.rbadge { cursor: pointer; }
   button.rbadge:hover { border-color: var(--ac); color: var(--tx); }
-  .smode { border: 1px solid var(--ln); background: var(--hov); color: var(--tx3); height: 26px; padding: 0 10px; border-radius: 8px; font: 500 11.5px Onest, sans-serif; cursor: pointer; white-space: nowrap; flex: 0 0 auto; }
-  .smode b { color: var(--tx); font-weight: 600; }
-  .smode:hover { border-color: var(--ac); }
+  .smode { border: 0; background: transparent; color: var(--tx3); height: 26px; padding: 0 8px; border-radius: 8px; font: 500 11.5px Onest, sans-serif; cursor: pointer; white-space: nowrap; flex: 0 0 auto; transition: color .15s ease, text-shadow .15s ease; }
+  .smode b { color: var(--tx2); font-weight: 600; transition: color .15s ease; }
+  /* Наведение подсвечивает сам текст, а не подложку */
+  .smode:hover, .smode:hover b { color: var(--ac2); text-shadow: 0 0 10px rgba(var(--acr),.55); }
   .sback { margin: 2px 6px 6px; }
   .al { cursor: pointer; border-radius: 3px; transition: color .12s; }
   .al:hover { color: var(--ac2); text-decoration: underline; text-underline-offset: 3px; }
@@ -997,7 +998,7 @@
           <div class="searchbar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9EA2B0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
             <input id="search" type="text" placeholder="Название, исполнитель или ссылка (Яндекс, YouTube)" aria-label="Поиск">
-            <button class="smode" id="smode" aria-haspopup="menu" title="Как упорядочивать найденное">Выдача: <b>Умный</b> ▾</button>
+            <button class="smode" id="smode" aria-haspopup="menu" title="Как упорядочивать найденное"><b>Умный</b> ▾</button>
           </div>
           <div class="suggest" id="suggest"></div>
         </div>
@@ -2929,7 +2930,7 @@
     A.getSetting('srcOrder').then(function (v){ if (Array.isArray(v) && v.length) { srcOrder = v.filter(function (x){ return SRC[x]; }); if (srcOrder.indexOf('lc') < 0) srcOrder.unshift('lc'); ['ym', 'yt', 'sc', 'au'].forEach(function (x){ if (srcOrder.indexOf(x) < 0) srcOrder.push(x); }); renderSrcOrder(); } });
   }
   function smodeOf(id){ return SMODES.find(function (m){ return m.id === id; }) || SMODES[0]; }
-  function renderSmode(){ renderSmodeSet(); var b = $('smode'); if (b) b.innerHTML = 'Выдача: <b>' + esc(smodeOf(searchMode).n) + '</b> <span aria-hidden="true">▾</span>'; var sb = document.querySelectorAll('#setSmode button'); for (var k = 0; k < sb.length; k++) sb[k].classList.toggle('on', sb[k].dataset.v === searchMode); }
+  function renderSmode(){ renderSmodeSet(); var b = $('smode'); if (b) b.innerHTML = '<b>' + esc(smodeOf(searchMode).n) + '</b> <span aria-hidden="true">▾</span>'; var sb = document.querySelectorAll('#setSmode button'); for (var k = 0; k < sb.length; k++) sb[k].classList.toggle('on', sb[k].dataset.v === searchMode); }
   function setSearchMode(id){
     searchMode = id; renderSmode();
     if (A.setSetting) A.setSetting('searchMode', id);
