@@ -1076,145 +1076,11 @@
   html.skin-dos .pbtn, html.skin-dos .rq-sm, html.skin-dos .chip, html.skin-dos .set-side button {
     box-shadow: inset -2px -2px 0 rgba(0,0,0,.45), inset 2px 2px 0 rgba(255,255,255,.55); }
   html.skin-dos .pbtn:active, html.skin-dos .rq-sm:active { box-shadow: inset 2px 2px 0 rgba(0,0,0,.45); transform: translate(1px,1px); }
-  html.skin-dos nav button.active { background: var(--ac); color: #FFFFFF; box-shadow: none; }
+  html.skin-dos nav button.active { background: var(--ac); color: var(--ac-tx); box-shadow: none; }
   html.skin-dos .qrow, html.skin-dos .row, html.skin-dos .rq, html.skin-dos .wavecard { background: var(--bg2); }
 
 
 
-  /* ── Norton Commander: «синий экран + светлые окна» ──
-     Цвета окон берутся из ядра схемы (--bg1/--bg2/--tx/--pri), поэтому
-     редактор схемы снова управляет оформлением. Синяя шапка — фиксированный хром. */
-  html[data-skn-scheme="norton"] .results-col,
-  html[data-skn-scheme="norton"] .my-col,
-  html[data-skn-scheme="norton"] .reqv,
-  html[data-skn-scheme="norton"] .brv,
-  html[data-skn-scheme="norton"] .queue-col,
-  html[data-skn-scheme="norton"] .set-main,
-  html[data-skn-scheme="norton"] .set-side {
-    background: var(--bg1) !important;
-    color: var(--tx);
-    border: 0;
-    box-shadow: 0 0 0 2px var(--ln), 0 0 0 3px #00004E, inset 1px 1px 0 rgba(255,255,255,.55), inset -1px -1px 0 rgba(0,0,0,.30);
-  }
-  /* Шапка остаётся синей: текст светлый, активная вкладка — циановая плашка */
-  html[data-skn-scheme="norton"] .app-shell { color: #E8ECFF; }
-  /* Тексты синей шапки: логотип, вкладки, служебные подписи */
-  html[data-skn-scheme="norton"] .tbrand .name,
-  html[data-skn-scheme="norton"] .hrow1 a,
-  html[data-skn-scheme="norton"] .hrow1 span,
-  html[data-skn-scheme="norton"] .ver { color: #E8ECFF; }
-  /* Сцена «Ничего не играет» внутри окна — светлая */
-  html[data-skn-scheme="norton"] .nowcard .video,
-  html[data-skn-scheme="norton"] .nowcard video,
-  html[data-skn-scheme="norton"] #player { background: var(--bg2) !important; }
-  html[data-skn-scheme="norton"] .vidph-t { color: var(--tx2); }
-  /* Заглушка непроигрывания перекрывает чёрный кадр видео */
-  html[data-skn-scheme="norton"] .nowcard .vidph { background: var(--bg2); }
-  html[data-skn-scheme="norton"] .nowcard .video:not(.has-track) video { visibility: hidden; }
-  html[data-skn-scheme="norton"] .vidph-s { color: var(--tx4); }
-  html[data-skn-scheme="norton"] nav button { color: #E8ECFF; }
-  html[data-skn-scheme="norton"] nav button.active { background: #00E5E5; color: #00104A; }
-  /* Поиск и источники — светлые поля, цвет из ядра */
-  html[data-skn-scheme="norton"] .searchbar {
-    background: var(--bg3) !important;
-    color: var(--tx);
-    box-shadow: 0 0 0 2px var(--ln), inset 1px 1px 0 rgba(255,255,255,.55), inset -1px -1px 0 rgba(0,0,0,.25);
-  }
-  html[data-skn-scheme="norton"] .searchbar input,
-  html[data-skn-scheme="norton"] .searchbar .field { color: var(--tx); }
-  html[data-skn-scheme="norton"] #chips {
-    background: var(--bg1) !important;
-    box-shadow: 0 0 0 2px var(--ln);
-    padding: 4px 6px; border-radius: 6px;
-  }
-  html[data-skn-scheme="norton"] #chips .chip { color: var(--tx); background: var(--bg2); }
-  html[data-skn-scheme="norton"] #chips .chip.active { background: var(--ac); color: var(--prit); }
-  html[data-skn-scheme="norton"] #chips .chip[data-f="all"] .ic { color: var(--tx) !important; }
-  /* Подвал — светлая полоса F-клавиш */
-  html[data-skn-scheme="norton"] footer {
-    background: var(--bg1) !important; color: var(--tx);
-    box-shadow: inset 0 2px 0 var(--ln), inset 0 -2px 0 rgba(0,0,0,.30);
-  }
-  /* Кнопки: главные — цвет «Кнопки» из ядра, второстепенные — платина */
-  html[data-skn-scheme="norton"] .pbtn:not(.ghost) { background: var(--pri) !important; color: var(--prit) !important; }
-  html[data-skn-scheme="norton"] .pbtn.ghost {
-    background: var(--bg4) !important; color: var(--tx) !important;
-    box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.6);
-  }
-  html[data-skn-scheme="norton"] .cbtn { color: var(--tx); }
-  html[data-skn-scheme="norton"] .cbtn.play { background: var(--pri) !important; color: var(--prit) !important; box-shadow: 0 0 0 2px var(--ln); }
-  /* Боковое меню настроек */
-  html[data-skn-scheme="norton"] .set-side button {
-    background: var(--bg4) !important; color: var(--tx) !important;
-    box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.6);
-  }
-  html[data-skn-scheme="norton"] .set-side button.active { background: var(--pri) !important; color: var(--prit) !important; box-shadow: none; }
-
-  /* Внутренние окна вкладок */
-  html[data-skn-scheme="norton"] .my-side { background: var(--bg2) !important; box-shadow: inset 1px 1px 0 rgba(0,0,0,.22), inset -1px -1px 0 rgba(255,255,255,.55); }
-  html[data-skn-scheme="norton"] .my-main,
-  html[data-skn-scheme="norton"] .plview,
-  html[data-skn-scheme="norton"] .rq-list { background: transparent; color: var(--tx); }
-  html[data-skn-scheme="norton"] .mytabs { background: var(--bg2); border-bottom: 1px solid var(--ln2); }
-  html[data-skn-scheme="norton"] .myt { color: var(--tx3); }
-  html[data-skn-scheme="norton"] .myt.on { color: var(--tx); border-bottom-color: var(--ac); }
-  html[data-skn-scheme="norton"] .myab {
-    background: var(--bg4); color: var(--tx);
-    box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.6);
-  }
-  html[data-skn-scheme="norton"] .myab:hover { background: var(--bg3); }
-  html[data-skn-scheme="norton"] .myab.ghost { background: transparent; box-shadow: none; }
-  html[data-skn-scheme="norton"] .rq { box-shadow: inset 1px 1px 0 rgba(255,255,255,.6), inset -1px -1px 0 rgba(0,0,0,.25); }
-  html[data-skn-scheme="norton"] .br-wrap {
-    background: var(--bg1) !important;
-    box-shadow: inset 0 0 0 2px var(--ln), inset 0 0 0 3px #00004E;
-  }
-  html[data-skn-scheme="norton"] .br-seg {
-    background: var(--bg3);
-    box-shadow: inset 1px 1px 0 rgba(0,0,0,.22), inset -1px -1px 0 rgba(255,255,255,.55);
-  }
-  html[data-skn-scheme="norton"] .br-addr input {
-    background: var(--bg3); color: var(--tx);
-    box-shadow: inset 1px 1px 0 rgba(0,0,0,.22), inset -1px -1px 0 rgba(255,255,255,.55);
-  }
-  html[data-skn-scheme="norton"] .br-empty { background: var(--bg2); color: var(--tx3); }
-
-  /* Смысловые цвета в светлых окнах */
-  html[data-skn-scheme="norton"] { --ok: #0E7A4E; --warn: #8A5300; --err: #9E2B22; }
-  html[data-skn-scheme="norton"] .rq-h .amt,
-  html[data-skn-scheme="norton"] .rq-it.ex .rq-lv,
-  html[data-skn-scheme="norton"] .qrow .qs .rqtag,
-  html[data-skn-scheme="norton"] .imp-pk,
-  html[data-skn-scheme="norton"] .st-ok,
-  html[data-skn-scheme="norton"] .hs-ic.ok,
-  html[data-skn-scheme="norton"] .lamp.ok { color: var(--ok); }
-  html[data-skn-scheme="norton"] .rq-h .miss,
-  html[data-skn-scheme="norton"] .imp-note.bad,
-  html[data-skn-scheme="norton"] .imp-pk.warn,
-  html[data-skn-scheme="norton"] .ck-r.warn .v { color: var(--warn); }
-  html[data-skn-scheme="norton"] .rq-it.db .rq-lv { color: #6B4E00; }
-  html[data-skn-scheme="norton"] .rq-it.rj .rq-lv,
-  html[data-skn-scheme="norton"] .st-bad,
-  html[data-skn-scheme="norton"] .hs-ic.bad,
-  html[data-skn-scheme="norton"] .ck-r.bad .v { color: var(--err); }
-  html[data-skn-scheme="norton"] .rq-it.ex { border-color: var(--ok); }
-  html[data-skn-scheme="norton"] .rq-it.db { border-color: #B88600; }
-  html[data-skn-scheme="norton"] .rq-it.rj { border-color: var(--err); }
-  html[data-skn-scheme="norton"] .rq.rq-act { background: rgba(14,122,78,.10); border-color: rgba(14,122,78,.40); }
-  html[data-skn-scheme="norton"] .rq-fl span,
-  html[data-skn-scheme="norton"] .rq-fl span.pay { background: rgba(138,83,0,.14); color: var(--warn); }
-  html[data-skn-scheme="norton"] .rq-fl span.rj,
-  html[data-skn-scheme="norton"] .c-no { background: rgba(158,43,34,.14); color: var(--err); }
-  html[data-skn-scheme="norton"] .c-ok { background: rgba(14,122,78,.14); color: var(--ok); }
-  html[data-skn-scheme="norton"] .c-cl { background: rgba(138,83,0,.14); color: var(--warn); }
-  html[data-skn-scheme="norton"] .set .pill.ok,
-  html[data-skn-scheme="norton"] .hs-pill.ok { background: rgba(14,122,78,.14); color: var(--ok); }
-  html[data-skn-scheme="norton"] .hs-pill.warn { background: rgba(138,83,0,.14); color: var(--warn); }
-  html[data-skn-scheme="norton"] .hs-pill.fail { background: rgba(158,43,34,.14); color: var(--err); }
-  html[data-skn-scheme="norton"] .toggle { background: var(--tx4); }
-  html[data-skn-scheme="norton"] .toggle span { background: var(--bg3); }
-  html[data-skn-scheme="norton"] .toggle.on { background: var(--pri); }
-  html[data-skn-scheme="norton"] .toggle.on span { background: var(--prit); }
 
   /* 4. Неон-скан — CRT: скан-линии, виньетка и свечение */
   html.skin-crt { --bg00:#05040a; --bg0:#0b0b12; --bg1:#12101e; --bg2:#191527; --bg3:#211a33; --bg4:#2a2140;
@@ -1296,7 +1162,7 @@
   html.skin-retro .pbtn:active, html.skin-retro .rq-sm:active, html.skin-retro .chip:active {
     box-shadow: inset 2px 2px 0 rgba(0,0,0,.35), inset -2px -2px 0 rgba(255,255,255,.40); transform: translate(1px, 1px); }
   /* Активная вкладка — как заголовок окна */
-  html.skin-retro nav button.active { background: var(--ac); color: #FFFFFF; box-shadow: inset 1px 1px 0 rgba(255,255,255,.45), inset -1px -1px 0 rgba(0,0,0,.35); }
+  html.skin-retro nav button.active { background: var(--ac); color: var(--ac-tx); box-shadow: inset 1px 1px 0 rgba(255,255,255,.45), inset -1px -1px 0 rgba(0,0,0,.35); }
   /* Заголовки секций — тёмная плашка */
   html.skin-retro .sec-h h2 { background: linear-gradient(90deg, var(--ac) 0%, var(--ac2) 100%); color: #FFFFFF; padding: 3px 10px; margin-left: -10px; }
   html.skin-retro .qhead h2 { color: var(--tx); }
@@ -2027,8 +1893,6 @@ window.onerror = function(msg, src, line){
     dos: [
       { id: 'classic', name: 'Оригинал VGA / DOS', legacy: true, desc: 'Исходная оболочка: бирюзовый рабочий стол, платиновые панели и чёрный текст — как на экране DOS.',
         core: { bg: '#007878', panel: '#C0C0C0', surface: '#D0D0D0', line: '#808080', text: '#000000', accent: '#000080', button: '#C0C0C0' } },
-      { id: 'norton', name: 'Norton Commander', dual: true, desc: 'Тёмно-синий экран #00005A, светлые окна #C6CAD3 в циановой рамке #00E5E5 и синие кнопки #0000A8 — две панели, как в NC.',
-        core: { bg: '#00005A', panel: '#C6CAD3', surface: '#DADEE6', line: '#00E5E5', text: '#101018', accent: '#0000A8', button: '#0000A8' } },
       { id: 'turbo', name: 'Turbo Pascal', desc: 'Тёмно-синий экран IDE #000080, серый текст #C0C0C0, бирюзовые линии #00A8A8 и жёлтые подсказки #FFFF55 — как первый день в Turbo Pascal.',
         core: { bg: '#000080', panel: '#000060', surface: '#000070', line: '#00A8A8', text: '#C0C0C0', accent: '#FFFF55', button: '#00A8A8' } },
       { id: 'amber', name: 'Янтарный монитор', desc: 'P3-фосфор: тёмно-коричневый, почти чёрный экран #1A0F00 и янтарные буквы #FFB000 — так читали документы до цветной VGA.',
@@ -2098,6 +1962,7 @@ window.onerror = function(msg, src, line){
       '--tx4': wgMix(c.text, c.bg, 0.36),
       '--tx5': wgMix(c.text, c.bg, 0.48),
       '--ac': c.accent,
+      '--ac-tx': (function(){ var b = wgHex2rgb(c.accent); var L = (0.2126 * b[0] + 0.7152 * b[1] + 0.0722 * b[2]) / 255; return L > 0.5 ? '#101013' : '#FFFFFF'; })(),
       '--ac2': wgMix(c.accent, '#FFFFFF', 0.28),
       '--acr': rgb.join(','),
       '--acbg': wgMix(c.panel, c.accent, 0.18),
@@ -2108,7 +1973,7 @@ window.onerror = function(msg, src, line){
       '--hov3': dark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.10)'
     };
   }
-  var SKIN_VAR_KEYS = ['--bg00','--bg0','--bg1','--bg2','--bg3','--bg4','--ln','--ln2','--ln3','--tx','--tx2','--tx3','--tx4','--tx5','--ac','--ac2','--acr','--acbg','--pri','--prit','--hov','--hov2','--hov3'];
+  var SKIN_VAR_KEYS = ['--bg00','--bg0','--bg1','--bg2','--bg3','--bg4','--ln','--ln2','--ln3','--tx','--tx2','--tx3','--tx4','--tx5','--ac','--ac-tx','--ac2','--acr','--acbg','--pri','--prit','--hov','--hov2','--hov3'];
   function clearSkinVars(){
     var d = document.documentElement;
     SKIN_VAR_KEYS.forEach(function (k){ d.style.removeProperty(k); });
@@ -2144,7 +2009,7 @@ window.onerror = function(msg, src, line){
     Object.keys(data).forEach(function (id){
       var v = data[id] || {};
       if (v.id === 'custom' && v.core) { curSkinScheme[id] = 'custom'; curSkinCore[id] = v.core; }
-      else if (v.id) curSkinScheme[id] = v.id;
+      else if (v.id && skinSchemeById(id, v.id)) curSkinScheme[id] = v.id;   // неизвестные схемы (например, удалённые) отбрасываем
     });
   }
   function setSkinScheme(id, sid, save){
