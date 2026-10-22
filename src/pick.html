@@ -5,7 +5,7 @@
 <title>Взять цвет с экрана</title>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: transparent; cursor: crosshair; }
-  canvas.screen { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  canvas.screen { position: fixed; left: 0; top: 0; display: block; }
   .dim { position: fixed; inset: 0; background: rgba(0,0,0,.18); pointer-events: none; }
   .loupe {
     position: fixed; width: 168px; height: 168px; border-radius: 50%; pointer-events: none;
@@ -57,14 +57,21 @@
   var hexEl = document.getElementById('hex');
   var ZOOM = 8, LOUPE = 168;
 
+  // Снимок рисуем в его логическом размере (ширина экрана), привязка — левый верхний угол.
+  // Так курсор и пиксель под ним совпадают, даже если окно обрезано панелью задач.
+  var cssW = data.cssW || window.innerWidth;
+  var cssH = data.cssH || window.innerHeight;
+
   function fit(){
     var dpr = window.devicePixelRatio || 1;
-    screenCv.width = Math.round(window.innerWidth * dpr);
-    screenCv.height = Math.round(window.innerHeight * dpr);
+    screenCv.width = Math.round(cssW * dpr);
+    screenCv.height = Math.round(cssH * dpr);
     sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     sctx.imageSmoothingEnabled = true;
-    sctx.drawImage(base, 0, 0, window.innerWidth, window.innerHeight);
+    sctx.clearRect(0, 0, cssW, cssH);
+    sctx.drawImage(base, 0, 0, cssW, cssH);
   }
+
   fit();
   window.addEventListener('resize', fit);
 

@@ -629,12 +629,22 @@ async function pickScreenColor() {
   const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: thumbW, height: thumbH } });
   const src = sources.find((s) => String(s.display_id) === String(display.id)) || sources[0];
   if (!src || src.thumbnail.isEmpty()) return null;
-  pickSession = { dataUrl: src.thumbnail.toDataURL(), scale };
+  const shot = src.thumbnail.getSize();
+  // cssW/cssH — размер экрана в логических пикселях; scale — сколько физических на логический
+  pickSession = {
+    dataUrl: src.thumbnail.toDataURL(),
+    scale: shot.width / display.bounds.width,
+    cssW: display.bounds.width,
+    cssH: display.bounds.height,
+    imgW: shot.width,
+    imgH: shot.height
+  };
+  log('пипетка: экран ' + display.bounds.width + 'x' + display.bounds.height + ' (x' + scale + '), снимок ' + shot.width + 'x' + shot.height + ', рабочих ' + display.workAreaSize.width + 'x' + display.workAreaSize.height);
 
   return await new Promise((resolve) => {
     const win = new BrowserWindow({
       x: display.bounds.x, y: display.bounds.y,
-      width: display.size.width, height: display.size.height,
+      width: display.bounds.width, height: display.bounds.height,
       frame: false, transparent: true, backgroundColor: '#00000000',
       alwaysOnTop: true, skipTaskbar: true, resizable: false, movable: false,
       minimizable: false, maximizable: false, fullscreenable: false, hasShadow: false,
@@ -644,7 +654,11 @@ async function pickScreenColor() {
     win.setAlwaysOnTop(true, 'screen-saver');
     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     win.loadFile(path.join(__dirname, 'pick.html'));
-    win.once('ready-to-show', () => { win.show(); win.focus(); });
+    win.once('ready-to-show', () => {
+      win.setBounds({ x: display.bounds.x, y: display.bounds.y, width: display.bounds.width, height: display.bounds.height });
+      win.show(); win.focus();
+      setTimeout(() => { try { log('пипетка: окно ' + JSON.stringify(win.getBounds()) + ', контент ' + JSON.stringify(win.getContentBounds())); } catch (e) {} }, 300);
+    });
 
     let finished = false;
     const finish = (val) => {
