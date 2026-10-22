@@ -1888,6 +1888,8 @@ window.onerror = function(msg, src, line){
   ];
   var SKIN_SCHEMES = {
     dos: [
+      { id: 'classic', name: 'Оригинал VGA / DOS', legacy: true, desc: 'Исходная оболочка: бирюзовый рабочий стол, платиновые панели и чёрный текст — как на экране DOS.',
+        core: { bg: '#007878', panel: '#C0C0C0', surface: '#D0D0D0', line: '#808080', text: '#000000', accent: '#000080', button: '#C0C0C0' } },
       { id: 'norton', name: 'Norton Commander', desc: 'Синие панели файлового менеджера и циановые подписи — символ DOS-эпохи, когда всё делали в двух окнах.',
         core: { bg: '#0000A8', panel: '#0000C4', surface: '#1010D0', line: '#00A8A8', text: '#E8ECFF', accent: '#00FFFF', button: '#A8A8A8' } },
       { id: 'turbo', name: 'Turbo Pascal', desc: 'Тёмно-синий экран IDE с жёлтыми подсказками — как выглядел первый рабочий день программиста.',
@@ -1898,17 +1900,19 @@ window.onerror = function(msg, src, line){
         core: { bg: '#0A0A0A', panel: '#141414', surface: '#1E1E1E', line: '#3C3C3C', text: '#C0C0C0', accent: '#00FFFF', button: '#FF55FF' } }
     ],
     crt: [
+      { id: 'neon', name: 'Оригинал · Неон-скан', desc: 'Исходная оболочка: маджента и циан на почти чёрном — неон и скан-линии.',
+        core: { bg: '#0B0B12', panel: '#12101E', surface: '#191527', line: '#3A2F5C', text: '#F2EEFF', accent: '#FF2D95', button: '#00E5FF' } },
       { id: 'p1', name: 'P1 · зелёный фосфор', desc: 'Классический зелёный терминал: монохром, скан-линии и чувство, что ты в ЦУПе.',
         core: { bg: '#03110A', panel: '#061A10', surface: '#0A2418', line: '#1F5A3A', text: '#B7FFD2', accent: '#33FF99', button: '#33FF99' } },
       { id: 'p3', name: 'P3 · янтарь', desc: 'Янтарные мониторы медицинских и военных систем — «мягче» зелёного и теплее.',
         core: { bg: '#120B04', panel: '#1C1208', surface: '#24180C', line: '#5A3A12', text: '#FFD9A0', accent: '#FFAE33', button: '#FFAE33' } },
       { id: 'vhs', name: 'VHS', desc: 'Выцветшая видеокассета: кремовый, пыльный голубой и розовая полоса записи.',
         core: { bg: '#1B1D24', panel: '#242732', surface: '#2D3140', line: '#4A5064', text: '#EDE6D8', accent: '#FF7A9A', button: '#7FD0FF' } },
-      { id: 'neon', name: 'Неон-вывеска', desc: 'Ночной город и вывески 80-х: маджента и циан на почти чёрном.',
-        core: { bg: '#0B0B12', panel: '#12101E', surface: '#191527', line: '#3A2F5C', text: '#F2EEFF', accent: '#FF2D95', button: '#00E5FF' } }
     ],
     retro: [
-      { id: 'win95', name: 'Windows 95', desc: 'Бирюзовый рабочий стол #008080, платина панелей и синий заголовок окна — стартовая кнопка эпохи.',
+      { id: 'graphite', name: 'Оригинал · Ретро-десктоп', legacy: true, desc: 'Исходная оболочка: графитовый корпус, стальные кромки 95-го и синеватый акцент — как было до схем.',
+        core: { bg: '#1B1B1E', panel: '#26262A', surface: '#303035', line: '#5C5C64', text: '#E9E9EC', accent: '#8AA4C8', button: '#C6C6CA' } },
+      { id: 'win95', name: 'Windows 95', desc: 'Платиновый интерфейс 95-го: светлые панели, тёмный текст и синий заголовок окна.',
         core: { bg: '#C3C7CB', panel: '#D8DCE0', surface: '#F0F2F4', line: '#8A8F96', text: '#101418', accent: '#000080', button: '#C0C0C0' } },
       { id: 'platinum', name: 'Mac OS Platinum', desc: 'Серый «платиновый» интерфейс Apple 8–9: мягкие тени, синий акцент, никакого глянца.',
         core: { bg: '#DDDDDD', panel: '#ECECEC', surface: '#F5F5F5', line: '#9A9A9A', text: '#1A1A1A', accent: '#3366CC', button: '#DDDDDD' } },
