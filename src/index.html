@@ -97,7 +97,7 @@
   .hs-foot { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
   .hs-det summary { cursor: pointer; font-size: 12.5px; color: var(--tx4); }
   .hs-det pre { max-height: 220px; overflow: auto; background: var(--bg0); border: 0; border-radius: 10px; padding: 10px; font: 11.5px 'JetBrains Mono', Consolas, monospace; color: var(--tx3); white-space: pre-wrap; word-break: break-word; }
-  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 0 0 var(--gutter); gap: var(--sp-3); }
+  .brv { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 0 0 var(--gutter) var(--gutter); gap: var(--sp-3); }
   .br-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .br-seg { display: flex; background: var(--bg0); border: 0; border-radius: 10px; padding: 3px; gap: 2px; }
   .br-seg button { height: 30px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--tx2); font: 500 13px Onest, sans-serif; cursor: pointer; }
@@ -109,7 +109,7 @@
   .br-addr input:focus { outline: none; border-color: var(--ac); color: var(--tx); }
   .br-note { font-size: 12.5px; color: var(--tx4); line-height: 1.45; }
   .br-wrap { flex: 1; min-height: 0; border-radius: var(--r-panel); overflow: hidden; border: 0; background: #fff; display: flex; }
-  .br-web { flex: 1; width: 100%; height: 100%; border: 0; }
+  .br-web { flex: 1; width: 100%; height: 100%; border: 0; border-radius: var(--r-panel); overflow: hidden; }
   .br-empty { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg1); color: var(--tx4); font-size: 14px; text-align: center; padding: 30px; line-height: 1.5; }
   /* Вход в YouTube */
   .yl-ov, .ask-ov, .ctx, .toast { -webkit-app-region: no-drag; }
