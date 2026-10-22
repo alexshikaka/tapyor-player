@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _sf = localStorage.getItem('tapSkinFont'); if (_sf) { _d.classList.add('font-' + _sf); } var _ss = localStorage.getItem('tapSkinAdj'); if (_ss) { try { var _a = JSON.parse(_ss) || {}; var _b = Math.max(20, Math.min(100, _a.b == null ? 100 : +_a.b)), _s2 = Math.max(0, Math.min(100, _a.s == null ? 100 : +_a.s)), _c = Math.max(0, Math.min(100, _a.c == null ? 100 : +_a.c)); _d.style.setProperty('--sk-b', (_b / 100).toFixed(2)); _d.style.setProperty('--sk-s', (_s2 / 100).toFixed(2)); _d.style.setProperty('--sk-c', (0.62 + 0.38 * (_c / 100)).toFixed(3)); } catch (e) {} } } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t === 'light') _d.classList.add('theme-light-default'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
 <style>
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
@@ -1203,193 +1203,6 @@
     --pri:#FFD43B; --prit:#14161B; --hov:rgba(20,22,27,.055);
     color-scheme: light;
   }
-  /* ═══════════════════════════════════════════════════════════════════════
-     6. SCORCHED EARTH (1991) — принцип экрана: серая панель меню, чёрный
-     текст, небо от индиго к розовому и тёмные горы. Всё — краска и
-     псевдоэлементы; раскладка не меняется. Палитра снята с оригинала.
-     ═══════════════════════════════════════════════════════════════════════ */
-  html.skin-scorch { --r-panel:0px; --r-card:0px; --r-ctl:0px; --r-tab:0px; }
-  html.skin-scorch *, html.skin-scorch body { font-family:'Silkscreen','Press Start 2P',monospace; letter-spacing:0; }
-  html.skin-scorch body { background:#101028; }
-  html.skin-scorch .app-shell { position:relative; z-index:1; background:transparent; }
-  /* Небо: сверху индиго, к горизонту розово-малиновое */
-  html.skin-scorch body::before {
-    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background:
-      radial-gradient(90% 46% at 50% 96%, rgba(255,110,90,.38), transparent 62%),
-      linear-gradient(180deg,#1B1B6E 0%,#3F3CA6 16%,#6D6DEF 40%,#9F69CB 56%,#BA60A6 67%,#C8617A 76%,#7A3A44 88%,#1E1420 100%);
-  }
-  /* Горы: тёмный силуэт у нижнего края */
-  html.skin-scorch body::after {
-    content:''; position:fixed; left:-5%; right:-5%; bottom:0; height:36%; z-index:0; pointer-events:none;
-    background:linear-gradient(180deg,#8A7C92 0%,#4A4056 45%,#241C2A 100%);
-    clip-path:polygon(0% 100%,0% 58%,7% 44%,14% 56%,21% 38%,28% 54%,36% 34%,44% 52%,52% 40%,60% 56%,68% 38%,75% 54%,83% 36%,90% 52%,96% 44%,100% 56%,100% 100%);
-  }
-  /* Верхняя строка: логотип на небе, «ВЕТЕР» справа */
-  html.skin-scorch .titlebar-space { position:relative; color:#F0E8F4; }
-  html.skin-scorch .titlebar-space .name, html.skin-scorch .titlebar-space .tbrand * { color:#F0E8F4; }
-  html.skin-scorch .titlebar-space::after {
-    content:'ВЕТЕР  ← 3'; position:absolute; right:250px; top:10px;
-    font-size:10px; letter-spacing:.08em; color:#FFD9A8; text-shadow:0 2px 0 rgba(0,0,0,.45);
-  }
-  /* Панели-«меню»: платина с фаской и чёрной рамкой */
-  html.skin-scorch .hrow1,
-  html.skin-scorch .results-col, html.skin-scorch .queue-col, html.skin-scorch .searchbar,
-  html.skin-scorch .card, html.skin-scorch .set-main, html.skin-scorch .set-side,
-  html.skin-scorch .br-wrap, html.skin-scorch .my-side, html.skin-scorch .nowcard,
-  html.skin-scorch .wavecard, html.skin-scorch footer {
-    background:#C0C0C0; color:#000;
-    box-shadow:inset 2px 2px 0 #FFFFFF, inset -2px -2px 0 #808080, 0 0 0 2px #000;
-  }
-  html.skin-scorch .hrow1 { color:#000; }
-  html.skin-scorch .hrow1 * { color:#000; }
-  /* Вкладки — пункты меню */
-  html.skin-scorch nav button {
-    background:#C0C0C0; color:#000; box-shadow:inset 2px 2px 0 #FFFFFF, inset -2px -2px 0 #808080, 0 0 0 2px #000;
-  }
-  html.skin-scorch nav button.active { background:#000; color:#C0C0C0; box-shadow:inset 0 0 0 2px #000; }
-  /* Строки списков */
-  html.skin-scorch .qrow, html.skin-scorch .tarea .row, html.skin-scorch .rq,
-  html.skin-scorch .plc, html.skin-scorch .mit, html.skin-scorch .mytabs {
-    background:#CFCFCF; color:#000; box-shadow:inset 0 0 0 1px #000;
-  }
-  html.skin-scorch .qrow:hover, html.skin-scorch .tarea .row:hover { background:#E2E2E2; }
-  html.skin-scorch .qrow .qt, html.skin-scorch .qrow .qs, html.skin-scorch .qrow .qm,
-  html.skin-scorch .tarea .row .t, html.skin-scorch .tarea .row .s { color:#000; }
-  /* Кнопки */
-  html.skin-scorch .pbtn, html.skin-scorch .rq-sm, html.skin-scorch .chip, html.skin-scorch .cbtn,
-  html.skin-scorch .btn, html.skin-scorch .set-side button, html.skin-scorch .toggle {
-    background:#C0C0C0; color:#000; box-shadow:inset 2px 2px 0 #FFFFFF, inset -2px -2px 0 #808080, 0 0 0 2px #000;
-  }
-  html.skin-scorch .pbtn:not(.ghost), html.skin-scorch .pbtn.y, html.skin-scorch .chip.active,
-  html.skin-scorch .set-side button.active {
-    background:#000; color:#C0C0C0; box-shadow:inset 0 0 0 2px #000;
-  }
-  html.skin-scorch .pbtn:active, html.skin-scorch .cbtn:active {
-    box-shadow:inset 2px 2px 0 #808080, 0 0 0 2px #000;
-  }
-  /* Поля ввода — белая бумага */
-  html.skin-scorch .searchbar input, html.skin-scorch .searchbar .field,
-  html.skin-scorch .field, html.skin-scorch .br-addr input, html.skin-scorch .te-hex {
-    background:#FFFFFF; color:#000; box-shadow:inset 0 0 0 1px #000, inset 1px 1px 0 #808080;
-  }
-  html.skin-scorch .hrow1 .upd-go, html.skin-scorch .ver, html.skin-scorch .hrow1 .warn { color:#000; }
-  html.skin-scorch footer, html.skin-scorch footer * { color:#000; }
-  html.skin-scorch .nowcard .video, html.skin-scorch .vidph { background:#C0C0C0 !important; }
-  html.skin-scorch .vidph-t, html.skin-scorch .vidph-s { color:#000; }
-  html.skin-scorch .nplabel { color:#000; }
-
-  /* ═══════════════════════════════════════════════════════════════════════
-     7. WINAMP — принцип: тёмные окна с фаской, LCD с зелёными цифрами,
-     чёрный плейлист с фосфорным текстом, анализатор и транспорт.
-     Только краска; спектр и «LCD» — псевдоэлементы, места не занимают.
-     ═══════════════════════════════════════════════════════════════════════ */
-  html.skin-winamp { --r-panel:0px; --r-card:0px; --r-ctl:0px; --r-tab:0px; }
-  html.skin-winamp *, html.skin-winamp body { font-family:Tahoma,'Segoe UI',Arial,sans-serif; }
-  html.skin-winamp body { background:var(--bg0); }
-  html.skin-winamp .app-shell { background:var(--bg0); }
-  /* Титульная планка + анализатор */
-  html.skin-winamp .titlebar-space { position:relative; color:var(--tx2); }
-  html.skin-winamp .titlebar-space .name, html.skin-winamp .titlebar-space .tbrand * { color:var(--tx2); }
-  html.skin-winamp .titlebar-space::after {
-    content:''; position:absolute; right:10px; top:10px; width:132px; height:16px; pointer-events:none;
-    background:repeating-linear-gradient(90deg, var(--ac) 0 5px, transparent 5px 8px);
-    -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
-    mask-image:linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
-    opacity:.9;
-  }
-  html.skin-winamp .hrow1 {
-    background:linear-gradient(180deg, var(--bg3) 0%, var(--bg1) 52%, var(--bg0) 100%);
-    box-shadow:inset 0 1px 0 var(--ln), inset 0 -1px 0 #000;
-    color:var(--tx);
-  }
-  html.skin-winamp .hrow1 * { color:var(--tx); }
-  html.skin-winamp nav button {
-    background:linear-gradient(var(--bg3), var(--bg1)); color:var(--tx2);
-    box-shadow:inset 1px 1px 0 var(--ln), inset -1px -1px 0 rgba(0,0,0,.65);
-  }
-  html.skin-winamp nav button.active {
-    background:linear-gradient(var(--bg4), var(--bg2)); color:var(--tx);
-    box-shadow:inset 1px 1px 0 var(--ln2), inset -1px -1px 0 rgba(0,0,0,.6);
-  }
-  /* Окна */
-  html.skin-winamp .results-col, html.skin-winamp .queue-col, html.skin-winamp .searchbar,
-  html.skin-winamp .card, html.skin-winamp .set-main, html.skin-winamp .set-side,
-  html.skin-winamp .br-wrap, html.skin-winamp .my-side, html.skin-winamp .nowcard,
-  html.skin-winamp .wavecard {
-    background:var(--bg1); color:var(--tx);
-    box-shadow:inset 1px 1px 0 var(--ln), inset -1px -1px 0 rgba(0,0,0,.65), 0 0 0 1px #000;
-  }
-  /* Заголовки окон — тёмная планка */
-  html.skin-winamp .qhead, html.skin-winamp .sec-h, html.skin-winamp .col-head {
-    background:linear-gradient(180deg, var(--bg3), var(--bg0));
-    box-shadow:inset 0 1px 0 var(--ln), inset 0 -1px 0 #000;
-  }
-  html.skin-winamp .qhead h2, html.skin-winamp .sec-h h2, html.skin-winamp .col-head h2 {
-    font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--tx2); font-weight:700;
-  }
-  html.skin-winamp .qhead span { color:var(--tx4); font-size:11px; }
-  /* Плейлист: чёрный фон, акцентный моноширинный текст */
-  html.skin-winamp .qrow, html.skin-winamp .tarea .row,
-  html.skin-winamp .rq, html.skin-winamp .plc, html.skin-winamp .mit {
-    background:var(--bg00); color:var(--ac);
-    box-shadow:inset 0 -1px 0 rgba(255,255,255,.07);
-    font-family:'VT323','Consolas',monospace;
-  }
-  html.skin-winamp .qrow:hover, html.skin-winamp .tarea .row:hover { background:var(--bg1); }
-  html.skin-winamp .qrow .qt, html.skin-winamp .qrow .qs, html.skin-winamp .qrow .qm,
-  html.skin-winamp .tarea .row .t, html.skin-winamp .tarea .row .s,
-  html.skin-winamp .tarea .row .dur { color:var(--ac); font-family:'VT323','Consolas',monospace; }
-  html.skin-winamp .qrow .qs, html.skin-winamp .tarea .row .s { color:var(--ac2); }
-  /* LCD в подвале */
-  html.skin-winamp .progress {
-    background:#000; box-shadow:inset 0 0 0 1px var(--ln), inset 1px 1px 0 rgba(0,0,0,.8);
-  }
-  html.skin-winamp .progress .tm {
-    font-family:'VT323','Consolas',monospace; font-size:18px; color:var(--ac);
-    text-shadow:0 0 7px color-mix(in srgb, var(--ac) 55%, transparent);
-  }
-  html.skin-winamp .f-now .t { color:var(--tx); }
-  html.skin-winamp .f-now .s, html.skin-winamp .nplabel { color:var(--tx4); }
-  /* Транспорт */
-  html.skin-winamp footer {
-    background:linear-gradient(180deg, var(--bg2), var(--bg0));
-    box-shadow:inset 0 1px 0 var(--ln), inset 0 -1px 0 #000;
-  }
-  html.skin-winamp .cbtn, html.skin-winamp .pbtn, html.skin-winamp .rq-sm, html.skin-winamp .chip,
-  html.skin-winamp .btn, html.skin-winamp .set-side button {
-    background:linear-gradient(var(--bg3), var(--bg1)); color:var(--tx);
-    box-shadow:inset 1px 1px 0 var(--ln), inset -1px -1px 0 rgba(0,0,0,.65);
-  }
-  html.skin-winamp .cbtn.play, html.skin-winamp .pbtn:not(.ghost), html.skin-winamp .pbtn.y {
-    background:linear-gradient(var(--ac), color-mix(in srgb, var(--ac) 45%, #000)); color:#08120A;
-  }
-  html.skin-winamp .chip.active { background:var(--ac); color:#08120A; }
-  html.skin-winamp .searchbar input, html.skin-winamp .searchbar .field,
-  html.skin-winamp .field, html.skin-winamp .br-addr input {
-    background:var(--bg00); color:var(--tx);
-    box-shadow:inset 0 0 0 1px #000, inset 1px 1px 0 var(--ln);
-  }
-  html.skin-winamp *::-webkit-scrollbar-track { background:var(--bg00); }
-  html.skin-winamp *::-webkit-scrollbar-thumb { background:linear-gradient(var(--bg3), var(--bg1)); box-shadow:inset 0 0 0 1px #000; }
-  /* Scorched: шапка прозрачная — небо видно, меню-кнопки остаются платиной */
-  html.skin-scorch .hrow1 { background:transparent; box-shadow:none; }
-  html.skin-scorch .hrow1 .chip, html.skin-scorch .hrow1 .rbadge, html.skin-scorch .hrow1 .upd-go, html.skin-scorch .hrow1 .ver {
-    background:#C0C0C0; color:#000; box-shadow:inset 2px 2px 0 #FFF, inset -2px -2px 0 #808080, 0 0 0 2px #000;
-  }
-  html.skin-scorch .progress .tm { color:#000; }
-  html.skin-scorch input[type=range] { background:#000; box-shadow:inset 0 0 0 1px #808080; }
-
-  /* Winamp: титульная планка и чёрный LCD */
-  html.skin-winamp .titlebar-space {
-    background:linear-gradient(180deg,#3E3E3E 0%,#1A1A1A 100%);
-    box-shadow:inset 0 1px 0 #6A6A6A, inset 0 -1px 0 #000;
-  }
-  html.skin-winamp .titlebar-space .name { text-transform:uppercase; letter-spacing:.2em; font-size:11px; color:#D8D8D8; }
-  html.skin-winamp .progress {
-    background:#000 !important; box-shadow:inset 0 0 0 1px var(--ln);
-  }
-  html.skin-winamp .progress .tm { font-size:18px; }
   html.theme-light-default .qglow.idle { background: radial-gradient(130% 60% at 50% 0%, var(--acbg), transparent 72%); }</style>
 </head>
 <body data-tab="search">
@@ -2060,9 +1873,7 @@ window.onerror = function(msg, src, line){
   var SKINS = [
     { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0', pixel: true },
     { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff', pixel: true },
-    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca', pixel: true },
-    { id: 'scorch', name: 'Scorched Earth', sub: 'серая панель, небо и горы', tag: 'DOS', bg: '#3F3CA6', card: '#C0C0C0', line: '#000000', txt: '#000000', btn: '#C0C0C0', pixel: true },
-    { id: 'winamp', name: 'Winamp', sub: 'окна, LCD и плейлист', tag: '2000-е', bg: '#232323', card: '#2E2E2E', line: '#5A5A5A', txt: '#33FF66', btn: '#4A4A4A', pixel: false }
+    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca', pixel: true }
   ];
   var curSkin = '', skinAdj = { b: 100, s: 100, c: 100 };
   // ── Цветовые схемы оболочек ────────────────────────────────────────────────
@@ -2112,20 +1923,6 @@ window.onerror = function(msg, src, line){
         core: { bg: '#1A2A6C', panel: '#3366CC', surface: '#3F73D6', line: '#0B1B45', text: '#FFFFFF', accent: '#FFD400', button: '#FFD400' } },
       { id: 'motif', name: 'Motif / CDE', desc: 'Motif/CDE: пыльный сланец #2F3A44, серый металл панелей #3E4A56 и оранжевый акцент #E08A3C — Solaris, HP-UX, первые CDE.',
         core: { bg: '#2F3A44', panel: '#3E4A56', surface: '#4A5765', line: '#6C7C8C', text: '#E6EDF2', accent: '#E08A3C', button: '#8A9AA8' } }
-    ],
-    scorch: [
-      { id: 'plains', name: 'Полигон', desc: 'Серая панель меню #C0C0C0 с чёрным текстом, а за ней небо от индиго #3F3CA6 к розовому #BA60A6 и тёмные горы — экран Scorched Earth 1991.',
-        core: { bg: '#C0C0C0', panel: '#C0C0C0', surface: '#CFCFCF', line: '#000000', text: '#000000', accent: '#000000', button: '#C0C0C0' } }
-    ],
-    winamp: [
-      { id: 'base', name: 'База 2.x', desc: 'Классика Winamp 2: графитовые окна #232323, зелёный LCD #00FF00 и чёрный плейлист.',
-        core: { bg: '#232323', panel: '#2E2E2E', surface: '#1A1A1A', line: '#5A5A5A', text: '#E6E6E6', accent: '#00FF00', button: '#4A4A4A' } },
-      { id: 'wa5', name: 'Winamp 5', desc: 'Стальная тема: окна #1E242B, циановый LCD #39D0FF и холодные фаски.',
-        core: { bg: '#14171C', panel: '#1E242B', surface: '#0E1114', line: '#3C4A57', text: '#DCE6EF', accent: '#39D0FF', button: '#2F3D4A' } },
-      { id: 'bento', name: 'Bento', desc: 'Тёмный Bento: почти чёрные окна #151518 и лаймовый акцент #B6FF3C.',
-        core: { bg: '#0D0D0F', panel: '#151518', surface: '#0A0A0C', line: '#2A2A30', text: '#E8E8EC', accent: '#B6FF3C', button: '#232327' } },
-      { id: 'playlist', name: 'Плейлист', desc: 'Окно плейлиста на весь экран: чёрный фон #000000 и фосфорно-зелёный текст #33FF66.',
-        core: { bg: '#000000', panel: '#0A0A0A', surface: '#000000', line: '#1F3A1F', text: '#E8E8E8', accent: '#33FF66', button: '#123312' } }
     ],
   };
   var curSkinScheme = {};   // id оболочки → id схемы | 'custom'
