@@ -1127,7 +1127,6 @@
   html.skin-retro .app-shell { position: relative; z-index: 1; }
   /* Наборы шрифтов: можно взять шрифт одной оболочки, оставив другую.
      Двойной класс нужен, чтобы перебить правила кожи по специфичности. */
-  html.font-onest.font-onest *, html.font-onest.font-onest body { font-family: Onest, 'Segoe UI', system-ui, sans-serif !important; }
   html.font-mono.font-mono *, html.font-mono.font-mono body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
   html.font-retro.font-retro *, html.font-retro.font-retro body { font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; }
   html.font-pixel.font-pixel *, html.font-pixel.font-pixel body { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace !important; }
@@ -1135,9 +1134,6 @@
   html.font-pixel.font-pixel .tbrand .name, html.font-pixel.font-pixel .sec-h h2 {
     font-family: 'Press Start 2P', 'Pixelify Sans', monospace !important; }
   /* Заголовки: у кожи своё правило с большим весом — перебиваем его так же */
-  html.font-onest.font-onest h1, html.font-onest.font-onest h2,
-  html.font-onest.font-onest .tbrand .name, html.font-onest.font-onest .sec-h h2 {
-    font-family: Onest, 'Segoe UI', system-ui, sans-serif !important; }
   html.font-mono.font-mono h1, html.font-mono.font-mono h2,
   html.font-mono.font-mono .tbrand .name, html.font-mono.font-mono .sec-h h2 {
     font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
@@ -1825,13 +1821,13 @@ window.onerror = function(msg, src, line){
   // Набор шрифтов: '' — как в оболочке, иначе один из наборов
   var SKIN_FONTS = [
     { id: '', name: 'Как в оболочке' },
-    { id: 'onest', name: 'Как в дизайне' },
     { id: 'mono', name: 'VGA / DOS' },
     { id: 'pixel', name: 'Неон-скан' },
     { id: 'retro', name: 'Ретро-десктоп' }
   ];
   var curFont = '';
   function applySkinFont(id, save){
+    if (id === 'onest') id = ''; // пункт убран: старое сохранённое значение сбрасываем на «как в оболочке»
     curFont = id || '';
     var d = document.documentElement;
     ['onest', 'mono', 'pixel', 'retro'].forEach(function (k){ d.classList.remove('font-' + k); });
