@@ -6038,6 +6038,7 @@ if (A.onWidgetRq) A.onWidgetRq(function(d){
 });
 
 if (A.onWidgetCmd) A.onWidgetCmd(function(action){
+  if (action === 'search') { setTab('search'); var si = $('search'); if (si) { si.focus(); try { si.select(); } catch (e) {} } return; }
   if (action === 'playpause') { var b = $('playpause'); if (b) b.click(); }
   else if (action === 'next') { var n = $('next'); if (n) n.click(); }
   else if (action === 'prev') { var p = $('prev'); if (p) p.click(); }

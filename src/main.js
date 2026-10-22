@@ -566,6 +566,8 @@ function startServer(preferredPort) {
     }
     if (p.startsWith('/widget/cmd/')) {
       const action = p.slice('/widget/cmd/'.length);
+      // Поиск из панели: показываем окно плеера поверх и ставим курсор в строку поиска
+      if (action === 'search' && typeof showMainWindow === 'function') showMainWindow();
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('widget-cmd', action);
       res.writeHead(204); res.end();
       return;
