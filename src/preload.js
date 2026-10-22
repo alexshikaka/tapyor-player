@@ -118,6 +118,7 @@ contextBridge.exposeInMainWorld('app', {
   widgetPush: (state) => ipcRenderer.send('widget-state', state),
   onWidgetCmd: (cb) => ipcRenderer.on('widget-cmd', (e, action) => cb(action)),
   onWidgetSetting: (cb) => ipcRenderer.on('widget-setting', (e, s) => cb(s)),
+  onWidgetRq: (cb) => ipcRenderer.on('widget-rq', (e, d) => cb(d)),
   getSetting: (key) => ipcRenderer.invoke('get-setting', key),
   setSetting: (key, value) => ipcRenderer.invoke('set-setting', key, value),
   // Заказы со стрима и сервисы донатов

@@ -3,69 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Тапёр — заказы</title>
+<title>Тапёр — лента сообщений</title>
+<!-- Стили те же, что в приложении: док выглядит один-в-один как вкладка «Заказы» -->
+<link rel="stylesheet" href="/app.css">
 <style>
-  :root{
-    --bg:#0E0F13; --card:#15161C; --line:#2C2F3A; --tx:#ECEDF2; --tx2:#C9CBD4; --tx3:#9EA2B0;
-    --ac:#9B87FF; --pri:#FFD43B; --radius:12px; --font:'Onest','Segoe UI',sans-serif;
-    --ok:#4ADE9A; --wait:#FFD43B; --bad:#FF8A7A;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;overflow:hidden}
-  body{font-family:var(--font);color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased}
-  .wg{height:100%;display:flex;flex-direction:column;min-height:0}
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body { background: var(--bg0); color: var(--tx); font-family: Onest, sans-serif; }
+  .dock { height: 100%; display: flex; flex-direction: column; min-height: 0; }
 
-  /* Шапка панели */
-  .head{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--card)}
-  .head .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);flex:0 0 auto}
-  .head b{font-size:12px;font-weight:700;letter-spacing:.02em}
-  .head .cnt{font-size:10.5px;color:var(--tx3);margin-left:auto;white-space:nowrap}
-  .tg{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;margin-left:6px}
-  .tg span{font-size:10px;color:var(--tx3);font-weight:600;white-space:nowrap}
-  .tg .sw{width:22px;height:12px;border-radius:6px;background:var(--line);position:relative;transition:background .15s;flex:0 0 auto}
-  .tg .sw::after{content:'';position:absolute;top:2px;left:2px;width:8px;height:8px;border-radius:50%;background:var(--tx3);transition:transform .15s,background .15s}
-  .tg.on .sw{background:var(--ac)}
-  .tg.on .sw::after{transform:translateX(10px);background:var(--pri)}
+  .dock-head { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    border-bottom: 1px solid var(--ln2); background: var(--bg1); }
+  .dock-head b { font: 700 12.5px Onest, sans-serif; letter-spacing: .02em; color: var(--tx); }
+  .dock-head .cnt { font: 500 11.5px Onest, sans-serif; color: var(--tx4); margin-left: auto; }
+  .dock-head .tg { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .dock-head .tg span { font: 600 11px Onest, sans-serif; color: var(--tx3); }
+  .dock-head .tg .sw { width: 26px; height: 14px; border-radius: 7px; background: var(--ln3); position: relative; transition: background .15s; }
+  .dock-head .tg .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; opacity: .85; transition: transform .15s, background .15s; }
+  .dock-head .tg.on .sw { background: var(--ac); }
+  .dock-head .tg.on .sw::after { transform: translateX(12px); }
 
-  /* Лента сообщений — прокручивается, занимает всё место */
-  .feed{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 8px;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin}
-  .feed::-webkit-scrollbar{width:8px}
-  .feed::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
-  .feed::-webkit-scrollbar-track{background:transparent}
+  /* Лента: тот же список, что в приложении, с тем же зазором между сообщениями */
+  .dock-feed { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 12px; }
+  .dock-feed::-webkit-scrollbar { width: 8px; }
+  .dock-feed::-webkit-scrollbar-thumb { background: var(--ln3); border-radius: 4px; }
+  .dock-feed::-webkit-scrollbar-track { background: transparent; }
 
-  .msg{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;background:var(--card);border-left:2px solid var(--line)}
-  .msg.queued{border-left-color:var(--ok)}
-  .msg.waiting{border-left-color:var(--wait)}
-  .msg.found{border-left-color:var(--ac)}
-  .msg.look{border-left-color:var(--bad)}
-  .row1{display:flex;align-items:baseline;gap:6px;font-size:10.5px;color:var(--tx2)}
-  .row1 b{font-size:11px;color:var(--tx);font-weight:700}
-  .row1 .amt{color:var(--pri);font-weight:700;font-size:10px}
-  .row1 .ago{color:var(--tx3);margin-left:auto;white-space:nowrap;font-size:9.5px}
-  .txt{font-size:10.5px;color:var(--tx3);word-break:break-word}
-  .ttl{font-size:11.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .st{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-  .st.q{color:var(--ok)} .st.w{color:var(--wait)} .st.n{color:var(--bad)}
-  .empty{font-size:10.5px;color:var(--tx3);padding:14px 6px;text-align:center}
+  /* Карточки сообщений — штатные .rq из приложения, только под ширину дока */
+  .dock-feed .rq { padding: 10px 12px; gap: 7px; }
+  .dock-feed .rq-h { font-size: 12px; gap: 6px; }
+  .dock-feed .rq-h b { font-size: 13px; }
+  .dock-feed .rq-sm { height: 28px; padding: 0 11px; font-size: 11.5px; }
+  .dock-feed .rq-it { gap: 5px; }
+
+  .dock-empty { color: var(--tx4); font-size: 12px; text-align: center; padding: 18px 8px; }
 
   /* Плеер внизу */
-  .bar{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:6px 8px;border-top:1px solid var(--line);background:var(--card)}
-  .bar .np{flex:1;min-width:0;font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bar .np b{color:var(--tx2);font-weight:600}
-  .cb{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;
-      background:transparent;color:var(--tx2);cursor:pointer;padding:0;flex:0 0 auto}
-  .cb:hover{background:rgba(255,255,255,.08);color:var(--tx)}
-  .cb svg{width:11px;height:11px;fill:currentColor}
-  .cb.play{background:var(--pri);color:#0E0F13;width:26px;height:26px}
-  .cb.play:hover{background:var(--pri);opacity:.9}
-  .time{font-size:9.5px;color:var(--tx3);min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
+  .dock-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 7px 10px;
+    border-top: 1px solid var(--ln2); background: var(--bg1); }
+  .dock-bar .np { flex: 1; min-width: 0; font-size: 11px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dock-bar .np b { color: var(--tx2); font-weight: 600; }
+  .dock-bar .time { font: 500 10.5px ui-monospace, monospace; color: var(--tx4); font-variant-numeric: tabular-nums; }
+  .db { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 7px;
+    background: transparent; color: var(--tx2); cursor: pointer; padding: 0; flex: 0 0 auto; }
+  .db:hover { background: var(--hov); color: var(--tx); }
+  .db svg { width: 11px; height: 11px; fill: currentColor; }
+  .db.play { width: 28px; height: 28px; background: var(--tx); color: var(--bg0); border-radius: 50%; }
+  .db.play:hover { background: #fff; }
 </style>
 </head>
 <body>
-<div class="wg">
-  <div class="head">
-    <span class="dot"></span>
-    <b>Заказы</b>
+<div class="dock">
+  <div class="dock-head">
+    <b>Лента сообщений</b>
     <span class="cnt" id="cnt">—</span>
     <label class="tg" id="exactTg" title="Точные — сразу в очередь">
       <span>Точные</span>
@@ -73,16 +63,16 @@
     </label>
   </div>
 
-  <div class="feed" id="feed"><div class="empty">Сообщений пока нет</div></div>
+  <div class="dock-feed" id="feed"><div class="dock-empty">Сообщений пока нет</div></div>
 
-  <div class="bar">
-    <button class="cb" data-cmd="prev" title="Назад" aria-label="Назад">
+  <div class="dock-bar">
+    <button class="db" data-cmd="prev" title="Назад" aria-label="Назад">
       <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14l-10-7z"/></svg>
     </button>
-    <button class="cb play" id="pp" data-cmd="playpause" title="Пауза / играть" aria-label="Пауза / играть">
+    <button class="db play" id="pp" data-cmd="playpause" title="Пауза / играть" aria-label="Пауза / играть">
       <svg viewBox="0 0 24 24"><path d="M8 5l12 7-12 7z"/></svg>
     </button>
-    <button class="cb" data-cmd="next" title="Следующий" aria-label="Следующий">
+    <button class="db" data-cmd="next" title="Следующий" aria-label="Следующий">
       <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10-7z"/></svg>
     </button>
     <span class="np" id="np">ничего не играет</span>
@@ -99,68 +89,35 @@
   var ppEl = document.getElementById('pp');
   var tgEl = document.getElementById('exactTg');
   var stickBottom = true;
+  var lastHtml = '';
 
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
   function fmt(t){ t = Math.max(0, Math.round(t || 0)); var m = Math.floor(t / 60), s = t % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
 
-  function applyTheme(t){
-    if (!t) return;
-    var r = document.documentElement.style;
-    if (t.bg) r.setProperty('--bg', t.bg);
-    if (t.card) r.setProperty('--card', t.card);
-    if (t.line) r.setProperty('--line', t.line);
-    if (t.tx) r.setProperty('--tx', t.tx);
-    if (t.tx2) r.setProperty('--tx2', t.tx2);
-    if (t.tx3) r.setProperty('--tx3', t.tx3);
-    if (t.ac) r.setProperty('--ac', t.ac);
-    if (t.pri) r.setProperty('--pri', t.pri);
-    if (t.radius != null) r.setProperty('--radius', t.radius + 'px');
-    if (t.font) r.setProperty('--font', t.font);
-  }
-
-  function ago(ts){
-    if (!ts) return '';
-    var m = Math.round((Date.now() - ts) / 60000);
-    if (m < 1) return 'только что';
-    if (m < 60) return m + ' мин';
-    var h = Math.round(m / 60);
-    if (h < 24) return h + ' ч';
-    return Math.round(h / 24) + ' д';
-  }
-
-  function statusHtml(st){
-    if (st === 'queued') return '<span class="st q">в очереди</span>';
-    if (st === 'playing') return '<span class="st q">играет</span>';
-    if (st === 'waiting') return '<span class="st w">ждёт</span>';
-    return '<span class="st n">ищу</span>';
+  function applySkin(st){
+    if (!st) return;
+    // те же классы темы и оболочки, что в приложении
+    document.documentElement.className = st.htmlClass || '';
+    document.documentElement.setAttribute('style', st.htmlStyle || '');
+    if (st.scale) document.documentElement.style.zoom = (Math.max(50, Math.min(200, st.scale)) / 100);
   }
 
   function render(st){
     if (!st) return;
-    applyTheme(st.theme);
-    if (st.scale) document.documentElement.style.zoom = (Math.max(50, Math.min(200, st.scale)) / 100);
+    applySkin(st);
 
     tgEl.classList.toggle('on', !!st.reqAuto);
     tgEl.setAttribute('aria-pressed', st.reqAuto ? 'true' : 'false');
 
-    var msgs = st.messages || [];
-    cntEl.textContent = msgs.length ? msgs.length + ' сообщ.' : 'пусто';
-
-    var nearBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 40;
-    if (nearBottom) stickBottom = true;
-
-    feedEl.innerHTML = msgs.length ? msgs.map(function(m){
-      var who = m.who ? '<b>' + esc(m.who) + '</b>' : '<b>Аноним</b>';
-      var amt = m.amt ? '<span class="amt">' + esc(m.amt) + (m.cur ? ' ' + esc(m.cur) : '') + '</span>' : '';
-      var txt = m.text ? '<div class="txt">' + esc(m.text) + '</div>' : '';
-      var ttl = m.title ? '<div class="ttl">' + esc(m.title) + '</div>' : '';
-      return '<div class="msg ' + (m.status || 'look') + '">'
-        + '<div class="row1">' + who + amt + statusHtml(m.status) + '<span class="ago">' + esc(ago(m.at)) + '</span></div>'
-        + txt + ttl + '</div>';
-    }).join('') : '<div class="empty">Сообщений пока нет</div>';
-
-    // новые сообщения — внизу, если пользователь не отлистал вверх
-    if (stickBottom) feedEl.scrollTop = feedEl.scrollHeight;
+    var html = st.feedHtml || '';
+    cntEl.textContent = (st.msgCount || 0) + ' сообщ.';
+    if (html !== lastHtml) {
+      var nearBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 60;
+      if (nearBottom) stickBottom = true;
+      lastHtml = html;
+      feedEl.innerHTML = html || '<div class="dock-empty">Сообщений пока нет</div>';
+      if (stickBottom) feedEl.scrollTop = feedEl.scrollHeight;
+    }
 
     var playing = st.np && st.np.playing;
     ppEl.innerHTML = playing
@@ -172,15 +129,27 @@
     tmEl.textContent = fmt(st.np && st.np.pos);
   }
 
-  // если пользователь отлистал вверх — не дёргаем ленту вниз
   feedEl.addEventListener('scroll', function(){
-    stickBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 40;
+    stickBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 60;
+  });
+
+  // Кнопки карточек работают как в приложении: передаём нажатие в приложение
+  feedEl.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-rq]');
+    if (!btn) return;
+    e.preventDefault();
+    var dataset = {};
+    for (var k in btn.dataset) if (btn.dataset[k] != null) dataset[k] = btn.dataset[k];
+    fetch('/widget/rq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dataset: dataset })
+    }).catch(function(){});
   });
 
   function cmd(action){
     fetch('/widget/cmd/' + encodeURIComponent(action), { method: 'POST' }).catch(function(){});
   }
-
   document.querySelectorAll('[data-cmd]').forEach(function(b){
     b.addEventListener('click', function(){ cmd(b.dataset.cmd); });
   });
@@ -197,7 +166,6 @@
 
   var es = new EventSource('/widget/events');
   es.onmessage = function(e){ try { render(JSON.parse(e.data)); } catch (err) {} };
-
   fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
 })();
 </script>

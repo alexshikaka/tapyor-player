@@ -959,7 +959,7 @@
   .rq-it.added > .rq-lv { color: var(--tx4); }
   /* Лента сообщений и выполненные заказы — сворачиваемые разделы */
   .rq-sec { font: 700 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 0; }
-  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 12px; margin-top: 2px; }
   .rq-feed > summary, .rq-done > summary { cursor: pointer; font: 600 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 6px; list-style: none; }
   .rq-feed > summary::-webkit-details-marker, .rq-done > summary::-webkit-details-marker { display: none; }
   .rq-feed > summary::before, .rq-done > summary::before { content: '▸ '; }
@@ -5875,6 +5875,16 @@ function widgetMessages(){
   return out.slice(0, 80);
 }
 
+// Та же лента сообщений, что во вкладке «Заказы»: общий HTML и общие обработчики
+function widgetFeedHtml(){
+  var t0 = Date.now() - RQ_DAY;
+  var vis = (RQ.list || []).filter(function(r){
+    return r.state !== 'dismissed' && (r.got || r.at || 0) > t0;
+  });
+  vis.sort(function(a, b){ return (a.got || 0) - (b.got || 0); }); // старые сверху, свежие внизу
+  return vis.map(function(r){ return rqCardHtml(r, r._ri, null, 'dock-card'); }).join('');
+}
+
 function pushWidget(force){
   if (!A.widgetPush) return;
   if (typeof RQ === 'undefined' || !RQ || typeof queue === 'undefined' || typeof current === 'undefined') return;
@@ -5895,6 +5905,12 @@ function pushWidget(force){
     var sig = JSON.stringify(st);
     if (!force && sig === wgLast) return;
     wgLast = sig;
+    st.feedHtml = widgetFeedHtml();
+    var t0w = Date.now() - RQ_DAY;
+    st.msgCount = (RQ.list || []).filter(function(r){ return r.state !== 'dismissed' && (r.got || r.at || 0) > t0w; }).length;
+    st.htmlClass = document.documentElement.className;
+    st.htmlStyle = document.documentElement.getAttribute('style') || '';
+    st.bodyClass = document.body.className;
     A.widgetPush(st);
   } catch (err) {
     try { A.widgetPush({ orders: [], np: { title: 'ERR ' + (err && err.message), artist: '', playing: false }, reqAuto: false, scale: 100, theme: null }); } catch (e) {}
@@ -5902,6 +5918,22 @@ function pushWidget(force){
 }
 
 // команды из виджета
+// Кнопки в доке работают как в приложении: находим такую же кнопку в своём окне и нажимаем
+if (A.onWidgetRq) A.onWidgetRq(function(d){
+  if (!d || !d.dataset) return;
+  var want = d.dataset;
+  var all = document.querySelectorAll('[data-rq]');
+  for (var i = 0; i < all.length; i++) {
+    var el = all[i], ok = true;
+    for (var k in want) {
+      if (k === 'rq' || k === 'ri' || k === 'id' || k === 'act' || k === 'ix') {
+        if (String(el.dataset[k] || '') !== String(want[k] || '')) { ok = false; break; }
+      }
+    }
+    if (ok) { el.click(); setTimeout(function(){ pushWidget(true); }, 150); return; }
+  }
+});
+
 if (A.onWidgetCmd) A.onWidgetCmd(function(action){
   if (action === 'playpause') { var b = $('playpause'); if (b) b.click(); }
   else if (action === 'next') { var n = $('next'); if (n) n.click(); }

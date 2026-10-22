@@ -505,6 +505,28 @@ function startServer(preferredPort) {
       });
       return;
     }
+    if (p === '/app.css') {
+      try {
+        const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+        const m = /<style>([\s\S]*?)<\/style>/.exec(html);
+        res.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(m ? m[1] : '');
+      } catch (e) {
+        res.writeHead(500); res.end('');
+      }
+      return;
+    }
+    if (p === '/widget/rq' && req.method === 'POST') {
+      try {
+        const body = await readBody(req);
+        log('док: клик ' + JSON.stringify(body && body.dataset ? body.dataset : body));
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('widget-rq', body || {});
+      } catch (e) {
+        log('док: клик ' + e.message);
+      }
+      res.writeHead(204); res.end();
+      return;
+    }
     if (p === '/widget/state') {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(JSON.stringify(widgetState));
