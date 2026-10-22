@@ -754,20 +754,19 @@
   .wchip.on-bg { border-color: var(--pri); color: var(--pri); }
 
   /* Настройки */
-  /* Невидимый контейнер с базовым скруглением: содержимое при прокрутке режется по углам */
-  .set { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; border-radius: var(--r-panel); overflow: hidden; }
-  .set-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
-  .set-scroll::-webkit-scrollbar { width: 12px; }
-  /* В настройках ползунок виден всегда — его не надо искать наведением */
-  .set-scroll::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
-  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--gutter); max-width: 1180px; margin: 0 auto; box-sizing: border-box; }
+  /* Прокручивается только колонка с карточками: её скругление режет контент при прокрутке */
+  .set { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+  .set-main::-webkit-scrollbar { width: 12px; }
+  /* Ползунок виден всегда — его не надо искать наведением */
+  .set-main::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
+  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0; max-width: 1180px; margin: 0 auto; box-sizing: border-box; height: 100%; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
   @media (min-width: 880px) { .set-side { position: sticky; top: 0; align-self: flex-start; max-height: calc(100vh - 170px); overflow-y: auto; } }
   .set-side .cap { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 0 12px 8px; }
   .set-side button { display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: transparent; color: var(--tx2); font: 500 14px Onest, sans-serif; cursor: pointer; text-align: left; }
   .set-side button:hover { background: var(--bg2); color: var(--tx); }
-  .set-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
+  .set-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); min-height: 0; max-height: 100%; overflow-y: auto; scrollbar-gutter: stable; border-radius: var(--r-panel); }
   .set .sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
   .set .sec-h h2 { margin: 0; font-size: 18px; font-weight: 700; }
   .set .sec-h span { font-size: 13px; color: var(--tx4); }
@@ -1055,7 +1054,6 @@
     </section>
 
     <section class="view set" id="viewSettings" hidden aria-label="Настройки">
-      <div class="set-scroll">
       <div class="set-in">
         <aside class="set-side">
           <button data-go="sAcc">Аккаунты</button>
@@ -1311,7 +1309,6 @@
           </section>
 
         </div>
-      </div>
       </div>
     </section>
 
