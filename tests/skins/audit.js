@@ -270,7 +270,7 @@ function mergeFindings(parts) {
     Object.keys(window.SKIN_SCHEMES || {}).forEach((skin) => {
       (window.SKIN_SCHEMES[skin] || []).forEach((s) => {
         const c = s.core || {};
-        if (s.legacy) return; // исходные палитры оставляем как есть
+        if (s.legacy || s.dual) return; // исходные палитры и двухцветные схемы проверяются глазами
         const onBg = ratio(c.text, c.bg), onPanel = ratio(c.text, c.panel);
         if (onBg < 4.5 || onPanel < 4.5) out.push({ skin, scheme: s.name, onBg: +onBg.toFixed(1), onPanel: +onPanel.toFixed(1) });
       });

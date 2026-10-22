@@ -1080,100 +1080,106 @@
   html.skin-dos .qrow, html.skin-dos .row, html.skin-dos .rq, html.skin-dos .wavecard { background: var(--bg2); }
 
 
-  /* ── Norton Commander: единая концепция «синий экран + светлые окна» ──
-     Экран тёмно-синий, а содержимое — светлые панели с тёмным текстом и
-     циановой рамкой, как окна в NC. Все оттенки наследуются от контейнера,
-     поэтому поиск, плейлисты, очередь и настройки выглядят одинаково. */
+
+  /* ── Norton Commander: «синий экран + светлые окна» ──
+     Цвета окон берутся из ядра схемы (--bg1/--bg2/--tx/--pri), поэтому
+     редактор схемы снова управляет оформлением. Синяя шапка — фиксированный хром. */
   html[data-skn-scheme="norton"] .results-col,
   html[data-skn-scheme="norton"] .my-col,
   html[data-skn-scheme="norton"] .reqv,
   html[data-skn-scheme="norton"] .brv,
-  html[data-skn-scheme="norton"] .br-bar,
-  html[data-skn-scheme="norton"] .br-wrap,
   html[data-skn-scheme="norton"] .queue-col,
   html[data-skn-scheme="norton"] .set-main,
   html[data-skn-scheme="norton"] .set-side {
-    --bg0: #C6CAD3; --bg1: #CFD3DB; --bg2: #DADEE6; --bg3: #E6E9EF; --bg4: #F2F4F7;
-    --tx: #101018; --tx2: #26263A; --tx3: #41415A; --tx4: #585874; --tx5: #6E6E8C;
-    --ln: #7A8092; --ln2: #9AA0B0; --ln3: #5E6474;
-    --ac: #0000A8; --ac2: #0000D0; --acr: 0,0,168; --acbg: #B9BEC9;
-    --hov: rgba(0,0,0,.06); --hov2: rgba(0,0,0,.07); --hov3: rgba(0,0,0,.09);
-    background: #C6CAD3 !important;
-    color: #101018;
+    background: var(--bg1) !important;
+    color: var(--tx);
     border: 0;
-    box-shadow: 0 0 0 2px #00E5E5, 0 0 0 3px #00004E, inset 1px 1px 0 #EFF1F4, inset -1px -1px 0 #7A8092;
+    box-shadow: 0 0 0 2px var(--ln), 0 0 0 3px #00004E, inset 1px 1px 0 rgba(255,255,255,.55), inset -1px -1px 0 rgba(0,0,0,.30);
   }
-  /* Поиск и строка источников — такие же светлые окна, не синие */
+  /* Шапка остаётся синей: текст светлый, активная вкладка — циановая плашка */
+  html[data-skn-scheme="norton"] .app-shell { color: #E8ECFF; }
+  /* Тексты синей шапки: логотип, вкладки, служебные подписи */
+  html[data-skn-scheme="norton"] .tbrand .name,
+  html[data-skn-scheme="norton"] .hrow1 a,
+  html[data-skn-scheme="norton"] .hrow1 span,
+  html[data-skn-scheme="norton"] .ver { color: #E8ECFF; }
+  /* Сцена «Ничего не играет» внутри окна — светлая */
+  html[data-skn-scheme="norton"] .nowcard .video,
+  html[data-skn-scheme="norton"] .nowcard video,
+  html[data-skn-scheme="norton"] #player { background: var(--bg2) !important; }
+  html[data-skn-scheme="norton"] .vidph-t { color: var(--tx2); }
+  /* Заглушка непроигрывания перекрывает чёрный кадр видео */
+  html[data-skn-scheme="norton"] .nowcard .vidph { background: var(--bg2); }
+  html[data-skn-scheme="norton"] .nowcard .video:not(.has-track) video { visibility: hidden; }
+  html[data-skn-scheme="norton"] .vidph-s { color: var(--tx4); }
+  html[data-skn-scheme="norton"] nav button { color: #E8ECFF; }
+  html[data-skn-scheme="norton"] nav button.active { background: #00E5E5; color: #00104A; }
+  /* Поиск и источники — светлые поля, цвет из ядра */
   html[data-skn-scheme="norton"] .searchbar {
-    --tx: #101018; --tx2: #26263A; --tx3: #41415A; --tx4: #585874;
-    background: #E8EBF0 !important; color: #101018;
-    box-shadow: 0 0 0 2px #00E5E5, inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #9AA0B0;
+    background: var(--bg3) !important;
+    color: var(--tx);
+    box-shadow: 0 0 0 2px var(--ln), inset 1px 1px 0 rgba(255,255,255,.55), inset -1px -1px 0 rgba(0,0,0,.25);
   }
   html[data-skn-scheme="norton"] .searchbar input,
-  html[data-skn-scheme="norton"] .searchbar .field { color: #101018; }
+  html[data-skn-scheme="norton"] .searchbar .field { color: var(--tx); }
   html[data-skn-scheme="norton"] #chips {
-    background: #C6CAD3 !important;
-    box-shadow: 0 0 0 2px #00E5E5;
+    background: var(--bg1) !important;
+    box-shadow: 0 0 0 2px var(--ln);
     padding: 4px 6px; border-radius: 6px;
   }
-  html[data-skn-scheme="norton"] #chips .chip { color: #101018; background: #D6DAE2; }
-  html[data-skn-scheme="norton"] #chips .chip.active { background: #0000A8; color: #FFFFFF; }
-  /* Подвал — светлая полоса функциональных клавиш */
+  html[data-skn-scheme="norton"] #chips .chip { color: var(--tx); background: var(--bg2); }
+  html[data-skn-scheme="norton"] #chips .chip.active { background: var(--ac); color: var(--prit); }
+  html[data-skn-scheme="norton"] #chips .chip[data-f="all"] .ic { color: var(--tx) !important; }
+  /* Подвал — светлая полоса F-клавиш */
   html[data-skn-scheme="norton"] footer {
-    --tx: #101018; --tx2: #26263A; --tx3: #41415A; --tx4: #585874;
-    background: #C6CAD3 !important; color: #101018;
-    box-shadow: inset 0 2px 0 #00E5E5, inset 0 -2px 0 #7A8092;
+    background: var(--bg1) !important; color: var(--tx);
+    box-shadow: inset 0 2px 0 var(--ln), inset 0 -2px 0 rgba(0,0,0,.30);
   }
-  /* Шапка остаётся синей, активная вкладка — циановая плашка */
-  html[data-skn-scheme="norton"] nav button.active { background: #00E5E5; color: #00104A; }
-  /* Кнопки внутри светлых окон наследуют синий акцент (--pri) */
-  html[data-skn-scheme="norton"] .pbtn { box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF; }
-  /* Кнопки внутри светлых окон: синяя плашка с белым текстом, «призрачные» — платина */
-  /* Боковое меню настроек — те же светлые окна, кнопки как в DOS */
-  html[data-skn-scheme="norton"] .set-side { background: #C6CAD3 !important; box-shadow: 0 0 0 2px #00E5E5, 0 0 0 3px #00004E; }
+  /* Кнопки: главные — цвет «Кнопки» из ядра, второстепенные — платина */
+  html[data-skn-scheme="norton"] .pbtn:not(.ghost) { background: var(--pri) !important; color: var(--prit) !important; }
+  html[data-skn-scheme="norton"] .pbtn.ghost {
+    background: var(--bg4) !important; color: var(--tx) !important;
+    box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.6);
+  }
+  html[data-skn-scheme="norton"] .cbtn { color: var(--tx); }
+  html[data-skn-scheme="norton"] .cbtn.play { background: var(--pri) !important; color: var(--prit) !important; box-shadow: 0 0 0 2px var(--ln); }
+  /* Боковое меню настроек */
   html[data-skn-scheme="norton"] .set-side button {
-    background: #C0C0C0 !important; color: #101018 !important;
-    box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF;
+    background: var(--bg4) !important; color: var(--tx) !important;
+    box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.6);
   }
-  html[data-skn-scheme="norton"] .set-side button.active { background: #0000A8 !important; color: #FFFFFF !important; box-shadow: none; }
-  html[data-skn-scheme="norton"] .pbtn:not(.ghost) { background: #0000A8 !important; color: #FFFFFF !important; }
-  html[data-skn-scheme="norton"] .pbtn.ghost { background: #C0C0C0 !important; color: #101018 !important; box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF; }
-  html[data-skn-scheme="norton"] .cbtn.play { background: #0000A8 !important; color: #FFFFFF !important; box-shadow: 0 0 0 2px #00E5E5; }
-  html[data-skn-scheme="norton"] .cbtn { color: #101018; }
+  html[data-skn-scheme="norton"] .set-side button.active { background: var(--pri) !important; color: var(--prit) !important; box-shadow: none; }
 
-  /* ── NC: внутренние окна вкладок «Плейлисты», «Заказы», «Браузер» ── */
-  html[data-skn-scheme="norton"] .my-side {
-    background: #CFD3DB !important;
-    box-shadow: inset 1px 1px 0 #7A8092, inset -1px -1px 0 #EFF1F4;
-  }
+  /* Внутренние окна вкладок */
+  html[data-skn-scheme="norton"] .my-side { background: var(--bg2) !important; box-shadow: inset 1px 1px 0 rgba(0,0,0,.22), inset -1px -1px 0 rgba(255,255,255,.55); }
   html[data-skn-scheme="norton"] .my-main,
   html[data-skn-scheme="norton"] .plview,
-  html[data-skn-scheme="norton"] .rq-list { background: transparent; color: #101018; }
-  html[data-skn-scheme="norton"] .mytabs { background: #CFD3DB; border-bottom: 1px solid #7A8092; }
-  html[data-skn-scheme="norton"] .myt { color: #41415A; }
-  html[data-skn-scheme="norton"] .myt.on { color: #101018; border-bottom-color: #0000A8; }
+  html[data-skn-scheme="norton"] .rq-list { background: transparent; color: var(--tx); }
+  html[data-skn-scheme="norton"] .mytabs { background: var(--bg2); border-bottom: 1px solid var(--ln2); }
+  html[data-skn-scheme="norton"] .myt { color: var(--tx3); }
+  html[data-skn-scheme="norton"] .myt.on { color: var(--tx); border-bottom-color: var(--ac); }
   html[data-skn-scheme="norton"] .myab {
-    background: #C0C0C0; color: #101018;
-    box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF;
+    background: var(--bg4); color: var(--tx);
+    box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.6);
   }
-  html[data-skn-scheme="norton"] .myab:hover { background: #CFD3DB; }
+  html[data-skn-scheme="norton"] .myab:hover { background: var(--bg3); }
   html[data-skn-scheme="norton"] .myab.ghost { background: transparent; box-shadow: none; }
-  html[data-skn-scheme="norton"] .rq { box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #7A8092; }
+  html[data-skn-scheme="norton"] .rq { box-shadow: inset 1px 1px 0 rgba(255,255,255,.6), inset -1px -1px 0 rgba(0,0,0,.25); }
   html[data-skn-scheme="norton"] .br-wrap {
-    background: #C6CAD3 !important;
-    box-shadow: inset 0 0 0 2px #00E5E5, inset 0 0 0 3px #00004E;
+    background: var(--bg1) !important;
+    box-shadow: inset 0 0 0 2px var(--ln), inset 0 0 0 3px #00004E;
   }
   html[data-skn-scheme="norton"] .br-seg {
-    background: #E8EBF0;
-    box-shadow: inset 1px 1px 0 #7A8092, inset -1px -1px 0 #EFF1F4;
+    background: var(--bg3);
+    box-shadow: inset 1px 1px 0 rgba(0,0,0,.22), inset -1px -1px 0 rgba(255,255,255,.55);
   }
   html[data-skn-scheme="norton"] .br-addr input {
-    background: #E8EBF0; color: #101018;
-    box-shadow: inset 1px 1px 0 #7A8092, inset -1px -1px 0 #EFF1F4;
+    background: var(--bg3); color: var(--tx);
+    box-shadow: inset 1px 1px 0 rgba(0,0,0,.22), inset -1px -1px 0 rgba(255,255,255,.55);
   }
-  html[data-skn-scheme="norton"] .br-empty { background: #CFD3DB; color: #41415A; }
+  html[data-skn-scheme="norton"] .br-empty { background: var(--bg2); color: var(--tx3); }
 
-  /* Смысловые цвета в светлых окнах: тёмные оттенки вместо неоновых */
+  /* Смысловые цвета в светлых окнах */
   html[data-skn-scheme="norton"] { --ok: #0E7A4E; --warn: #8A5300; --err: #9E2B22; }
   html[data-skn-scheme="norton"] .rq-h .amt,
   html[data-skn-scheme="norton"] .rq-it.ex .rq-lv,
@@ -1194,9 +1200,7 @@
   html[data-skn-scheme="norton"] .rq-it.ex { border-color: var(--ok); }
   html[data-skn-scheme="norton"] .rq-it.db { border-color: #B88600; }
   html[data-skn-scheme="norton"] .rq-it.rj { border-color: var(--err); }
-  html[data-skn-scheme="norton"] .rq.rq-act {
-    background: rgba(14,122,78,.10); border-color: rgba(14,122,78,.40);
-  }
+  html[data-skn-scheme="norton"] .rq.rq-act { background: rgba(14,122,78,.10); border-color: rgba(14,122,78,.40); }
   html[data-skn-scheme="norton"] .rq-fl span,
   html[data-skn-scheme="norton"] .rq-fl span.pay { background: rgba(138,83,0,.14); color: var(--warn); }
   html[data-skn-scheme="norton"] .rq-fl span.rj,
@@ -1207,13 +1211,10 @@
   html[data-skn-scheme="norton"] .hs-pill.ok { background: rgba(14,122,78,.14); color: var(--ok); }
   html[data-skn-scheme="norton"] .hs-pill.warn { background: rgba(138,83,0,.14); color: var(--warn); }
   html[data-skn-scheme="norton"] .hs-pill.fail { background: rgba(158,43,34,.14); color: var(--err); }
-
-  /* Переключатели и мелкие иконки на светлом */
-  html[data-skn-scheme="norton"] .toggle { background: #8A8F9C; }
-  html[data-skn-scheme="norton"] .toggle span { background: #F2F4F7; }
-  html[data-skn-scheme="norton"] .toggle.on { background: #0000A8; }
-  html[data-skn-scheme="norton"] .toggle.on span { background: #C6CAD3; }
-  html[data-skn-scheme="norton"] #chips .chip[data-f="all"] .ic { color: #101018 !important; }
+  html[data-skn-scheme="norton"] .toggle { background: var(--tx4); }
+  html[data-skn-scheme="norton"] .toggle span { background: var(--bg3); }
+  html[data-skn-scheme="norton"] .toggle.on { background: var(--pri); }
+  html[data-skn-scheme="norton"] .toggle.on span { background: var(--prit); }
 
   /* 4. Неон-скан — CRT: скан-линии, виньетка и свечение */
   html.skin-crt { --bg00:#05040a; --bg0:#0b0b12; --bg1:#12101e; --bg2:#191527; --bg3:#211a33; --bg4:#2a2140;
@@ -2026,8 +2027,8 @@ window.onerror = function(msg, src, line){
     dos: [
       { id: 'classic', name: 'Оригинал VGA / DOS', legacy: true, desc: 'Исходная оболочка: бирюзовый рабочий стол, платиновые панели и чёрный текст — как на экране DOS.',
         core: { bg: '#007878', panel: '#C0C0C0', surface: '#D0D0D0', line: '#808080', text: '#000000', accent: '#000080', button: '#C0C0C0' } },
-      { id: 'norton', name: 'Norton Commander', desc: 'Тёмно-синий экран и светлые окна с циановой рамкой — как панели Norton Commander с двухпанельным списком.',
-        core: { bg: '#00005A', panel: '#0000B4', surface: '#1010CE', line: '#00E5E5', text: '#F2F5FF', accent: '#00FFFF', button: '#C8C8C8' } },
+      { id: 'norton', name: 'Norton Commander', dual: true, desc: 'Тёмно-синий экран #00005A, светлые окна #C6CAD3 в циановой рамке #00E5E5 и синие кнопки #0000A8 — две панели, как в NC.',
+        core: { bg: '#00005A', panel: '#C6CAD3', surface: '#DADEE6', line: '#00E5E5', text: '#101018', accent: '#0000A8', button: '#0000A8' } },
       { id: 'turbo', name: 'Turbo Pascal', desc: 'Тёмно-синий экран IDE #000080, серый текст #C0C0C0, бирюзовые линии #00A8A8 и жёлтые подсказки #FFFF55 — как первый день в Turbo Pascal.',
         core: { bg: '#000080', panel: '#000060', surface: '#000070', line: '#00A8A8', text: '#C0C0C0', accent: '#FFFF55', button: '#00A8A8' } },
       { id: 'amber', name: 'Янтарный монитор', desc: 'P3-фосфор: тёмно-коричневый, почти чёрный экран #1A0F00 и янтарные буквы #FFB000 — так читали документы до цветной VGA.',
@@ -2102,12 +2103,17 @@ window.onerror = function(msg, src, line){
       '--acbg': wgMix(c.panel, c.accent, 0.18),
       '--pri': c.button,
       '--prit': (function(){ var b = wgHex2rgb(c.button); var L = (0.2126 * b[0] + 0.7152 * b[1] + 0.0722 * b[2]) / 255; return L > 0.5 ? '#101013' : '#FFFFFF'; })(),
-      '--hov': dark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)'
+      '--hov': dark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)',
+      '--hov2': dark ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.08)',
+      '--hov3': dark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.10)'
     };
   }
-  var SKIN_VAR_KEYS = ['--bg00','--bg0','--bg1','--bg2','--bg3','--bg4','--ln','--ln2','--ln3','--tx','--tx2','--tx3','--tx4','--tx5','--ac','--ac2','--acr','--acbg','--pri','--prit','--hov'];
-  function clearSkinVars(){ var d = document.documentElement; SKIN_VAR_KEYS.forEach(function (k){ d.style.removeProperty(k); }); }
-  try { delete document.documentElement.dataset.sknScheme; } catch (e) {}
+  var SKIN_VAR_KEYS = ['--bg00','--bg0','--bg1','--bg2','--bg3','--bg4','--ln','--ln2','--ln3','--tx','--tx2','--tx3','--tx4','--tx5','--ac','--ac2','--acr','--acbg','--pri','--prit','--hov','--hov2','--hov3'];
+  function clearSkinVars(){
+    var d = document.documentElement;
+    SKIN_VAR_KEYS.forEach(function (k){ d.style.removeProperty(k); });
+    try { delete d.dataset.sknScheme; } catch (e) {}
+  }
   function applySkinVars(id){
     var core = skinCoreOf(id); if (!core) return;
     var v = skinVarsFromCore(core); if (!v) return;
@@ -2123,10 +2129,14 @@ window.onerror = function(msg, src, line){
     });
     return out;
   }
+  var _skinSaveT = null;
   function saveSkinSchemes(){
-    var data = skinSchemesStore();
-    try { localStorage.setItem('tapSkinSchemes', JSON.stringify(data)); } catch (e) {}
-    if (A.setSetting) A.setSetting('skinSchemes', data);
+    clearTimeout(_skinSaveT);
+    _skinSaveT = setTimeout(function(){
+      var data = skinSchemesStore();
+      try { localStorage.setItem('tapSkinSchemes', JSON.stringify(data)); } catch (e) {}
+      if (A.setSetting) A.setSetting('skinSchemes', data);
+    }, 250);
   }
   function loadSkinSchemes(data){
     curSkinScheme = {}; curSkinCore = {};
@@ -4174,7 +4184,7 @@ function colDrawSV(){
   if (mk) { mk.style.left = (COL.s * w) + 'px'; mk.style.top = ((1 - COL.v) * hh) + 'px'; }
 }
 
-function colSet(hex, silent){
+function colSet(hex, silent, init){
   var rgb = colRgb(hex);
   COL.h = COL.v === 0 || COL.s === 0 ? COL.h : rgb2hsv(rgb.r, rgb.g, rgb.b).h;
   var hsv = rgb2hsv(rgb.r, rgb.g, rgb.b);
@@ -4186,13 +4196,13 @@ function colSet(hex, silent){
   if ($('colB')) $('colB').value = Math.round(rgb.b);
   if ($('colHue')) $('colHue').value = Math.round(COL.h);
   colDrawSV();
-  if (COL.onPick) COL.onPick(hx); else if (COL.key) colApply(hx, silent);
+  if (!init) { if (COL.onPick) COL.onPick(hx); else if (COL.key) colApply(hx, silent); }
 }
 
 function colApply(hex, silent){
+  if (COL.onPick) { if ($('colHex')) $('colHex').value = hex; COL.onPick(hex); return; }
   if (!COL.key) return;
   var inp = document.querySelector('[data-tc="' + COL.key + '"]');
-  if (!inp) return;
   if (inp.value.toUpperCase() !== hex.toUpperCase()) {
     inp.value = hex;
     if (!silent) inp.dispatchEvent(new Event('input', { bubbles: true }));
@@ -4225,7 +4235,7 @@ function colOpenFor(title, hex, onPick, onClose){
   var box = $('colv');
   if (!box) return;
   box.hidden = false;
-  colSet(hex || '#000000', true);
+  colSet(hex || '#000000', true, true);
   var inp = $('colHex'); if (inp) setTimeout(function(){ inp.focus(); inp.select(); }, 60);
   colPresets();
 }
@@ -4259,7 +4269,7 @@ $('colHue') && ($('colHue').oninput = function(){
 });
 
 $('colHex') && ($('colHex').onchange = function(){
-  var v = this.value.trim(); if (!/^#?[0-9a-f]{6}$/i.test(v)) { colSet(colRgb(this.value) ? this.value : '#000000', true); return; }
+  var v = this.value.trim(); if (!/^#?[0-9a-f]{6}$/i.test(v)) { var rgb0 = hsv2rgb(COL.h, COL.s, COL.v); this.value = colHex(rgb0.r, rgb0.g, rgb0.b); return; }
   v = '#' + v.replace('#', '').toUpperCase(); colSet(v);
 });
 ['colR', 'colG', 'colB'].forEach(function(id){
