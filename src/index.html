@@ -880,6 +880,43 @@
   .te-row > span:first-child { width: 120px; color: var(--tx3); flex: 0 0 auto; }
   .te-row input[type=color] { width: 30px; height: 30px; border: 0; border-radius: 8px; padding: 0; background: none; cursor: pointer; }
   .te-row input[type=color]::-webkit-color-swatch-wrapper { padding: 0; } .te-row input[type=color]::-webkit-color-swatch { border: 0; border-radius: 7px; }
+  /* Кружок выбранного цвета в редакторе темы */
+  .te-sw { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--ln3); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 2px rgba(255,255,255,.06); }
+  .te-sw:hover { outline: 2px solid var(--ac); outline-offset: 2px; }
+  /* Современное окно выбора цвета */
+  .colv { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center;
+    background: rgba(6,7,10,.62); backdrop-filter: blur(6px); }
+  .colv[hidden] { display: none; }
+  .colbox { width: 580px; max-width: calc(100vw - 40px); background: var(--bg1); border: 1px solid var(--ln2);
+    border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.55); overflow: hidden; }
+  .colhead { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--ln2); }
+  .colhead b { font-size: 14px; color: var(--tx); }
+  .colx { margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 8px; background: var(--hov);
+    color: var(--tx3); cursor: pointer; font-size: 14px; line-height: 1; }
+  .colx:hover { background: var(--hov2); color: var(--tx); }
+  .colbody { display: flex; gap: 14px; padding: 16px; }
+  .colsvwrap { position: relative; flex: 0 0 280px; }
+  #colSV { width: 280px; height: 180px; display: block; border-radius: 10px; cursor: crosshair; }
+  .colmark { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%;
+    border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.55); pointer-events: none; }
+  .colside { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .colhue { -webkit-appearance: none; appearance: none; height: 14px; border-radius: 7px; outline: none; cursor: pointer;
+    background: linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
+  .colhue::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--bg1); box-shadow: 0 1px 5px rgba(0,0,0,.5); }
+  .colrow { display: flex; align-items: center; gap: 8px; }
+  .colhex { width: 96px; text-transform: uppercase; }
+  .colpip { width: 30px; height: 30px; }
+  .colrgb { gap: 6px; }
+  .colrgb label { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--tx4); }
+  .colrgb input { width: 52px; background: var(--bg0); border: 1px solid var(--ln2); border-radius: 6px;
+    color: var(--tx2); font: 12px 'JetBrains Mono', monospace; padding: 5px 6px; }
+  .colpresets { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 2px; }
+  .colpresets button { width: 100%; aspect-ratio: 1; border-radius: 7px; border: 1px solid var(--ln3); cursor: pointer; padding: 0; }
+  .colpresets button:hover { outline: 2px solid var(--ac); outline-offset: 1px; }
+  .colfoot { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--ln2); }
+  .colnote { font-size: 12px; color: var(--tx4); }
+  .colfoot .btn { margin-left: auto; }
   .te-pick { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: var(--bg3); color: var(--tx2); cursor: pointer; padding: 0; }
   .te-pick:hover { background: var(--bg4); color: var(--ac2); }
   .te-pick:active { transform: translateY(1px); }
@@ -3627,7 +3664,11 @@ window.onerror = function(msg, src, line){
       '<div class="te-row"><span>Название</span><input class="te-name" id="teName" maxlength="40" value="' + esc(t.name || '') + '"></div>' +
       '<div class="te-row"><span>Основа</span><div class="te-seg" id="teMode"><button data-v="dark"' + (t.mode !== 'light' ? ' class="on"' : '') + '>Тёмная</button><button data-v="light"' + (t.mode === 'light' ? ' class="on"' : '') + '>Светлая</button></div></div>';
     TE_COLORS.forEach(function (c){
-      h += '<div class="te-row"><span>' + c[1] + '</span><input type="color" data-tc="' + c[0] + '" value="' + esc(t[c[0]]) + '" aria-label="' + c[1] + '"><button class="te-pick" data-pick="' + c[0] + '" title="Взять цвет с любого места экрана" aria-label="Пипетка"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3l2 2-9.5 9.5-2-2L19 3z"/><path d="M11.5 13.5L4 21H2v-2l7.5-7.5"/></svg></button><input class="te-hex" data-th="' + c[0] + '" id="teHex_' + c[0] + '" value="' + esc(t[c[0]]) + '" maxlength="7" spellcheck="false"></div>';
+      h += '<div class="te-row"><span>' + c[1] + '</span>' +
+        '<button class="te-sw" type="button" data-tcopen="' + c[0] + '" style="background:' + esc(t[c[0]]) + '" title="Выбрать цвет" aria-label="' + c[1] + '"></button>' +
+        '<input type="color" data-tc="' + c[0] + '" value="' + esc(t[c[0]]) + '" hidden>' +
+        '<button class="te-pick" data-pick="' + c[0] + '" title="Взять цвет с любого места экрана" aria-label="Пипетка"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3l2 2-9.5 9.5-2-2L19 3z"/><path d="M11.5 13.5L4 21H2v-2l7.5-7.5"/></svg></button>' +
+        '<input class="te-hex" data-th="' + c[0] + '" id="teHex_' + c[0] + '" value="' + esc(t[c[0]]) + '" maxlength="7" spellcheck="false"></div>';
     });
     h += '<div class="te-row"><span>Контраст</span><input class="te-rng" id="teContrast" type="range" min="0" max="100" value="' + (t.contrast == null ? 50 : t.contrast) + '"><span id="teCv" style="width:70px;color:var(--tx4)">' + contrastWord(t.contrast) + '</span></div>' +
       '<div class="te-note">Остальные ~20 оттенков (колонки, рамки, подсказки, наведение) Тапёр строит сам и следит, чтобы текст читался.</div>' +
@@ -3694,7 +3735,174 @@ window.onerror = function(msg, src, line){
     }
   });
   // События редактора
+// ===== Современное окно выбора цвета =====
+// Системный диалог Electron рисует лупу только внутри окна, поэтому цвета выбираем своим окном.
+var COL = { key: null, h: 0, s: 0, v: 0, drag: false };
+
+function colRgb(hex){
+  var h = String(hex || '').replace('#', '');
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  if (!/^[0-9a-f]{6}$/i.test(h)) return { r: 0, g: 0, b: 0 };
+  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+}
+function colHex(r, g, b){
+  return '#' + [r, g, b].map(function(v){ var s = Math.max(0, Math.min(255, Math.round(v))).toString(16).toUpperCase(); return s.length === 1 ? '0' + s : s; }).join('');
+}
+function rgb2hsv(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+  if (d) {
+    if (mx === r) h = ((g - b) / d) % 6;
+    else if (mx === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  return { h: h, s: mx ? d / mx : 0, v: mx };
+}
+function hsv2rgb(h, s, v){
+  h = ((h % 360) + 360) % 360;
+  var c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c, r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
+}
+
+function colDrawSV(){
+  var cv = $('colSV'); if (!cv) return;
+  var g = cv.getContext('2d'), w = cv.width, hh = cv.height;
+  var base = hsv2rgb(COL.h, 1, 1);
+  g.fillStyle = colHex(base.r, base.g, base.b); g.fillRect(0, 0, w, hh);
+  var gx = g.createLinearGradient(0, 0, w, 0);
+  gx.addColorStop(0, 'rgba(255,255,255,1)'); gx.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gx; g.fillRect(0, 0, w, hh);
+  var gy = g.createLinearGradient(0, 0, 0, hh);
+  gy.addColorStop(0, 'rgba(0,0,0,0)'); gy.addColorStop(1, 'rgba(0,0,0,1)');
+  g.fillStyle = gy; g.fillRect(0, 0, w, hh);
+  var mk = $('colMark');
+  if (mk) { mk.style.left = (COL.s * w) + 'px'; mk.style.top = ((1 - COL.v) * hh) + 'px'; }
+}
+
+function colSet(hex, silent){
+  var rgb = colRgb(hex);
+  COL.h = COL.v === 0 || COL.s === 0 ? COL.h : rgb2hsv(rgb.r, rgb.g, rgb.b).h;
+  var hsv = rgb2hsv(rgb.r, rgb.g, rgb.b);
+  COL.h = hsv.h; COL.s = hsv.s; COL.v = hsv.v;
+  var hx = colHex(rgb.r, rgb.g, rgb.b);
+  if ($('colHex')) $('colHex').value = hx;
+  if ($('colR')) $('colR').value = Math.round(rgb.r);
+  if ($('colG')) $('colG').value = Math.round(rgb.g);
+  if ($('colB')) $('colB').value = Math.round(rgb.b);
+  if ($('colHue')) $('colHue').value = Math.round(COL.h);
+  colDrawSV();
+  COL.key && colApply(hx, silent);
+}
+
+function colApply(hex, silent){
+  if (!COL.key) return;
+  var inp = document.querySelector('[data-tc="' + COL.key + '"]');
+  if (!inp) return;
+  if (inp.value.toUpperCase() !== hex.toUpperCase()) {
+    inp.value = hex;
+    if (!silent) inp.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  var sw = document.querySelector('[data-tcopen="' + COL.key + '"]');
+  if (sw) sw.style.background = hex;
+}
+
+function colOpen(key){
+  colBind();
+  var inp = document.querySelector('[data-tc="' + key + '"]');
+  if (!inp) return;
+  COL.key = key;
+  var label = { bg: 'Фон', text: 'Текст', accent: 'Акцент', primary: 'Главная кнопка' };
+  if ($('colTitle')) $('colTitle').textContent = 'Цвет: ' + (label[key] || key);
+  var box = $('colv');
+  box.hidden = false;
+  colSet(inp.value || '#000000', true);
+  setTimeout(function(){ box.classList.add('on'); }, 10);
+  var hex = $('colHex'); if (hex) setTimeout(function(){ hex.focus(); hex.select(); }, 60);
+  colPresets();
+}
+
+function colClose(){ var box = $('colv'); if (box) box.hidden = true; COL.key = null; }
+
+function colPresets(){
+  var box = $('colPresets'); if (!box || !COL.key) return;
+  var t = themeById(curThemeId);
+  var list = [];
+  if (t) list = list.concat([t.bg, t.text, t.accent, t.primary].filter(Boolean));
+  list = list.concat(['#0E0F13', '#15161C', '#1D1F26', '#272A33', '#FFFFFF', '#ECEDF2', '#9B87FF', '#284CB8', '#FFD43B', '#4ADE9A', '#FF5A52', '#16B1F3']);
+  list = list.filter(function(v, i){ return v && list.indexOf(v) === i; }).slice(0, 16);
+  box.innerHTML = list.map(function(c){ return '<button type="button" data-col="' + c + '" style="background:' + c + '" title="' + c + '"></button>'; }).join('');
+}
+
+function colBind(){ if (COL.bound) return; COL.bound = true;
+$('colv') && ($('colv').onclick = function(e){ if (e.target === $('colv')) colClose(); });
+$('colClose') && ($('colClose').onclick = colClose);
+$('colDone') && ($('colDone').onclick = colClose);
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && $('colv') && !$('colv').hidden) colClose(); });
+
+$('colHue') && ($('colHue').oninput = function(){
+  COL.h = +this.value; colDrawSV();
+  var rgb = hsv2rgb(COL.h, COL.s, COL.v); colApply(colHex(rgb.r, rgb.g, rgb.b));
+});
+
+$('colHex') && ($('colHex').onchange = function(){
+  var v = this.value.trim(); if (!/^#?[0-9a-f]{6}$/i.test(v)) { colSet(colRgb(this.value) ? this.value : '#000000', true); return; }
+  v = '#' + v.replace('#', '').toUpperCase(); colSet(v);
+});
+['colR', 'colG', 'colB'].forEach(function(id){
+  var el = $(id); if (!el) return;
+  el.oninput = function(){
+    var hex = colHex(+$('colR').value || 0, +$('colG').value || 0, +$('colB').value || 0);
+    COL.h = rgb2hsv(+$('colR').value || 0, +$('colG').value || 0, +$('colB').value || 0).h;
+    $('colHex').value = hex; colApply(hex);
+  };
+});
+
+$('colPresets') && ($('colPresets').onclick = function(e){
+  var b = e.target.closest('[data-col]'); if (!b) return;
+  colSet(b.dataset.col);
+});
+
+$('colPip') && ($('colPip').onclick = async function(){
+  if (!A.pickColor) return;
+  var col = await A.pickColor();
+  if (col) colSet(col);
+});
+
+(function(){
+  var cv = $('colSV'); if (!cv) return;
+  function pick(e){
+    var r = cv.getBoundingClientRect();
+    COL.s = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    COL.v = Math.max(0, Math.min(1, 1 - (e.clientY - r.top) / r.height));
+    colDrawSV();
+    var rgb = hsv2rgb(COL.h, COL.s, COL.v);
+    var hex = colHex(rgb.r, rgb.g, rgb.b);
+    $('colHex').value = hex; $('colR').value = Math.round(rgb.r); $('colG').value = Math.round(rgb.g); $('colB').value = Math.round(rgb.b);
+    colApply(hex);
+  }
+  cv.addEventListener('pointerdown', function(e){ COL.drag = true; try { cv.setPointerCapture(e.pointerId); } catch (err) {} pick(e); });
+  cv.addEventListener('pointermove', function(e){ if (COL.drag) pick(e); });
+  cv.addEventListener('pointerup', function(e){ COL.drag = false; });
+  cv.addEventListener('pointercancel', function(){ COL.drag = false; });
+})();
+}
+
+// Клик по кружку открывает наше окно
+$('teEd').addEventListener('click', function(e){
+  var sw = e.target.closest('[data-tcopen]');
+  if (!sw) return;
+  e.preventDefault();
+  colOpen(sw.dataset.tcopen);
+});
 // Пипетка: берём цвет с любого места экрана и подставляем в строку цвета
+document.addEventListener('DOMContentLoaded', colBind);
 $('teEd').addEventListener('click', async function(e){
   var btn = e.target.closest('[data-pick]');
   if (!btn) return;
@@ -6768,5 +6976,39 @@ setInterval(function(){ pushWidget(false); }, 1500);
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>
+<!-- Современное окно выбора цвета (вместо системного диалога) -->
+<div class="colv" id="colv" hidden>
+  <div class="colbox" role="dialog" aria-modal="true" aria-labelledby="colTitle">
+    <div class="colhead">
+      <b id="colTitle">Цвет</b>
+      <button class="colx" id="colClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="colbody">
+      <div class="colsvwrap">
+        <canvas id="colSV" width="280" height="180"></canvas>
+        <i class="colmark" id="colMark"></i>
+      </div>
+      <div class="colside">
+        <input class="colhue" id="colHue" type="range" min="0" max="360" value="0" aria-label="Оттенок">
+        <div class="colrow">
+          <input class="te-hex colhex" id="colHex" maxlength="7" spellcheck="false" aria-label="Код цвета">
+          <button class="te-pick colpip" id="colPip" title="Взять цвет с экрана" aria-label="Пипетка">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3l2 2-9.5 9.5-2-2L19 3z"/><path d="M11.5 13.5L4 21H2v-2l7.5-7.5"/></svg>
+          </button>
+        </div>
+        <div class="colrow colrgb">
+          <label>R<input id="colR" type="number" min="0" max="255"></label>
+          <label>G<input id="colG" type="number" min="0" max="255"></label>
+          <label>B<input id="colB" type="number" min="0" max="255"></label>
+        </div>
+        <div class="colpresets" id="colPresets"></div>
+      </div>
+    </div>
+    <div class="colfoot">
+      <span class="colnote">Тема перекрашивается сразу</span>
+      <button class="btn" id="colDone">Готово</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
