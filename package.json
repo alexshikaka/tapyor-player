@@ -1,6 +1,6 @@
 {
   "name": "tapyor",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "Тапёр — музыка и заказы для стрима из нескольких сервисов",
   "main": "src/main.js",
   "scripts": {
