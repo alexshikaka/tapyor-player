@@ -764,7 +764,7 @@
   .set-side .cap { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 0 12px 8px; }
   .set-side button { display: flex; align-items: center; height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: transparent; color: var(--tx2); font: 500 14px Onest, sans-serif; cursor: pointer; text-align: left; }
   .set-side button:hover { background: var(--bg2); color: var(--tx); }
-  .set-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); min-height: 0; max-height: 100%; overflow-y: auto; scrollbar-gutter: stable; border-radius: var(--r-panel); padding: var(--sp-4) 0 var(--sp-2); }
+  .set-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); min-height: 0; max-height: 100%; overflow-y: auto; scrollbar-gutter: stable; border-radius: var(--r-panel); padding: var(--sp-4) var(--gutter) var(--sp-2) 0; margin-right: calc(-1 * var(--gutter)); }
   /* Заголовок секции встаёт по левому краю текста в её карточке: с иконками — с отступом, без них — по краю */
   .set .sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; padding-left: var(--sp-5); }
   .set .sec-h h2 { margin: 0; font-size: 18px; font-weight: 700; }
