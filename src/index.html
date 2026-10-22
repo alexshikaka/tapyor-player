@@ -756,10 +756,8 @@
   /* Настройки */
   /* Прокручивается только колонка с карточками: её скругление режет контент при прокрутке */
   .set { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
-  .set-main::-webkit-scrollbar { width: 12px; }
-  /* Ползунок виден всегда — его не надо искать наведением */
-  .set-main::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
-  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0; max-width: 1180px; margin: 0 auto; box-sizing: border-box; height: 100%; }
+  /* Полоса прокрутки — как в выдаче поиска: тонкая, появляется при наведении */
+  .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--gutter); margin: 0; box-sizing: border-box; height: 100%; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
   @media (min-width: 880px) { .set-side { position: sticky; top: 0; align-self: flex-start; max-height: calc(100vh - 170px); overflow-y: auto; } }
