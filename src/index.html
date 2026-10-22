@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement; if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
 <style>
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
     --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; --hov: rgba(255,255,255,.05); --hov2: rgba(255,255,255,.07); --hov3: rgba(255,255,255,.09);
@@ -987,7 +987,82 @@
   .rq-test { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--bg3); border: 0; border-radius: var(--r-card); padding: 10px 12px; }
   .rq-test input { height: 34px; border-radius: var(--r-ctl); border: 0; background: var(--bg0); color: var(--tx); padding: 0 10px; font: 500 13px Onest, sans-serif; outline: none; }
   .rq-test input:focus { border-color: var(--ac); }
-</style>
+  /* ===== Оболочки в стиле пиксель-арт ===== */
+  /* База: жёсткие углы, пиксельные шрифты, фаски, без размытых теней */
+  html.pixel-skin *, html.pixel-skin *::before, html.pixel-skin *::after { border-radius: 0 !important; }
+  html.pixel-skin body { font-family: Silkscreen, 'JetBrains Mono', monospace; letter-spacing: .01em; }
+  html.pixel-skin h1, html.pixel-skin h2, html.pixel-skin .tbrand .name, html.pixel-skin .sec-h h2 { font-family: 'Press Start 2P', Silkscreen, monospace; letter-spacing: 0; }
+  html.pixel-skin .logo { image-rendering: pixelated; }
+  html.pixel-skin .card, html.pixel-skin .queue-col, html.pixel-skin .set-main, html.pixel-skin .searchbar {
+    box-shadow: inset 0 0 0 2px var(--ln), 4px 4px 0 rgba(0,0,0,.45); }
+  html.pixel-skin .pbtn, html.pixel-skin .rq-sm, html.pixel-skin .chip, html.pixel-skin .set-side button {
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,.40), inset 2px 2px 0 rgba(255,255,255,.16); }
+  html.pixel-skin .pbtn:active, html.pixel-skin .rq-sm:active, html.pixel-skin .chip:active {
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.45); transform: translate(1px, 1px); }
+  html.pixel-skin .wavecard, html.pixel-skin .qrow, html.pixel-skin .row, html.pixel-skin .disc, html.pixel-skin .rq {
+    box-shadow: inset 0 0 0 2px var(--ln2); }
+
+  /* 1. Гамебой — четыре оттенка зелёного и сетка жидкого кристалла */
+  html.skin-gb { --bg00:#081f08; --bg0:#0f380f; --bg1:#123f12; --bg2:#1b4a1b; --bg3:#22581f; --bg4:#2f6b26;
+    --ln:#2a5a24; --ln2:#1c4a1c; --ln3:#8bac0f; --tx:#9bbc0f; --tx2:#8bac0f; --tx3:#79a00e; --tx4:#6a8f0c; --tx5:#5a7a0a;
+    --ac:#9bbc0f; --ac2:#c3e23a; --acr:155,188,15; --pri:#9bbc0f; --prit:#0f380f; --hov:rgba(155,188,15,.10); }
+  html.skin-gb body::after { content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px 3px); }
+  html.skin-gb .pbtn.y { box-shadow: inset -2px -2px 0 rgba(15,56,15,.6), inset 2px 2px 0 rgba(255,255,255,.5); }
+
+  /* 2. Аркада — палитра PICO-8, жёсткие чёрные контуры и тени */
+  html.skin-pico { --bg00:#0d1428; --bg0:#121a33; --bg1:#1d2b53; --bg2:#253866; --bg3:#2f4576; --bg4:#3b548c;
+    --ln:#3b548c; --ln2:#253866; --ln3:#5f7ab8; --tx:#fff1e8; --tx2:#d8d3cf; --tx3:#b6aec4; --tx4:#9a92ab; --tx5:#83769c;
+    --ac:#ff77a8; --ac2:#ffa0c4; --acr:255,119,168; --pri:#ffec27; --prit:#1d2b53; --hov:rgba(255,241,232,.08); }
+  html.skin-pico .card, html.skin-pico .queue-col, html.skin-pico .searchbar {
+    box-shadow: inset 0 0 0 2px #000000, 5px 5px 0 #0a0f1e; }
+  html.skin-pico .pbtn, html.skin-pico .rq-sm, html.skin-pico .chip { box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.45); }
+  html.skin-pico .pbtn.y { box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.55), 4px 4px 0 #0a0f1e; }
+
+  /* 3. VGA / DOS — серые панели с фаской, как в 90-х */
+  html.skin-dos { --bg00:#006464; --bg0:#007878; --bg1:#c0c0c0; --bg2:#d0d0d0; --bg3:#c0c0c0; --bg4:#b4b4b4;
+    --ln:#808080; --ln2:#a8a8a8; --ln3:#ffffff; --tx:#000000; --tx2:#101010; --tx3:#2a2a2a; --tx4:#4a4a4a; --tx5:#5c5c5c;
+    --ac:#000080; --ac2:#1084d0; --acr:0,0,128; --pri:#c0c0c0; --prit:#000000; --hov:rgba(0,0,0,.08); }
+  html.skin-dos body { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  html.skin-dos h1, html.skin-dos h2, html.skin-dos .tbrand .name, html.skin-dos .sec-h h2 { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  html.skin-dos .card, html.skin-dos .queue-col, html.skin-dos .searchbar, html.skin-dos .set-main {
+    box-shadow: inset -2px -2px 0 #000000, inset 2px 2px 0 #ffffff; }
+  html.skin-dos .pbtn, html.skin-dos .rq-sm, html.skin-dos .chip, html.skin-dos .set-side button {
+    box-shadow: inset -2px -2px 0 #000000, inset 2px 2px 0 #ffffff; }
+  html.skin-dos .pbtn:active, html.skin-dos .rq-sm:active { box-shadow: inset 2px 2px 0 #000000; transform: translate(1px,1px); }
+  html.skin-dos nav button.active { background: #000080; color: #ffffff; box-shadow: none; }
+  html.skin-dos .qrow, html.skin-dos .row, html.skin-dos .rq, html.skin-dos .wavecard { background: var(--bg2); }
+
+  /* 4. Неон-скан — CRT: скан-линии, виньетка и свечение */
+  html.skin-crt { --bg00:#05040a; --bg0:#0b0b12; --bg1:#12101e; --bg2:#191527; --bg3:#211a33; --bg4:#2a2140;
+    --ln:#3a2f5c; --ln2:#241c3c; --ln3:#6b4fd0; --tx:#f2eeff; --tx2:#cfc7ea; --tx3:#a89fd0; --tx4:#847bad; --tx5:#645c86;
+    --ac:#ff2d95; --ac2:#ff77b8; --acr:255,45,149; --pri:#00e5ff; --prit:#0a0a14; --hov:rgba(255,45,149,.10); }
+  html.skin-crt body::after { content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.26) 0 1px, transparent 1px 3px),
+                radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%); }
+  html.skin-crt .pbtn.y { box-shadow: 0 0 0 2px var(--pri), 0 0 20px rgba(0,229,255,.35); }
+  html.skin-crt .card, html.skin-crt .queue-col { box-shadow: inset 0 0 0 2px var(--ln), 0 0 26px rgba(255,45,149,.12); }
+  html.skin-crt .chip.active .dot { box-shadow: 0 0 12px 3px rgba(0,229,255,.9); }  /* Оформление: переключатель «Темы / Оболочки» и карточки оболочек */
+  .look-tabs { margin-bottom: 16px; }
+  .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 12px; }
+  .skin-c { position: relative; border: 2px solid var(--ln); border-radius: 12px; padding: 6px; background: transparent; color: var(--tx); text-align: left; cursor: pointer; font: 600 12.5px Onest, sans-serif; }
+  .skin-c:hover { border-color: var(--ln3); }
+  .skin-c.on { border-color: var(--ac); }
+  .skin-c b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .skin-c small { display: block; color: var(--tx4); font-weight: 500; font-size: 11px; margin-top: 3px; }
+  .skin-pv { position: relative; height: 62px; margin-bottom: 8px; overflow: hidden; }
+  .skin-pv i { position: absolute; display: block; }
+  .skin-pv .sp-card { left: 8px; right: 8px; top: 10px; height: 30px; }
+  .skin-pv .sp-line { left: 16px; top: 20px; width: 56%; height: 4px; }
+  .skin-pv .sp-btn { right: 16px; top: 46px; width: 44px; height: 12px; }
+  .skin-tag { position: absolute; right: 8px; top: 8px; font: 700 9px Onest, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 2px 5px; border-radius: 4px; background: var(--ac); color: var(--bg0); }  /* Доводка оболочек по превью */
+  html.skin-dos footer { color: #ffffff; }
+  html.skin-dos footer .t, html.skin-dos footer .s, html.skin-dos footer .f-artist { color: #eeeeee; }
+  html.skin-dos .wavecard { background: #c0c0c0 !important; }
+  html.skin-dos .wavecard .wtitle .t, html.skin-dos .wavecard .t { color: #000000; }
+  html.skin-dos .queue-col .qhead h2 { color: #000000; }
+  html.skin-crt .pbtn.y { color: var(--prit); }
+  html.skin-crt .cbtn.play { box-shadow: 0 0 0 2px var(--pri), 0 0 18px rgba(0,229,255,.45); }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
@@ -1204,10 +1279,20 @@
           </section>
 
           <section id="sLook">
-            <div class="sec-h"><h2>Оформление</h2><span>Темы и редактор</span></div>
+            <div class="sec-h"><h2>Оформление</h2><span>Темы, оболочки и редактор</span></div>
             <div class="card" style="padding:18px 20px">
-              <div class="te-list" id="teList"></div>
-              <div class="te" id="teEd" hidden></div>
+              <div class="te-seg look-tabs" id="lookTabs">
+                <button data-look="themes" class="on">Темы</button>
+                <button data-look="skins">Оболочки</button>
+              </div>
+              <div id="lookThemes">
+                <div class="te-list" id="teList"></div>
+                <div class="te" id="teEd" hidden></div>
+              </div>
+              <div id="lookSkins" hidden>
+                <div class="skin-grid" id="skinGrid"></div>
+                <div class="te-note">Оболочка — это пиксель-арт стиль: жёсткие углы, фаски, скан-линии и пиксельные шрифты. Цвета темы в ней не используются, поэтому оболочка и тема взаимоисключающие.</div>
+              </div>
             </div>
           </section>
 
@@ -1557,6 +1642,69 @@
     });
     setTimeout(upd, 300);
   })();
+  // ===== Оболочки в стиле пиксель-арт =====
+  var SKINS = [
+    { id: 'gb',   name: 'Гамебой',   sub: '4 оттенка зелёного',    tag: '4 цвета',  bg: '#0f380f', card: '#1b4a1b', line: '#8bac0f', txt: '#9bbc0f', btn: '#9bbc0f' },
+    { id: 'pico', name: 'Аркада',    sub: 'палитра PICO-8',        tag: '16 цветов', bg: '#121a33', card: '#2f4576', line: '#ff77a8', txt: '#fff1e8', btn: '#ffec27' },
+    { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0' },
+    { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' }
+  ];
+  var curSkin = '';
+  function skinById(id){ for (var i = 0; i < SKINS.length; i++) if (SKINS[i].id === id) return SKINS[i]; return null; }
+  function clearSkinClass(){
+    var d = document.documentElement;
+    if (SKINS) SKINS.forEach(function (s){ d.classList.remove('skin-' + s.id); });
+    d.classList.remove('pixel-skin');
+    curSkin = '';
+  }
+  // Применить оболочку; '' — выключить и вернуться к теме
+  function applySkin(id, save){
+    var d = document.documentElement, s = skinById(id);
+    clearSkinClass();
+    if (s) {
+      if (typeof clearCustomVars === 'function') clearCustomVars();
+      d.classList.remove('theme-mono', 'theme-light');
+      curSkin = s.id;
+      d.classList.add('pixel-skin', 'skin-' + s.id);
+      curThemeId = '';
+    }
+    try { localStorage.setItem('tapSkin', curSkin); } catch (e) {}
+    if (save && A.setSetting) A.setSetting('skin', curSkin);
+    renderSkinList();
+    renderThemeList();
+  }
+  function renderSkinList(){
+    var box = $('skinGrid'); if (!box) return;
+    box.innerHTML = SKINS.map(function (s){
+      return '<button class="skin-c' + (curSkin === s.id ? ' on' : '') + '" data-skin="' + s.id + '" title="Включить оболочку «' + esc(s.name) + '»">' +
+        '<div class="skin-pv" style="background:' + s.bg + '">' +
+          '<i class="sp-card" style="background:' + s.card + ';box-shadow:inset 0 0 0 2px ' + s.line + '"></i>' +
+          '<i class="sp-line" style="background:' + s.txt + ';opacity:.85"></i>' +
+          '<i class="sp-btn" style="background:' + s.btn + ';box-shadow:inset -2px -2px 0 rgba(0,0,0,.4)"></i>' +
+        '</div><b>' + esc(s.name) + '</b><small>' + esc(s.sub) + '</small>' +
+        (curSkin === s.id ? '<span class="skin-tag">вкл</span>' : '') + '</button>';
+    }).join('') +
+      '<button class="skin-c' + (curSkin ? '' : ' on') + '" data-skin="" title="Вернуться к обычному интерфейсу">' +
+        '<div class="skin-pv" style="background:var(--bg2);box-shadow:inset 0 0 0 2px var(--ln)"><i class="sp-line" style="background:var(--tx3);top:28px;width:64%"></i></div>' +
+        '<b>Без оболочки</b><small>обычный интерфейс</small></button>';
+  }
+  function bindSkins(){
+    var grid = $('skinGrid');
+    if (grid) grid.addEventListener('click', function (e){
+      var b = e.target.closest('[data-skin]'); if (!b) return;
+      applySkin(b.dataset.skin || '', true);
+      toast(b.dataset.skin ? 'Оболочка включена' : 'Оболочка выключена');
+    });
+    var tabs = $('lookTabs');
+    if (tabs) tabs.addEventListener('click', function (e){
+      var b = e.target.closest('button[data-look]'); if (!b) return;
+      Array.prototype.forEach.call(tabs.children, function (x){ x.classList.toggle('on', x === b); });
+      $('lookThemes').hidden = b.dataset.look !== 'themes';
+      $('lookSkins').hidden = b.dataset.look !== 'skins';
+    });
+    renderSkinList();
+  }
+  bindSkins();
   // ===== Вкладки =====
   var curTab = 'search';
   function setTab(t){
@@ -3198,6 +3346,7 @@
   function themeById(id){ return myThemes.find(function (t){ return 'c:' + t.id === id; }) || null; }
   // Применить тему; save — запомнить выбор
   function applyTheme(id, save){
+    clearSkinClass();
     var d = document.documentElement, t = id && id.indexOf('c:') === 0 ? themeById(id) : null;
     if (id && id.indexOf('c:') === 0 && !t) id = 'violet';
     if (id !== 'mono' && !t) id = 'violet';
@@ -3366,6 +3515,8 @@
     myThemes = Array.isArray(list) ? list.filter(function (t){ return t && t.id && t.bg; }) : [];
     var id = A.getSetting ? await A.getSetting('theme') : null;
     applyTheme(id || themeLocal() || 'violet', false);
+    var sk = (A.getSetting ? await A.getSetting('skin') : '') || (function (){ try { return localStorage.getItem('tapSkin') || ''; } catch (e) { return ''; } })();
+    if (sk) applySkin(sk, false);
   })();
   function rankCtx(){ return { lcOn: true, ymFull: ymLoggedIn && ymPlus, ymOn: true, ytOn: ytUsable(), ytLogged: typeof ytLogged === 'function' && ytLogged(), scOn: SVC.scOn, auOn: SVC.auOn, order: srcOrder }; }
 
