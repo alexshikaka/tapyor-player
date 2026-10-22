@@ -1079,9 +1079,6 @@
   .skin-soft .adj span { width: 112px; flex: 0 0 auto; }
   .skin-soft .adj input[type=range] { flex: 1 1 auto; max-width: 300px; accent-color: var(--ac); height: 18px; }
   .skin-soft .adj b { min-width: 44px; font: 700 12px Onest, sans-serif; color: var(--ac2); }
-  .skin-soft .presets { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .skin-soft .presets button { height: 26px; padding: 0 10px; border: 1px solid var(--ln2); background: transparent; color: var(--tx2); border-radius: 8px; font: 600 11.5px Onest, sans-serif; cursor: pointer; }
-  .skin-soft .presets button:hover { color: var(--tx); border-color: var(--ln3); }
   /* Вуаль: гасит «чёрный провал» и пересвет текста, когда контраст убавлен */
   html.pixel-skin body::before { content: ''; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
     background: rgba(240,238,255, calc((1 - var(--sk-c)) * .30)); }  /* 5. Ретро-десктоп — серо-чёрный, фаски и кнопки как в 95-м */
@@ -1370,9 +1367,6 @@
                 <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
                 <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
                 <div class="adj adj-font"><span>Шрифт</span><select class="field skin-font-sel" id="skinFontSel" aria-label="Шрифт оболочки"></select></div>
-                <div class="presets">
-                  <button data-preset="100,100,100">Как в дизайне</button>
-                </div>
               </div>
 
               <div id="lookThemes">
@@ -1781,10 +1775,6 @@
     try { localStorage.setItem('tapSkinAdj', JSON.stringify(skinAdj)); } catch (e) {}
     if (save && A.setSetting) A.setSetting('skinAdj', skinAdj);
   }
-  function setSkinPreset(str){
-    var p = String(str).split(',');
-    applySkinAdj({ b: +p[0], s: +p[1], c: +p[2] }, true);
-  }
   function skinById(id){ for (var i = 0; i < SKINS.length; i++) if (SKINS[i].id === id) return SKINS[i]; return null; }
   function clearSkinClass(){
     var d = document.documentElement;
@@ -1843,10 +1833,6 @@
         var k = e.target && e.target.dataset && e.target.dataset.adj; if (!k) return;
         var patch = {}; patch[k] = +e.target.value;
         applySkinAdj(patch, true);
-      });
-      box.addEventListener('click', function (e){
-        var b = e.target.closest('[data-preset]'); if (!b) return;
-        setSkinPreset(b.dataset.preset);
       });
       box.addEventListener('change', function (e){
         if (!e.target || e.target.id !== 'skinFontSel') return;
