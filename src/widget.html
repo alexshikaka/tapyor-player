@@ -36,6 +36,13 @@
   .dock-feed .rq-sm { height: 28px; padding: 0 11px; font-size: 11.5px; }
   .dock-feed .rq-it { gap: 5px; }
 
+  /* Статус связи с Тапёром: зелёный — на связи, красный — программа закрыта или недоступна */
+  .conn { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
+    background: var(--hov); color: var(--tx3); font: 600 10.5px Onest, sans-serif; white-space: nowrap; }
+  .conn i { width: 6px; height: 6px; border-radius: 50%; background: #FF5A52; box-shadow: 0 0 6px rgba(255,90,82,.9); flex: 0 0 auto; }
+  .conn.on { color: #4ADE9A; }
+  .conn.on i { background: #4ADE9A; box-shadow: 0 0 6px rgba(74,222,154,.9); }
+
   .dock-empty { color: var(--tx4); font-size: 12px; text-align: center; padding: 18px 8px; }
 
   /* Плеер внизу */
@@ -56,6 +63,7 @@
 <div class="dock">
   <div class="dock-head">
     <b>Лента сообщений</b>
+    <span class="conn" id="conn" title="Связь с Тапёром"><i></i><span id="connText">Подключаюсь…</span></span>
     <span class="cnt" id="cnt">—</span>
     <label class="tg" id="exactTg" title="Точные — сразу в очередь">
       <span>Точные</span>
@@ -88,6 +96,8 @@
   var tmEl = document.getElementById('tm');
   var ppEl = document.getElementById('pp');
   var tgEl = document.getElementById('exactTg');
+  var connEl = document.getElementById('conn');
+  var connText = document.getElementById('connText');
   var stickBottom = true;
   var lastHtml = '';
 
@@ -167,13 +177,34 @@
     }).catch(function(){});
   });
 
+  // ── Статус связи: зелёный «Подключён», красный «Отключён»
+  var connected = null;
+  var lastAlive = Date.now();
+
+  function setConn(on){
+    if (connected === on) return;
+    connected = on;
+    if (connEl) connEl.classList.toggle('on', on);
+    if (connText) connText.textContent = on ? 'Подключён' : 'Отключён';
+    if (!on) feedEl.innerHTML = '<div class="dock-empty">Нет связи с Тапёром.<br>Проверь, что программа запущена.</div>';
+  }
+
   var es = new EventSource('/widget/events');
-  var gotState = false;
-  es.onmessage = function(e){ try { gotState = true; render(JSON.parse(e.data)); } catch (err) {} };
-  setTimeout(function(){
-    if (!gotState) feedEl.innerHTML = '<div class="dock-empty">Нет связи с Тапёром.<br>Проверь, что программа запущена.</div>';
-  }, 4000);
-  fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
+  es.onopen = function(){ lastAlive = Date.now(); setConn(true); };
+  es.onerror = function(){ setConn(false); };
+  es.onmessage = function(e){
+    lastAlive = Date.now();
+    setConn(true);
+    var msg;
+    try { msg = JSON.parse(e.data); } catch (err) { return; }
+    if (msg && msg.hb) return;
+    render(msg);
+  };
+
+  // Если сигналов нет дольше 10 секунд — считаем, что Тапёр закрылся
+  setInterval(function(){ if (Date.now() - lastAlive > 10000) setConn(false); }, 2000);
+
+  fetch('/widget/state').then(function(r){ return r.json(); }).then(function(st){ lastAlive = Date.now(); setConn(true); render(st); }).catch(function(){ setConn(false); });
 })();
 </script>
 </body>

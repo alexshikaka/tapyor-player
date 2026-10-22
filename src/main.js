@@ -557,7 +557,11 @@ function startServer(preferredPort) {
       res.write('retry: 2000\n\n');
       res.write('data: ' + JSON.stringify(widgetState) + '\n\n');
       widgetClients.add(res);
-      req.on('close', () => widgetClients.delete(res));
+      // Каждые 4 секунды — короткий сигнал «жив», чтобы док видел, что связь есть
+      const hb = setInterval(() => {
+        try { res.write('data: {"hb":1}\n\n'); } catch (e) { clearInterval(hb); widgetClients.delete(res); }
+      }, 4000);
+      req.on('close', () => { clearInterval(hb); widgetClients.delete(res); });
       return;
     }
     if (p.startsWith('/widget/cmd/')) {
