@@ -1090,7 +1090,35 @@
   .skin-soft .presets button:hover { color: var(--tx); border-color: var(--ln3); }
   /* Вуаль: гасит «чёрный провал» и пересвет текста, когда контраст убавлен */
   html.pixel-skin body::before { content: ''; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
-    background: rgba(240,238,255, calc((1 - var(--sk-c)) * .30)); }</style>
+    background: rgba(240,238,255, calc((1 - var(--sk-c)) * .30)); }  /* 5. Ретро-десктоп — серо-чёрный, фаски и кнопки как в 95-м */
+  html.skin-retro { --bg00:#131315; --bg0:#1b1b1e; --bg1:#26262a; --bg2:#303035; --bg3:#3a3a40; --bg4:#4a4a51;
+    --ln:#5c5c64; --ln2:#3e3e45; --ln3:#7c7c86; --tx:#e9e9ec; --tx2:#c9c9cf; --tx3:#a9a9b1; --tx4:#8a8a93; --tx5:#72727c;
+    --ac:#8aa4c8; --ac2:#abc2de; --acr:138,164,200; --pri:#c6c6ca; --prit:#101013; --hov:rgba(255,255,255,.07); }
+  html.skin-retro *, html.skin-retro body { font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; letter-spacing: 0; }
+  html.skin-retro h1, html.skin-retro h2, html.skin-retro .tbrand .name, html.skin-retro .sec-h h2 {
+    font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; font-weight: 700; }
+  /* Панели и окна: светлая грань сверху-слева, тёмная снизу-справа */
+  html.skin-retro .card, html.skin-retro .queue-col, html.skin-retro .searchbar, html.skin-retro .set-main {
+    box-shadow: inset 2px 2px 0 #74747c, inset -2px -2px 0 #0d0d10, 0 0 0 1px #07070a; }
+  html.skin-retro .wavecard, html.skin-retro .rq, html.skin-retro .qrow, html.skin-retro .row, html.skin-retro .disc {
+    box-shadow: inset 2px 2px 0 #6c6c74, inset -2px -2px 0 #0d0d10; }
+  /* Кнопки — как в 95-м: выпуклые, при нажатии вдавливаются */
+  html.skin-retro .pbtn, html.skin-retro .rq-sm, html.skin-retro .chip, html.skin-retro .set-side button {
+    box-shadow: inset 2px 2px 0 #7e7e88, inset -2px -2px 0 #0d0d10, 0 0 0 1px #07070a; }
+  html.skin-retro .pbtn:active, html.skin-retro .rq-sm:active, html.skin-retro .chip:active {
+    box-shadow: inset 2px 2px 0 #0d0d10, inset -2px -2px 0 #7e7e88; transform: translate(1px, 1px); }
+  /* Активная вкладка — как заголовок окна */
+  html.skin-retro nav button.active { background: #3b5f8a; color: #ffffff; box-shadow: inset 1px 1px 0 #6f8fba, inset -1px -1px 0 #23395a; }
+  /* Заголовки секций — тёмная плашка */
+  html.skin-retro .sec-h h2 { background: linear-gradient(90deg, #3b5f8a 0%, #2c4767 100%); color: #ffffff; padding: 3px 10px; margin-left: -10px; }
+  html.skin-retro .qhead h2 { color: var(--tx); }
+  /* Подвал — панель-тулбар с фаской */
+  html.skin-retro footer { background: #24242a; box-shadow: inset 0 2px 0 #4a4a52, inset 0 -2px 0 #0d0d10; }
+  html.skin-retro .cbtn.play { box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #6a6a72; }
+  /* Сетка-дизеринг на «рабочем столе» */
+  html.skin-retro body::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .35;
+    background-image: repeating-conic-gradient(#1f1f23 0 25%, #17171a 0 50%); background-size: 4px 4px; }
+  html.skin-retro .app-shell { position: relative; z-index: 1; }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
@@ -1685,7 +1713,8 @@
     { id: 'gb',   name: 'Гамебой',   sub: '4 оттенка зелёного',    tag: '4 цвета',  bg: '#0f380f', card: '#1b4a1b', line: '#8bac0f', txt: '#9bbc0f', btn: '#9bbc0f' },
     { id: 'pico', name: 'Аркада',    sub: 'палитра PICO-8',        tag: '16 цветов', bg: '#121a33', card: '#2f4576', line: '#ff77a8', txt: '#fff1e8', btn: '#ffec27' },
     { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0' },
-    { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' }
+    { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' },
+    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca' }
   ];
   var curSkin = '', skinAdj = { b: 100, s: 78, c: 90 };
   // Ручки оболочки: яркость, насыщенность, контраст — независимо друг от друга
