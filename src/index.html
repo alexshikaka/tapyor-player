@@ -2964,21 +2964,15 @@ function renderSkinScheme(){
   // Переставить несыгранную песню: to — место вставки (индекс до удаления); выше играющего не ставим
   function moveItem(from, to){
     if (from < 0 || from >= queue.length) return;
-    var wasCur = from === current;
     var curObj = queue[current];
-    if (!wasCur) to = Math.max(to, current + 1);
     if (to === from || to === from + 1) return;
     var item = queue.splice(from, 1)[0];
     if (from < to) to--;
     queue.splice(to, 0, item);
-    // индекс играющего трека пересчитываем по объекту — он мог сдвинуться
-    // сыгранный трек, перетащенный ниже играющего, снова становится активным
-    if (!wasCur && item.played && current >= 0 && queue.indexOf(item) > current) item.played = false;
+    // играющий трек находим по объекту: он мог сдвинуться
     current = curObj ? queue.indexOf(curObj) : -1;
-    if (wasCur) {
-      // всё, что выше играющего, считается отыгравшим; всё, что ниже — активной очередью
-      queue.forEach(function (v, idx){ v.played = idx < current; });
-    }
+    // инвариант: всё выше играющего — отыгравшее, всё ниже — активная очередь
+    queue.forEach(function (v, idx){ v.played = idx < current; });
     renderQueue(); saveToday(); prefetchNext();
   }
   // «Играть сейчас»: несыгранная — сразу после текущей и включаем; сыгранная — копия следующей (история не откатывается)
@@ -3129,7 +3123,7 @@ var dragFrom = -1, dragWave = -1, dropTo = -1, dropWaveTo = -1;
       var to;
       if (!r) to = queue.length;
       else { var i = parseInt(r.dataset.i, 10), rc = r.getBoundingClientRect(); to = e.clientY > rc.top + rc.height / 2 ? i + 1 : i; }
-      to = Math.max(to, current + 1);
+      if (dragWave >= 0) to = Math.max(to, current + 1);   // новый трек из волны не ставим выше играющего
       dropTo = to;
       var rows = box.querySelectorAll('.qrow');
       if (to < rows.length) rows[to].classList.add('drop-before'); else if (rows.length) rows[rows.length - 1].classList.add('drop-after');
