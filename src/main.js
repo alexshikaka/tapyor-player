@@ -460,6 +460,7 @@ const widgetClients = new Set();
 let widgetState = { orders: [], np: { title: '', artist: '', playing: false }, reqAuto: false, scale: 100, theme: null };
 let serverPort = 0;
 let httpServerRef = null;
+let dockGuard = null;
 
 function widgetBroadcast() {
   const payload = 'data: ' + JSON.stringify(widgetState) + '\n\n';
@@ -520,6 +521,16 @@ function startServer(preferredPort) {
       try {
         const body = await readBody(req);
         log('док: клик ' + JSON.stringify(body && body.dataset ? body.dataset : body));
+        // Действие из дока не должно поднимать окно плеера: запоминаем состояние и возвращаем его
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          dockGuard = { focused: mainWindow.isFocused(), minimized: mainWindow.isMinimized(), at: Date.now() };
+          setTimeout(() => {
+            if (!dockGuard || Date.now() - dockGuard.at > 2500 || !mainWindow || mainWindow.isDestroyed()) return;
+            if (dockGuard.minimized && !mainWindow.isMinimized()) mainWindow.minimize();
+            else if (!dockGuard.focused && mainWindow.isFocused()) mainWindow.blur();
+            dockGuard = null;
+          }, 900);
+        }
         if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('widget-rq', body || {});
       } catch (e) {
         log('док: клик ' + e.message);
@@ -611,6 +622,7 @@ function createWindow() {
       webviewTag: true // вкладка «Браузер»: сайты сервисов
     }
   });
+
 
   mainWindow.loadURL(appUrl || ('file://' + path.join(__dirname, 'index.html')));
 

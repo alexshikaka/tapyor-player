@@ -116,7 +116,8 @@
       if (nearBottom) stickBottom = true;
       lastHtml = html;
       feedEl.innerHTML = html || '<div class="dock-empty">Сообщений пока нет</div>';
-      if (stickBottom) feedEl.scrollTop = feedEl.scrollHeight;
+      if (st.newOnTop) feedEl.scrollTop = 0;
+      else if (stickBottom) feedEl.scrollTop = feedEl.scrollHeight;
     }
 
     var playing = st.np && st.np.playing;

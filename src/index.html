@@ -959,7 +959,12 @@
   .rq-it.added > .rq-lv { color: var(--tx4); }
   /* Лента сообщений и выполненные заказы — сворачиваемые разделы */
   .rq-sec { font: 700 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 0; }
-  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 12px; margin-top: 2px; }
+  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 14px; margin-top: 2px; }
+  /* Сообщения в ленте должны читаться отдельно друг от друга: линия-разделитель сверху */
+  .rq-feed > .rq, .rq-done > .rq { position: relative; margin-bottom: 14px; }
+  .rq-feed > .rq:last-child, .rq-done > .rq:last-child { margin-bottom: 0; }
+  .rq-feed > .rq + .rq::before, .rq-done > .rq + .rq::before {
+    content: ''; position: absolute; left: 4px; right: 4px; top: -8px; height: 1px; background: var(--ln2); }
   .rq-feed > summary, .rq-done > summary { cursor: pointer; font: 600 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 6px; list-style: none; }
   .rq-feed > summary::-webkit-details-marker, .rq-done > summary::-webkit-details-marker { display: none; }
   .rq-feed > summary::before, .rq-done > summary::before { content: '▸ '; }
@@ -1506,6 +1511,13 @@
           <div class="srow">
             <div class="sl"><div class="st">Точные — сразу в очередь</div><div class="sd">Заказ, который точно определился, сразу встаёт в очередь</div></div>
             <button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button>
+          </div>
+          <div class="srow">
+            <div class="sl"><div class="st">Новые сообщения</div><div class="sd">Где появляются свежие сообщения в ленте панели</div></div>
+            <div class="seg" id="wgOrder" style="flex:0 0 auto">
+              <button data-v="bottom" class="on">Снизу</button>
+              <button data-v="top">Сверху</button>
+            </div>
           </div>
               <div class="srow">
                 <div class="sl"><div class="st">Писать название трека в файл</div><div class="sd">В OBS: источник «Текст (GDI+)» → «Читать из файла» → выбери этот файл</div></div>
@@ -5821,7 +5833,7 @@ window.onerror = function(msg, src, line){
 
 // ===== Виджет для OBS =====
 // Лента заказов и мини-плеер живут в отдельной странице /widget (источник «Браузер» в OBS).
-var WG = { look: 'current', scale: 100, url: '' };
+var WG = { look: 'current', scale: 100, url: '', newOnTop: false };
 var wgLast = '';
 var WG_PALETTES = {
   violet: { bg: '#0E0F13', card: '#15161C', line: '#2C2F3A', tx: '#ECEDF2', tx2: '#C9CBD4', tx3: '#9EA2B0', ac: '#9B87FF', pri: '#FFD43B', radius: 12, font: "'Onest','Segoe UI',sans-serif" },
@@ -5881,7 +5893,7 @@ function widgetFeedHtml(){
   var vis = (RQ.list || []).filter(function(r){
     return r.state !== 'dismissed' && (r.got || r.at || 0) > t0;
   });
-  vis.sort(function(a, b){ return (a.got || 0) - (b.got || 0); }); // старые сверху, свежие внизу
+  vis.sort(function(a, b){ var ta = a.got || a.at || 0, tb = b.got || b.at || 0; return WG.newOnTop ? (tb - ta) : (ta - tb); });
   return vis.map(function(r){ return rqCardHtml(r, r._ri, null, 'dock-card'); }).join('');
 }
 
@@ -5906,6 +5918,7 @@ function pushWidget(force){
     if (!force && sig === wgLast) return;
     wgLast = sig;
     st.feedHtml = widgetFeedHtml();
+    st.newOnTop = !!WG.newOnTop;
     var t0w = Date.now() - RQ_DAY;
     st.msgCount = (RQ.list || []).filter(function(r){ return r.state !== 'dismissed' && (r.got || r.at || 0) > t0w; }).length;
     st.htmlClass = document.documentElement.className;
@@ -5951,6 +5964,13 @@ if (A.onWidgetSetting) A.onWidgetSetting(function(s){
   } else if (s.key === 'widgetLook') {
     WG.look = s.value || 'current';
     var sel = $('wgLook'); if (sel) sel.value = WG.look;
+  } else if (s.key === 'widgetNewOnTop') {
+    WG.newOnTop = !!s.value;
+    var seg = document.getElementById('wgOrder');
+    if (seg) {
+      var bs = seg.querySelectorAll('button');
+      for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', (bs[k].dataset.v === 'top') === WG.newOnTop);
+    }
   } else if (s.key === 'widgetScale') {
     WG.scale = Number(s.value) || 100;
     var sl = $('wgScale'); if (sl) sl.value = WG.scale;
@@ -5969,6 +5989,23 @@ function initWidgetUi(){
   var urlEl = $('wgUrl'), copyBtn = $('wgCopy'), openBtn = $('wgOpen');
   var lookSel = $('wgLook'), scaleEl = $('wgScale'), scaleVal = $('wgScaleVal');
   if (A.widgetUrl) A.widgetUrl().then(function(u){ WG.url = u || ''; if (urlEl) urlEl.textContent = WG.url || 'нет адреса'; });
+  var orderSeg = document.getElementById('wgOrder');
+  if (orderSeg) {
+    if (A.getSetting) A.getSetting('widgetNewOnTop').then(function(v){
+      WG.newOnTop = !!v;
+      var bs = orderSeg.querySelectorAll('button');
+      for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', (bs[k].dataset.v === 'top') === WG.newOnTop);
+      pushWidget(true);
+    });
+    orderSeg.onclick = function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      var bs = orderSeg.querySelectorAll('button');
+      for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', bs[k] === b);
+      WG.newOnTop = b.dataset.v === 'top';
+      if (A.setSetting) A.setSetting('widgetNewOnTop', WG.newOnTop);
+      pushWidget(true);
+    };
+  }
   var portEl = $('wgPort'), portBtn = $('wgPortApply');
   if (portEl && A.getSetting) A.getSetting('widgetPort').then(function(v){ if (v) portEl.value = v; });
   if (portBtn) portBtn.onclick = function(){
