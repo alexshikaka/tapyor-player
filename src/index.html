@@ -5,7 +5,7 @@
 <title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
-<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _ss = localStorage.getItem('tapSkinSoft'); if (_ss !== null && _ss !== '') _d.style.setProperty('--sk', (Math.max(0, Math.min(100, +_ss)) / 100).toFixed(2)); } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
+<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _ss = localStorage.getItem('tapSkinAdj'); if (_ss) { try { var _a = JSON.parse(_ss) || {}; var _b = Math.max(20, Math.min(100, +_a.b || 100)), _s2 = Math.max(0, Math.min(100, +_a.s == null ? 100 : +_a.s)), _c = Math.max(0, Math.min(100, +_a.c == null ? 100 : +_a.c)); _d.style.setProperty('--sk-b', (_b / 100).toFixed(2)); _d.style.setProperty('--sk-s', (_s2 / 100).toFixed(2)); _d.style.setProperty('--sk-c', (0.62 + 0.38 * (_c / 100)).toFixed(3)); } catch (e) {} } } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
 <style>
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
     --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; --hov: rgba(255,255,255,.05); --hov2: rgba(255,255,255,.07); --hov3: rgba(255,255,255,.09);
@@ -1075,17 +1075,22 @@
   html.skin-crt .cbtn.play svg { filter: drop-shadow(0 0 6px rgba(0,229,255,.9)); }  /* Пиксельные шрифты мельче по x-height — поднимаем самые мелкие надписи */
   html.pixel-skin .searchbar input { font-size: 13px !important; }
   html.pixel-skin .sd, html.pixel-skin .ts, html.pixel-skin .f-sub, html.pixel-skin .s, html.pixel-skin .rq-note { font-size: 12.5px !important; }
-  html.pixel-skin .skin-c small, html.pixel-skin .te-note, html.pixel-skin .set .sd { font-size: 12px !important; }  /* Ползунок интенсивности: одна ручка гасит насыщенность, контраст и «черноту» */
-  html.pixel-skin { --sk: 0.7; }
-  html.pixel-skin body {
-    filter: saturate(calc(.58 + .42 * var(--sk))) contrast(calc(.86 + .14 * var(--sk))) brightness(calc(1.03 - .03 * var(--sk)));
-  }
-  .skin-soft { display: flex; align-items: center; gap: 12px; margin: 16px 0 2px; font: 500 12.5px Onest, sans-serif; color: var(--tx3); }
+  html.pixel-skin .skin-c small, html.pixel-skin .te-note, html.pixel-skin .set .sd { font-size: 12px !important; }
+  /* Ручки оболочки: яркость, насыщенность и контраст настраиваются отдельно */
+  html.pixel-skin { --sk-b: 1; --sk-s: 1; --sk-c: 1; }
+  html.pixel-skin body { filter: brightness(var(--sk-b)) saturate(var(--sk-s)) contrast(var(--sk-c)); }
+  .skin-soft { margin: 18px 0 2px; font: 500 12.5px Onest, sans-serif; color: var(--tx3); }
   .skin-soft[hidden] { display: none; }
-  .skin-soft b { min-width: 74px; font: 700 12px Onest, sans-serif; color: var(--ac2); letter-spacing: .02em; }
-  .skin-soft input[type=range] { flex: 1 1 auto; max-width: 320px; accent-color: var(--ac); height: 18px; }  /* Вуаль: гасит «чёрный провал» и пересвет текста на низкой интенсивности */
+  .skin-soft .adj { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .skin-soft .adj span { width: 112px; flex: 0 0 auto; }
+  .skin-soft .adj input[type=range] { flex: 1 1 auto; max-width: 300px; accent-color: var(--ac); height: 18px; }
+  .skin-soft .adj b { min-width: 44px; font: 700 12px Onest, sans-serif; color: var(--ac2); }
+  .skin-soft .presets { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .skin-soft .presets button { height: 26px; padding: 0 10px; border: 1px solid var(--ln2); background: transparent; color: var(--tx2); border-radius: 8px; font: 600 11.5px Onest, sans-serif; cursor: pointer; }
+  .skin-soft .presets button:hover { color: var(--tx); border-color: var(--ln3); }
+  /* Вуаль: гасит «чёрный провал» и пересвет текста, когда контраст убавлен */
   html.pixel-skin body::before { content: ''; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
-    background: rgba(240,238,255, calc((1 - var(--sk)) * .085)); }</style>
+    background: rgba(240,238,255, calc((1 - var(--sk-c)) * .30)); }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
@@ -1314,10 +1319,15 @@
               </div>
               <div id="lookSkins" hidden>
                 <div class="skin-grid" id="skinGrid"></div>
-                <div class="skin-soft" id="skinSoftRow" hidden>
-                  <span>Интенсивность</span>
-                  <input type="range" id="skinSoft" min="0" max="100" value="70" aria-label="Интенсивность оболочки">
-                  <b id="skinSoftVal">Мягкая</b>
+                <div class="skin-soft" id="skinAdjRow" hidden>
+                  <div class="adj"><span>Яркость</span><input type="range" data-adj="b" min="20" max="100" value="100" aria-label="Яркость оболочки"><b data-adjv="b">100%</b></div>
+                  <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
+                  <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
+                  <div class="presets">
+                    <button data-preset="100,100,100">Как в дизайне</button>
+                    <button data-preset="100,75,88">Мягко</button>
+                    <button data-preset="72,55,82">Ночь</button>
+                  </div>
                 </div>
                 <div class="te-note">Оболочка — это пиксель-арт стиль: жёсткие углы, фаски, скан-линии и пиксельные шрифты. Цвета темы в ней не используются, поэтому оболочка и тема взаимоисключающие.</div>
               </div>
@@ -1677,18 +1687,30 @@
     { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0' },
     { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' }
   ];
-  var curSkin = '', skinSoft = 70;
-  function skinSoftWord(v){ return v >= 85 ? 'Яркая' : (v >= 55 ? 'Мягкая' : (v >= 25 ? 'Тихая' : 'Спокойная')); }
-  // Ползунок интенсивности: одна ручка на все оболочки
-  function applySkinSoft(v, save){
-    skinSoft = Math.max(0, Math.min(100, Math.round(v)));
-    document.documentElement.style.setProperty('--sk', (skinSoft / 100).toFixed(2));
-    try { localStorage.setItem('tapSkinSoft', String(skinSoft)); } catch (e) {}
-    var inp = $('skinSoft'), val = $('skinSoftVal');
-    if (inp) inp.value = skinSoft;
-    if (val) val.textContent = skinSoftWord(skinSoft);
-    if (save && A.setSetting) A.setSetting('skinSoft', skinSoft);
-  };
+  var curSkin = '', skinAdj = { b: 100, s: 78, c: 90 };
+  // Ручки оболочки: яркость, насыщенность, контраст — независимо друг от друга
+  function applySkinAdj(next, save){
+    if (next) { if (next.b != null) skinAdj.b = next.b; if (next.s != null) skinAdj.s = next.s; if (next.c != null) skinAdj.c = next.c; }
+    skinAdj.b = Math.max(20, Math.min(100, Math.round(skinAdj.b)));
+    skinAdj.s = Math.max(0, Math.min(100, Math.round(skinAdj.s)));
+    skinAdj.c = Math.max(0, Math.min(100, Math.round(skinAdj.c)));
+    var d = document.documentElement;
+    d.style.setProperty('--sk-b', (skinAdj.b / 100).toFixed(2));
+    d.style.setProperty('--sk-s', (skinAdj.s / 100).toFixed(2));
+    d.style.setProperty('--sk-c', (0.62 + 0.38 * (skinAdj.c / 100)).toFixed(3));
+    ['b', 's', 'c'].forEach(function (k){
+      var inp = document.querySelector('[data-adj="' + k + '"]');
+      var val = document.querySelector('[data-adjv="' + k + '"]');
+      if (inp) inp.value = skinAdj[k];
+      if (val) val.textContent = skinAdj[k] + '%';
+    });
+    try { localStorage.setItem('tapSkinAdj', JSON.stringify(skinAdj)); } catch (e) {}
+    if (save && A.setSetting) A.setSetting('skinAdj', skinAdj);
+  }
+  function setSkinPreset(str){
+    var p = String(str).split(',');
+    applySkinAdj({ b: +p[0], s: +p[1], c: +p[2] }, true);
+  }
   function skinById(id){ for (var i = 0; i < SKINS.length; i++) if (SKINS[i].id === id) return SKINS[i]; return null; }
   function clearSkinClass(){
     var d = document.documentElement;
@@ -1728,8 +1750,8 @@
       '<button class="skin-c' + (curSkin ? '' : ' on') + '" data-skin="" title="Вернуться к обычному интерфейсу">' +
         '<div class="skin-pv" style="background:var(--bg2);box-shadow:inset 0 0 0 2px var(--ln)"><i class="sp-line" style="background:var(--tx3);top:28px;width:64%"></i></div>' +
         '<b>Без оболочки</b><small>обычный интерфейс</small></button>';
-    var row = $('skinSoftRow'); if (row) row.hidden = !curSkin;
-    applySkinSoft(skinSoft, false);
+    var row = $('skinAdjRow'); if (row) row.hidden = !curSkin;
+    applySkinAdj(null, false);
   }
   function bindSkins(){
     var grid = $('skinGrid');
@@ -1745,8 +1767,18 @@
       $('lookThemes').hidden = b.dataset.look !== 'themes';
       $('lookSkins').hidden = b.dataset.look !== 'skins';
     });
-    var soft = $('skinSoft');
-    if (soft) soft.addEventListener('input', function (){ applySkinSoft(+soft.value, true); });
+    var box = $('skinAdjRow');
+    if (box) {
+      box.addEventListener('input', function (e){
+        var k = e.target && e.target.dataset && e.target.dataset.adj; if (!k) return;
+        var patch = {}; patch[k] = +e.target.value;
+        applySkinAdj(patch, true);
+      });
+      box.addEventListener('click', function (e){
+        var b = e.target.closest('[data-preset]'); if (!b) return;
+        setSkinPreset(b.dataset.preset);
+      });
+    }
     renderSkinList();
   }
   bindSkins();
@@ -3562,9 +3594,9 @@
     applyTheme(id || themeLocal() || 'violet', false);
     var sk = (A.getSetting ? await A.getSetting('skin') : '') || (function (){ try { return localStorage.getItem('tapSkin') || ''; } catch (e) { return ''; } })();
     if (sk) applySkin(sk, false);
-    var ss = (A.getSetting ? await A.getSetting('skinSoft') : null);
-    if (ss === null || ss === undefined) { try { ss = +(localStorage.getItem('tapSkinSoft') || 70); } catch (e) { ss = 70; } }
-    applySkinSoft(ss, false);
+    var adj = (A.getSetting ? await A.getSetting('skinAdj') : null);
+    if (!adj || typeof adj !== 'object') { try { adj = JSON.parse(localStorage.getItem('tapSkinAdj') || 'null'); } catch (e) { adj = null; } }
+    applySkinAdj(adj || { b: 100, s: 78, c: 90 }, false);
   })();
   function rankCtx(){ return { lcOn: true, ymFull: ymLoggedIn && ymPlus, ymOn: true, ytOn: ytUsable(), ytLogged: typeof ytLogged === 'function' && ytLogged(), scOn: SVC.scOn, auOn: SVC.auOn, order: srcOrder }; }
 
