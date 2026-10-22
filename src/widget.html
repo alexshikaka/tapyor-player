@@ -8,10 +8,10 @@
 <link rel="stylesheet" href="/app.css">
 <style>
   html, body { height: 100%; margin: 0; overflow: hidden; }
-  body { background: var(--bg0); color: var(--tx); font-family: Onest, sans-serif; }
+  body { background: var(--bg0); color: var(--tx); font-family: Onest, sans-serif; transition: background-color .25s ease, color .25s ease; }
   .dock { height: 100%; display: flex; flex-direction: column; min-height: 0; }
 
-  .dock-head { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  .dock-head { transition: background-color .25s ease, border-color .25s ease; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 8px 12px;
     border-bottom: 1px solid var(--ln2); background: var(--bg1); }
   .dock-head b { font: 700 12.5px Onest, sans-serif; letter-spacing: .02em; color: var(--tx); }
   .dock-head .cnt { font: 500 11.5px Onest, sans-serif; color: var(--tx4); margin-left: auto; }
@@ -39,14 +39,24 @@
   /* Статус связи с Тапёром: зелёный — на связи, красный — программа закрыта или недоступна */
   .conn { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
     background: var(--hov); color: var(--tx3); font: 600 10.5px Onest, sans-serif; white-space: nowrap; }
-  .conn i { width: 6px; height: 6px; border-radius: 50%; background: #FF5A52; box-shadow: 0 0 6px rgba(255,90,82,.9); flex: 0 0 auto; }
-  .conn.on { color: #4ADE9A; }
-  .conn.on i { background: #4ADE9A; box-shadow: 0 0 6px rgba(74,222,154,.9); }
+  .conn i { width: 6px; height: 6px; border-radius: 50%; background: var(--err, #FF5A52); box-shadow: 0 0 6px var(--err, #FF5A52); flex: 0 0 auto; }
+  .conn.on { color: var(--ok, #4ADE9A); }
+  .conn.on i { background: var(--ok, #4ADE9A); box-shadow: 0 0 6px var(--ok, #4ADE9A); }
 
   .dock-empty { color: var(--tx4); font-size: 12px; text-align: center; padding: 18px 8px; }
+  /* Цвета палитры: суммы, статусы и полоски слева берут цвета схемы (--ok / --wait / --err) */
+  .dock-feed .rq { transition: background-color .25s ease, color .25s ease; }
+  .dock-feed .rq-h .amt { color: var(--ok, #4ADE9A); }
+  .dock-feed .rq-it.ex { border-color: var(--ok, #4ADE9A); }
+  .dock-feed .rq-it.db { border-color: var(--wait, #FFD43B); }
+  .dock-feed .rq-it.rj { border-color: var(--err, #FF5A52); }
+  .dock-feed .rq-it.ex .rq-lv { color: var(--ok, #4ADE9A); }
+  .dock-feed .rq-it.db .rq-lv { color: var(--wait, #FFD43B); }
+  .dock-feed .rq-it.rj .rq-lv { color: var(--err, #FF8A84); }
+  .dock-feed .rq-empty, .dock-feed .dock-empty { color: var(--tx4); }
 
   /* Плеер внизу */
-  .dock-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 7px 10px;
+  .dock-bar { transition: background-color .25s ease, border-color .25s ease; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 7px 10px;
     border-top: 1px solid var(--ln2); background: var(--bg1); }
   .dock-bar .np { flex: 1; min-width: 0; font-size: 11px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dock-bar .np b { color: var(--tx2); font-weight: 600; }

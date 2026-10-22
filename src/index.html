@@ -933,6 +933,9 @@
   .rq-exact .toggle { width: 34px; height: 20px; border-radius: 10px; padding: 2px; flex: 0 0 auto; }
   .rq-exact .toggle span { width: 16px; height: 16px; }
   #wgScale { accent-color: var(--ac); }
+  .wg-prev { display: flex; gap: 6px; flex-wrap: wrap; }
+  .wg-chip { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--ln3); cursor: pointer; }
+  .wg-chip:hover { outline: 2px solid var(--ac); outline-offset: 1px; }
   /* Кнопки в шапке заказов — одного размера и формы */
   .rq-acts .pbtn, .rq-acts .rq-sm { height: 32px; padding: 0 14px; border-radius: 999px; font: 600 12.5px Onest, sans-serif; line-height: 1; }
   .rq-sm { height: 32px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--hov); color: var(--tx2); font: 600 12.5px Onest, sans-serif; line-height: 1; cursor: pointer; }
@@ -1497,7 +1500,19 @@
                 <option value="theme:mono">Монохром</option>
                 <option value="theme:light">Светлая</option>
               </optgroup>
+              <optgroup label="Yami (стандартное оформление)">
+                <option value="yami:default">Yami · Default</option>
+                <option value="yami:acri">Yami · Acri</option>
+                <option value="yami:classic">Yami · Classic</option>
+                <option value="yami:grey">Yami · Grey</option>
+                <option value="yami:light">Yami · Light</option>
+                <option value="yami:rachni">Yami · Rachni</option>
+              </optgroup>
             </select>
+          </div>
+          <div class="srow">
+            <div class="sl"><div class="st">Цвета схемы</div><div class="sd">Нажми на образец, чтобы скопировать HEX</div></div>
+            <div class="wg-prev" id="wgPrev"></div>
           </div>
           <div class="srow">
             <div class="sl"><div class="st">Масштаб панели</div><div class="sd">Размер текста и кнопок внутри панели</div></div>
@@ -5842,6 +5857,69 @@ var WG_PALETTES = {
   retro:  { bg: '#1B1B1E', card: '#26262A', line: '#5C5C64', tx: '#E9E9EC', tx2: '#C9C9CF', tx3: '#A9A9B1', ac: '#3B5F8A', pri: '#C0C0C0', radius: 0, font: 'Tahoma,sans-serif' }
 };
 
+// ===== Палитры Yami для панели OBS =====
+// Шесть стилей «стандартного» оформления: не оболочки, а цветовые схемы.
+var YAMI = {
+  default: { bg: '#1D1F26', panel: '#272A33', surf: '#3C404D', line: '#464B59', tx: '#FFFFFF', tx2: '#969696', ac: '#284CB8', ac2: '#476BD7', ok: '#37D247', err: '#C01C37', light: false },
+  acri:    { bg: '#101116', panel: '#191A20', surf: '#25262D', line: '#353640', tx: '#F5F5F7', tx2: '#92939D', ac: '#476BD7', ac2: '#718CDC', ok: '#37D247', err: '#E33B57', light: false },
+  classic: { bg: '#202020', panel: '#2A2A2A', surf: '#353535', line: '#484848', tx: '#F2F2F2', tx2: '#A0A0A0', ac: '#3B78C8', ac2: '#5595E8', ok: '#42B85A', err: '#D84040', light: false },
+  grey:    { bg: '#272A33', panel: '#323540', surf: '#3C404D', line: '#4E5566', tx: '#FFFFFF', tx2: '#B4B4B4', ac: '#5B6273', ac2: '#718094', ok: '#78B982', err: '#CC727C', light: false },
+  light:   { bg: '#F1F1F1', panel: '#FFFFFF', surf: '#E1E1E1', line: '#C6C6C6', tx: '#222222', tx2: '#686868', ac: '#284CB8', ac2: '#476BD7', ok: '#218838', err: '#C01C37', wait: '#A86400', light: true },
+  rachni:  { bg: '#171B20', panel: '#20272D', surf: '#2B353D', line: '#3B4B54', tx: '#F5F7F8', tx2: '#9AAAB1', ac: '#16B1F3', ac2: '#3DBEF5', ok: '#37D247', err: '#E33B57', light: false }
+};
+
+function wgHex2rgb(h){
+  h = String(h || '').replace('#', '');
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  return [parseInt(h.slice(0, 2), 16) || 0, parseInt(h.slice(2, 4), 16) || 0, parseInt(h.slice(4, 6), 16) || 0];
+}
+function wgRgb2hex(r){
+  return '#' + r.map(function(v){ var s = Math.max(0, Math.min(255, Math.round(v))).toString(16); return s.length === 1 ? '0' + s : s; }).join('');
+}
+function wgMix(a, b, t){
+  var x = wgHex2rgb(a), y = wgHex2rgb(b);
+  return wgRgb2hex([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]);
+}
+
+// Собираем CSS-переменные приложения из палитры Yami
+function yamiVars(id){
+  var p = YAMI[id] || YAMI.default;
+  var dark = !p.light;
+  var rgb = wgHex2rgb(p.ac).join(',');
+  var vars = {
+    '--bg00': wgMix(p.bg, '#000000', dark ? 0.3 : 0.06),
+    '--bg0': p.bg,
+    '--bg1': p.panel,
+    '--bg2': p.surf,
+    '--bg3': wgMix(p.surf, p.tx, 0.06),
+    '--bg4': wgMix(p.surf, p.tx, 0.12),
+    '--ln': p.line,
+    '--ln2': wgMix(p.line, p.bg, 0.45),
+    '--ln3': wgMix(p.line, p.tx, 0.18),
+    '--tx': p.tx,
+    '--tx2': wgMix(p.tx, p.tx2, 0.35),
+    '--tx3': p.tx2,
+    '--tx4': wgMix(p.tx2, p.bg, 0.25),
+    '--tx5': wgMix(p.tx2, p.bg, 0.45),
+    '--ac': p.ac,
+    '--ac2': p.ac2,
+    '--acr': rgb,
+    '--acbg': wgMix(p.panel, p.ac, dark ? 0.2 : 0.12),
+    '--pri': p.ac2,
+    '--prit': '#FFFFFF',
+    '--hov': dark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)',
+    '--hov2': dark ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.07)',
+    '--hov3': dark ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.09)',
+    '--ok': p.ok,
+    '--err': p.err,
+    '--wait': p.wait || '#FFD43B',
+    '--r-panel': '14px',
+    '--r-card': '12px',
+    'color-scheme': p.light ? 'light' : 'dark'
+  };
+  return Object.keys(vars).map(function(k){ return k + ':' + vars[k]; }).join(';');
+}
+
 function widgetTheme(){
   var look = WG.look || 'current';
   if (look.indexOf('theme:') === 0) return WG_PALETTES[look.slice(6)] || WG_PALETTES.violet;
@@ -5928,8 +6006,9 @@ function pushWidget(force){
       'theme:violet': '', 'theme:mono': 'theme-mono', 'theme:light': 'theme-light-default',
       'skin:dos': 'pixel-skin skin-dos', 'skin:crt': 'pixel-skin skin-crt', 'skin:retro': 'pixel-skin skin-retro'
     };
-    st.dockClass = lk === 'current' ? (st.htmlClass || '') : (DOCK_LOOK[lk] || '');
-    st.dockStyle = lk === 'current' ? (st.htmlStyle || '') : '';
+    var yamiId = lk.indexOf('yami:') === 0 ? lk.slice(5) : '';
+    st.dockClass = yamiId ? '' : (lk === 'current' ? (st.htmlClass || '') : (DOCK_LOOK[lk] || ''));
+    st.dockStyle = yamiId ? yamiVars(yamiId) : (lk === 'current' ? (st.htmlStyle || '') : '');
     A.widgetPush(st);
   } catch (err) {
     try { A.widgetPush({ orders: [], np: { title: 'ERR ' + (err && err.message), artist: '', playing: false }, reqAuto: false, scale: 100, theme: null }); } catch (e) {}
@@ -5970,6 +6049,11 @@ if (A.onWidgetSetting) A.onWidgetSetting(function(s){
   } else if (s.key === 'widgetLook') {
     WG.look = s.value || 'current';
     var sel = $('wgLook'); if (sel) sel.value = WG.look;
+    renderLookPrev(WG.look);
+  } else if (s.key === 'widgetScale') {
+    WG.scale = Number(s.value) || 100;
+    var sl = $('wgScale'); if (sl) sl.value = WG.scale;
+    var sv = $('wgScaleVal'); if (sv) sv.textContent = WG.scale + '%';
   } else if (s.key === 'widgetNewOnTop') {
     WG.newOnTop = !!s.value;
     var seg = document.getElementById('wgOrder');
@@ -5977,10 +6061,6 @@ if (A.onWidgetSetting) A.onWidgetSetting(function(s){
       var bs = seg.querySelectorAll('button');
       for (var k = 0; k < bs.length; k++) bs[k].classList.toggle('on', (bs[k].dataset.v === 'top') === WG.newOnTop);
     }
-  } else if (s.key === 'widgetScale') {
-    WG.scale = Number(s.value) || 100;
-    var sl = $('wgScale'); if (sl) sl.value = WG.scale;
-    var sv = $('wgScaleVal'); if (sv) sv.textContent = WG.scale + '%';
   }
   pushWidget(true);
 });
@@ -5991,6 +6071,39 @@ function syncReqAuto(){
 }
 
 // интерфейс в «Настройки → OBS и стрим»
+// Образцы цветов выбранной схемы: подписи в title, клик копирует HEX
+function renderLookPrev(look){
+  var box = document.getElementById('wgPrev');
+  if (!box) return;
+  var cols = [];
+  var yid = look && look.indexOf('yami:') === 0 ? look.slice(5) : '';
+  if (yid && YAMI[yid]) {
+    var p = YAMI[yid];
+    cols = [
+      ['Фон', p.bg], ['Панели', p.panel], ['Поверхности', p.surf], ['Границы', p.line],
+      ['Текст', p.tx], ['Вторичный', p.tx2], ['Акцент', p.ac], ['Акцент (наведение)', p.ac2],
+      ['Успех', p.ok], ['Ошибка', p.err]
+    ];
+  } else {
+    var cs = getComputedStyle(document.documentElement);
+    var v = function(n, d){ var x = (cs.getPropertyValue(n) || '').trim(); return x || d; };
+    cols = [
+      ['Фон', v('--bg0', '#0E0F13')], ['Панели', v('--bg1', '#15161C')], ['Поверхности', v('--bg2', '#181A21')],
+      ['Границы', v('--ln', '#2C2F3A')], ['Текст', v('--tx', '#ECEDF2')], ['Акцент', v('--ac', '#9B87FF')]
+    ];
+  }
+  box.innerHTML = cols.map(function(c){
+    return '<div class="wg-chip" title="' + c[0] + ': ' + c[1] + '" data-hex="' + c[1] + '" style="background:' + c[1] + '"></div>';
+  }).join('');
+  box.onclick = function(e){
+    var chip = e.target.closest('.wg-chip'); if (!chip) return;
+    var hex = chip.dataset.hex;
+    var done = function(){ toast('Скопировано: ' + hex); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(hex).then(done).catch(function(){ prompt('Цвет:', hex); });
+    else prompt('Цвет:', hex);
+  };
+}
+
 function initWidgetUi(){
   var urlEl = $('wgUrl'), copyBtn = $('wgCopy'), openBtn = $('wgOpen');
   var lookSel = $('wgLook'), scaleEl = $('wgScale'), scaleVal = $('wgScaleVal');
@@ -6035,13 +6148,13 @@ function initWidgetUi(){
     toast('Порт ' + v + ': страница перезапустится, адрес в OBS — http://127.0.0.1:' + v + '/widget');
   };
   if (A.getSetting) {
-    A.getSetting('widgetLook').then(function(v){ WG.look = v || 'current'; if (lookSel) lookSel.value = WG.look; pushWidget(true); });
+    A.getSetting('widgetLook').then(function(v){ WG.look = v || 'current'; if (lookSel) lookSel.value = WG.look; renderLookPrev(WG.look); pushWidget(true); });
     A.getSetting('widgetScale').then(function(v){ WG.scale = Number(v) || 100; if (scaleEl) scaleEl.value = WG.scale; if (scaleVal) scaleVal.textContent = WG.scale + '%'; pushWidget(true); });
     A.getSetting('reqAuto').then(function(v){ RQ.auto = !!v; syncReqAuto(); pushWidget(true); });
   }
   if (copyBtn) copyBtn.onclick = function(){ if (!WG.url) return; navigator.clipboard.writeText(WG.url).then(function(){ toast('Адрес виджета скопирован'); }).catch(function(){ prompt('Скопируй адрес:', WG.url); }); };
   if (openBtn) openBtn.onclick = function(){ if (WG.url) A.openExternal(WG.url); };
-  if (lookSel) lookSel.onchange = function(){ WG.look = lookSel.value; if (A.setSetting) A.setSetting('widgetLook', WG.look); pushWidget(true); };
+  if (lookSel) lookSel.onchange = function(){ WG.look = lookSel.value; if (A.setSetting) A.setSetting('widgetLook', WG.look); renderLookPrev(WG.look); pushWidget(true); };
   if (scaleEl) {
     scaleEl.oninput = function(){ WG.scale = Number(scaleEl.value); if (scaleVal) scaleVal.textContent = WG.scale + '%'; pushWidget(true); };
     scaleEl.onchange = function(){ if (A.setSetting) A.setSetting('widgetScale', WG.scale); };
