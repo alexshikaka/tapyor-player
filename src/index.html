@@ -29,9 +29,12 @@
   ::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ac) 70%, transparent) !important; border-width: 1px; }
   ::-webkit-scrollbar-thumb:active { background-color: var(--ac) !important; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg0); color: var(--tx);
+  /* Фон окна — цвет подвала: он лежит «подложкой» под скруглённым контейнером */
+  body { margin: 0; background: var(--bg00); color: var(--tx);
     font-family: 'Onest', 'Segoe UI', system-ui, sans-serif;
     height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  /* Всё, кроме подвала, — в контейнере со скруглёнными краями; фон прозрачный для цвета подложки */
+  .app-shell { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: var(--bg0); border-radius: var(--r-panel); overflow: hidden; }
   .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
   input::placeholder { color: var(--tx5); }
 
@@ -989,6 +992,7 @@
 </style>
 </head>
 <body data-tab="search">
+  <div class="app-shell">
   <header>
     <div class="titlebar-space"><div class="tbrand"><img class="logo" src="assets/icon.png" alt=""><span class="name">Тапёр</span></div></div>
     <div class="hrow hrow1">
@@ -1414,6 +1418,7 @@
 
     </aside>
   </main>
+  </div>
 
   <div class="modal" id="loginModal" hidden>
     <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="lmTitle">
