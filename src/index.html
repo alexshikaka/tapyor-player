@@ -71,11 +71,11 @@
   .searchtop { display: flex; flex-direction: column; gap: var(--sp-3); }
   .searchtop .searchwrap { max-width: none; }
   .searchtop[hidden] { display: none !important; }
-  .searchbar { display: flex; flex-direction: column; align-items: stretch; background: var(--bg3); border: 0; border-radius: var(--r-panel); padding: 0 0 2px; }
+  .searchbar { display: flex; flex-direction: column; align-items: stretch; background: var(--bg3); border: 0; border-radius: var(--r-panel); padding: 0; overflow: hidden; }
   .sb-row { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 46px; }
   .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--tx); font-size: 11.5px; font-weight: 500; }
-  .chips { display: flex; flex-wrap: nowrap; gap: 0; padding: 0 6px 4px; border-top: 1px solid rgba(255,255,255,.06); }
-  .chip { flex: 1 1 0; min-width: 0; height: 28px; padding: 0 6px; border-radius: 8px; border: 0; background: transparent; color: var(--tx3); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .12s, background .12s; }
+  .chips { display: flex; flex-wrap: nowrap; gap: 0; padding: 0; border-top: 1px solid rgba(255,255,255,.06); }
+  .chip { flex: 1 1 0; min-width: 0; height: 32px; padding: 0 6px; border-radius: 0; border: 0; background: transparent; color: var(--tx3); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .12s, background .12s; }
   .chip:hover { background: var(--hov); color: var(--tx); }
   .chip.active { background: transparent; color: var(--tx); border-color: transparent; font-weight: 700; }
   .chip.soon { opacity: .5; cursor: default; }
