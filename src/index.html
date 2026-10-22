@@ -919,14 +919,15 @@
   @media (prefers-reduced-motion: reduce) { #tabs button.has-req { animation: none; color: #4ADE9A; } }
   .reqv { flex: 1 1 auto; min-width: 0; padding: 0 0 0 var(--gutter); display: flex; flex-direction: column; gap: var(--sp-3); }
   .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .rq-acts .pbtn { height: 34px; font-size: 12.5px; }
-  .rq-sm { height: 30px; padding: 0 12px; border-radius: 15px; border: 0; background: var(--hov); color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
+  /* Кнопки в шапке заказов — одного размера и формы */
+  .rq-acts .pbtn, .rq-acts .rq-sm { height: 32px; padding: 0 12px; border-radius: var(--r-ctl); font: 600 12.5px Onest, sans-serif; }
+  .rq-sm { height: 32px; padding: 0 12px; border-radius: var(--r-ctl); border: 0; background: var(--hov); color: var(--tx2); font: 600 12.5px Onest, sans-serif; cursor: pointer; }
   .rq-sm:hover { color: var(--tx); border-color: var(--ln3); }
   .rq-sm.hl { background: rgba(var(--acr),.16); color: var(--ac2); border-color: transparent; }
   .rq-svc { font-size: 12px; color: var(--tx4); display: flex; gap: 8px; align-items: center; }
   .rq-svc i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; background: var(--tx5); }
   .rq-svc i.ok { background: #4ADE9A; } .rq-svc i.bad { background: #FF5A52; }
-  .rq-sum { background: var(--bg3); border: 0; border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--tx2); line-height: 1.55; }
+  .rq-sum { background: var(--bg3); border: 0; border-radius: var(--r-card); padding: 10px 14px; font-size: 13px; color: var(--tx2); line-height: 1.55; }
   .rq-sum b { color: var(--tx); font-weight: 600; }
   .rq-sum .g { color: #4ADE9A; } .rq-sum .y { color: #FFD43B; } .rq-sum .r { color: #FF8A84; }
   .rq-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
@@ -958,12 +959,12 @@
   .rq-lv { font: 700 11px Onest, sans-serif; letter-spacing: .04em; }
   .rq-it.ex .rq-lv { color: #4ADE9A; } .rq-it.db .rq-lv { color: #FFD43B; } .rq-it.rj .rq-lv { color: #FF8A84; }
   .rq-tr { display: flex; gap: 10px; align-items: center; min-width: 0; }
-  .rq-tr img, .rq-tr .ph { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--bg4); flex: 0 0 auto; }
+  .rq-tr img, .rq-tr .ph { width: 40px; height: 40px; border-radius: var(--r-ctl); object-fit: cover; background: var(--bg4); flex: 0 0 auto; }
   .rq-tr .tm { min-width: 0; flex: 1; }
   .rq-tr .tt { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rq-tr .ts { font-size: 12px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rq-fl { display: flex; gap: 6px; flex-wrap: wrap; }
-  .rq-fl span { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: rgba(255,212,59,.14); color: #FFD43B; }
+  .rq-fl span { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-ctl); background: rgba(255,212,59,.14); color: #FFD43B; }
   .rq-fl span.rj { background: rgba(255,90,82,.16); color: #FF8A84; }
   .rq-fl span.pay { background: rgba(255,184,107,.14); color: #FFB86B; }
   .rq-b { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -986,8 +987,8 @@
   .site-ov .box { width: min(820px, 92vw); height: min(780px, 88vh); background: var(--bg1); border: 0; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
   .site-ov .bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--ln); font-weight: 600; }
   .site-ov iframe { flex: 1; border: 0; background: #fff; }
-  .rq-test { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--bg3); border: 0; border-radius: 12px; padding: 10px 12px; }
-  .rq-test input { height: 34px; border-radius: 9px; border: 0; background: var(--bg0); color: var(--tx); padding: 0 10px; font: 500 13px Onest, sans-serif; outline: none; }
+  .rq-test { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--bg3); border: 0; border-radius: var(--r-card); padding: 10px 12px; }
+  .rq-test input { height: 34px; border-radius: var(--r-ctl); border: 0; background: var(--bg0); color: var(--tx); padding: 0 10px; font: 500 13px Onest, sans-serif; outline: none; }
   .rq-test input:focus { border-color: var(--ac); }
 </style>
 </head>
@@ -1045,9 +1046,8 @@
       <div class="plview" id="searchPl" hidden></div>
     </section>
 
-    <section class="view reqv" id="viewReq" hidden aria-label="Заказы со стрима">
+    <section class="view reqv" id="viewReq" hidden aria-label="Заказы">
       <div class="col-head">
-        <h2>Заказы со стрима</h2>
         <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
       </div>
       <div class="rq-sum" id="rqSum" hidden></div>
