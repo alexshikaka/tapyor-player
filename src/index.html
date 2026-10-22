@@ -1036,7 +1036,9 @@
   html.skin-crt .pbtn.y { box-shadow: 0 0 0 2px var(--pri), 0 0 20px rgba(0,229,255,.35); }
   html.skin-crt .card, html.skin-crt .queue-col { box-shadow: inset 0 0 0 2px var(--ln), 0 0 26px rgba(255,45,149,.12); }
   html.skin-crt .chip.active .dot { box-shadow: 0 0 12px 3px rgba(0,229,255,.9); }  /* Оформление: переключатель «Темы / Оболочки» и карточки оболочек */
-  .look-tabs { margin-bottom: 16px; }
+  /* Оформление: два блока на одной странице вместо подвкладок */
+  .look-group + .look-group { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--ln2); }
+  .look-h { font: 700 15px Onest, sans-serif; margin-bottom: 6px; }
   .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 12px; }
   .skin-c { position: relative; border: 2px solid var(--ln); border-radius: 12px; padding: 6px; background: transparent; color: var(--tx); text-align: left; cursor: pointer; font: 600 12.5px Onest, sans-serif; }
   .skin-c:hover { border-color: var(--ln3); }
@@ -1327,17 +1329,11 @@
           </section>
 
           <section id="sLook">
-            <div class="sec-h"><h2>Оформление</h2><span>Темы, оболочки и редактор</span></div>
+            <div class="sec-h"><h2>Оформление</h2><span>Оболочки, темы и редактор</span></div>
             <div class="card" style="padding:18px 20px">
-              <div class="te-seg look-tabs" id="lookTabs">
-                <button data-look="themes" class="on">Темы</button>
-                <button data-look="skins">Оболочки</button>
-              </div>
-              <div id="lookThemes">
-                <div class="te-list" id="teList"></div>
-                <div class="te" id="teEd" hidden></div>
-              </div>
-              <div id="lookSkins" hidden>
+              <div class="look-group">
+                <div class="look-h">Оболочки</div>
+                <div class="te-note" style="margin-top:0">Пиксель-арт стиль поверх приложения: жёсткие углы, фаски, свои шрифты. Включение оболочки выключает цветовую тему.</div>
                 <div class="skin-grid" id="skinGrid"></div>
                 <div class="skin-soft" id="skinAdjRow" hidden>
                   <div class="adj"><span>Яркость</span><input type="range" data-adj="b" min="20" max="100" value="100" aria-label="Яркость оболочки"><b data-adjv="b">100%</b></div>
@@ -1349,7 +1345,12 @@
                     <button data-preset="72,55,82">Ночь</button>
                   </div>
                 </div>
-                <div class="te-note">Оболочка — это пиксель-арт стиль: жёсткие углы, фаски, скан-линии и пиксельные шрифты. Цвета темы в ней не используются, поэтому оболочка и тема взаимоисключающие.</div>
+              </div>
+              <div class="look-group">
+                <div class="look-h">Цветовая тема</div>
+                <div class="te-note" style="margin-top:0">Цвета интерфейса. Выбор темы выключает оболочку.</div>
+                <div class="te-list" id="teList"></div>
+                <div class="te" id="teEd" hidden></div>
               </div>
             </div>
           </section>
@@ -1778,13 +1779,6 @@
       var b = e.target.closest('[data-skin]'); if (!b) return;
       applySkin(b.dataset.skin || '', true);
       toast(b.dataset.skin ? 'Оболочка включена' : 'Оболочка выключена');
-    });
-    var tabs = $('lookTabs');
-    if (tabs) tabs.addEventListener('click', function (e){
-      var b = e.target.closest('button[data-look]'); if (!b) return;
-      Array.prototype.forEach.call(tabs.children, function (x){ x.classList.toggle('on', x === b); });
-      $('lookThemes').hidden = b.dataset.look !== 'themes';
-      $('lookSkins').hidden = b.dataset.look !== 'skins';
     });
     var box = $('skinAdjRow');
     if (box) {
