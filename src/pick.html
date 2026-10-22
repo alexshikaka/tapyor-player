@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Взять цвет с экрана</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: transparent; cursor: crosshair; }
+  canvas.screen { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .dim { position: fixed; inset: 0; background: rgba(0,0,0,.18); pointer-events: none; }
+  .loupe {
+    position: fixed; width: 168px; height: 168px; border-radius: 50%; pointer-events: none;
+    box-shadow: 0 0 0 2px #fff, 0 8px 30px rgba(0,0,0,.55); background: #000;
+    display: none; overflow: hidden;
+  }
+  .loupe.on { display: block; }
+  .loupe canvas { width: 100%; height: 100%; display: block; }
+  .hex {
+    position: fixed; pointer-events: none; padding: 6px 10px; border-radius: 8px;
+    background: rgba(20,22,27,.92); color: #fff; font: 600 13px 'JetBrains Mono', Consolas, monospace;
+    box-shadow: 0 4px 18px rgba(0,0,0,.5); display: none; white-space: nowrap;
+  }
+  .hex.on { display: block; }
+  .hint {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); pointer-events: none;
+    padding: 10px 16px; border-radius: 10px; background: rgba(20,22,27,.92); color: #E7E9EE;
+    font: 500 13px 'Segoe UI', system-ui, sans-serif; box-shadow: 0 6px 26px rgba(0,0,0,.5);
+  }
+  .hint b { color: #FFD43B; }
+</style>
+</head>
+<body>
+<canvas class="screen" id="screen"></canvas>
+<div class="dim"></div>
+<div class="loupe" id="loupe"><canvas id="zoom" width="336" height="336"></canvas></div>
+<div class="hex" id="hex">#000000</div>
+<div class="hint">Двигай мышью по любому месту экрана, <b>клик</b> — взять цвет, <b>Esc</b> — отмена</div>
+<script>
+(async function(){
+  var api = window.pickApi;
+  if (!api) return;
+  var data = await api.init();
+  if (!data || !data.dataUrl) { api.done(null); return; }
+
+  var img = new Image();
+  await new Promise(function(res, rej){ img.onload = res; img.onerror = rej; img.src = data.dataUrl; });
+  var scale = data.scale || 1;                       // физические пиксели на CSS-пиксель
+  var base = document.createElement('canvas');
+  base.width = img.naturalWidth; base.height = img.naturalHeight;
+  var bctx = base.getContext('2d', { willReadFrequently: true });
+  bctx.drawImage(img, 0, 0);
+
+  var screenCv = document.getElementById('screen');
+  var sctx = screenCv.getContext('2d');
+  var loupe = document.getElementById('loupe');
+  var zoomCv = document.getElementById('zoom');
+  var zctx = zoomCv.getContext('2d');
+  var hexEl = document.getElementById('hex');
+  var ZOOM = 8, LOUPE = 168;
+
+  function fit(){
+    var dpr = window.devicePixelRatio || 1;
+    screenCv.width = Math.round(window.innerWidth * dpr);
+    screenCv.height = Math.round(window.innerHeight * dpr);
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sctx.imageSmoothingEnabled = true;
+    sctx.drawImage(base, 0, 0, window.innerWidth, window.innerHeight);
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  function rgb2hex(r, g, b){
+    return '#' + [r, g, b].map(function(v){ var s = v.toString(16).toUpperCase(); return s.length === 1 ? '0' + s : s; }).join('');
+  }
+
+  function sample(cx, cy){
+    var px = Math.max(0, Math.min(base.width - 1, Math.round(cx * scale)));
+    var py = Math.max(0, Math.min(base.height - 1, Math.round(cy * scale)));
+    var d = bctx.getImageData(px, py, 1, 1).data;
+    return { r: d[0], g: d[1], b: d[2], px: px, py: py };
+  }
+
+  function move(e){
+    var cx = e.clientX, cy = e.clientY;
+    var c = sample(cx, cy);
+    hexEl.textContent = rgb2hex(c.r, c.g, c.b);
+    hexEl.classList.add('on');
+
+    // лупа: 168 px круг, внутри увеличение 8x с центром в курсоре
+    var half = LOUPE / 2;
+    var left = cx + 24, top = cy - LOUPE - 24;
+    if (left + LOUPE > window.innerWidth - 8) left = cx - LOUPE - 24;
+    if (top < 8) top = cy + 24;
+    loupe.style.left = left + 'px';
+    loupe.style.top = top + 'px';
+    loupe.classList.add('on');
+
+    var srcX = c.px - half / ZOOM, srcY = c.py - half / ZOOM;
+    zctx.imageSmoothingEnabled = false;
+    zctx.clearRect(0, 0, zoomCv.width, zoomCv.height);
+    zctx.drawImage(base, srcX, srcY, LOUPE / ZOOM, LOUPE / ZOOM, 0, 0, zoomCv.width, zoomCv.height);
+
+    // перекрестие в центре лупы
+    zctx.strokeStyle = 'rgba(0,0,0,.55)'; zctx.lineWidth = 2;
+    zctx.strokeRect(zoomCv.width / 2 - 8, zoomCv.height / 2 - 8, 16, 16);
+    zctx.strokeStyle = '#fff'; zctx.lineWidth = 1;
+    zctx.strokeRect(zoomCv.width / 2 - 7, zoomCv.height / 2 - 7, 14, 14);
+
+    // подпись HEX рядом с курсором
+    hexEl.style.left = (cx + 18) + 'px';
+    hexEl.style.top = (cy + 18) + 'px';
+  }
+
+  window.addEventListener('mousemove', move);
+  window.addEventListener('mousedown', function(e){
+    if (e.button !== 0) { api.done(null); return; }
+    var c = sample(e.clientX, e.clientY);
+    api.done(rgb2hex(c.r, c.g, c.b));
+  });
+  window.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') api.done(null);
+  });
+  window.addEventListener('contextmenu', function(e){ e.preventDefault(); api.done(null); });
+})();
+</script>
+</body>
+</html>

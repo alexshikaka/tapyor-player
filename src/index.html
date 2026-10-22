@@ -880,6 +880,9 @@
   .te-row > span:first-child { width: 120px; color: var(--tx3); flex: 0 0 auto; }
   .te-row input[type=color] { width: 30px; height: 30px; border: 0; border-radius: 8px; padding: 0; background: none; cursor: pointer; }
   .te-row input[type=color]::-webkit-color-swatch-wrapper { padding: 0; } .te-row input[type=color]::-webkit-color-swatch { border: 0; border-radius: 7px; }
+  .te-pick { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: var(--bg3); color: var(--tx2); cursor: pointer; padding: 0; }
+  .te-pick:hover { background: var(--bg4); color: var(--ac2); }
+  .te-pick:active { transform: translateY(1px); }
   .te-hex, .te-name { font: 12px 'JetBrains Mono', monospace; color: var(--tx2); background: var(--bg0); border: 0; border-radius: 7px; padding: 6px 8px; width: 84px; }
   .te-name { font-family: Onest, sans-serif; font-size: 13px; width: 220px; }
   .te-hex:focus, .te-name:focus { outline: none; border-color: var(--ac); }
@@ -3628,7 +3631,7 @@ window.onerror = function(msg, src, line){
       '<div class="te-row"><span>Название</span><input class="te-name" id="teName" maxlength="40" value="' + esc(t.name || '') + '"></div>' +
       '<div class="te-row"><span>Основа</span><div class="te-seg" id="teMode"><button data-v="dark"' + (t.mode !== 'light' ? ' class="on"' : '') + '>Тёмная</button><button data-v="light"' + (t.mode === 'light' ? ' class="on"' : '') + '>Светлая</button></div></div>';
     TE_COLORS.forEach(function (c){
-      h += '<div class="te-row"><span>' + c[1] + '</span><input type="color" data-tc="' + c[0] + '" value="' + esc(t[c[0]]) + '" aria-label="' + c[1] + '"><input class="te-hex" data-th="' + c[0] + '" id="teHex_' + c[0] + '" value="' + esc(t[c[0]]) + '" maxlength="7" spellcheck="false"></div>';
+      h += '<div class="te-row"><span>' + c[1] + '</span><input type="color" data-tc="' + c[0] + '" value="' + esc(t[c[0]]) + '" aria-label="' + c[1] + '"><button class="te-pick" data-pick="' + c[0] + '" title="Взять цвет с любого места экрана" aria-label="Пипетка"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3l2 2-9.5 9.5-2-2L19 3z"/><path d="M11.5 13.5L4 21H2v-2l7.5-7.5"/></svg></button><input class="te-hex" data-th="' + c[0] + '" id="teHex_' + c[0] + '" value="' + esc(t[c[0]]) + '" maxlength="7" spellcheck="false"></div>';
     });
     h += '<div class="te-row"><span>Контраст</span><input class="te-rng" id="teContrast" type="range" min="0" max="100" value="' + (t.contrast == null ? 50 : t.contrast) + '"><span id="teCv" style="width:70px;color:var(--tx4)">' + contrastWord(t.contrast) + '</span></div>' +
       '<div class="te-note">Остальные ~20 оттенков (колонки, рамки, подсказки, наведение) Тапёр строит сам и следит, чтобы текст читался.</div>' +
@@ -3695,6 +3698,18 @@ window.onerror = function(msg, src, line){
     }
   });
   // События редактора
+// Пипетка: берём цвет с любого места экрана и подставляем в строку цвета
+$('teEd').addEventListener('click', async function(e){
+  var btn = e.target.closest('[data-pick]');
+  if (!btn) return;
+  e.preventDefault();
+  if (!A.pickColor) return;
+  var col = await A.pickColor();
+  if (!col) return;
+  var key = btn.dataset.pick;
+  var inp = document.querySelector('[data-tc="' + key + '"]');
+  if (inp) { inp.value = col; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+});
   $('teEd').addEventListener('input', function(e){
     var t = themeById(curThemeId); if (!t) return;
     var el = e.target;

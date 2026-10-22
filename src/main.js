@@ -613,6 +613,54 @@ function startServer(preferredPort) {
   }));
 }
 
+// ── Пипетка по всему экрану ────────────────────────────────────────────────
+// Обычная <input type="color"> в Electron показывает лупу только внутри окна.
+// Здесь снимаем весь экран и открываем прозрачное окно-оверлей во весь монитор:
+// лупа ездит под курсором по любым приложениям, клик забирает цвет.
+const { screen, desktopCapturer } = require('electron');
+let pickSession = null;
+
+async function pickScreenColor() {
+  const point = screen.getCursorScreenPoint();
+  const display = screen.getDisplayNearestPoint(point);
+  const scale = display.scaleFactor || 1;
+  const thumbW = Math.round(display.size.width * scale);
+  const thumbH = Math.round(display.size.height * scale);
+  const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: thumbW, height: thumbH } });
+  const src = sources.find((s) => String(s.display_id) === String(display.id)) || sources[0];
+  if (!src || src.thumbnail.isEmpty()) return null;
+  pickSession = { dataUrl: src.thumbnail.toDataURL(), scale };
+
+  return await new Promise((resolve) => {
+    const win = new BrowserWindow({
+      x: display.bounds.x, y: display.bounds.y,
+      width: display.size.width, height: display.size.height,
+      frame: false, transparent: true, backgroundColor: '#00000000',
+      alwaysOnTop: true, skipTaskbar: true, resizable: false, movable: false,
+      minimizable: false, maximizable: false, fullscreenable: false, hasShadow: false,
+      show: false, enableLargerThanScreen: true,
+      webPreferences: { preload: path.join(__dirname, 'pick-preload.js'), contextIsolation: true, sandbox: false }
+    });
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    win.loadFile(path.join(__dirname, 'pick.html'));
+    win.once('ready-to-show', () => { win.show(); win.focus(); });
+
+    let finished = false;
+    const finish = (val) => {
+      if (finished) return;
+      finished = true;
+      try { ipcMain.removeListener('pick-done', onDone); } catch (e) {}
+      try { if (!win.isDestroyed()) win.close(); } catch (e) {}
+      pickSession = null;
+      resolve(val);
+    };
+    const onDone = (e, val) => { if (e.sender === win.webContents) finish(val); };
+    ipcMain.on('pick-done', onDone);
+    win.on('closed', () => { if (!finished) { finished = true; ipcMain.removeListener('pick-done', onDone); pickSession = null; resolve(null); } });
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -942,6 +990,11 @@ app.whenReady().then(async () => {
   const settingsPath = () => path.join(app.getPath('userData'), 'settings.json');
   const readSettings = () => { try { return JSON.parse(fs.readFileSync(settingsPath(), 'utf8')); } catch (e) { return {}; } };
   // Виджет OBS: адрес страницы и поток состояния из окна приложения
+// Пипетка: окно приложения просит цвет с любого места экрана
+ipcMain.handle('pick-color', async () => {
+  try { return await pickScreenColor(); } catch (e) { log('пипетка: ' + e.message); return null; }
+});
+ipcMain.handle('pick-init', () => pickSession || null);
 ipcMain.handle('widget-url', () => (serverPort ? 'http://127.0.0.1:' + serverPort + '/widget' : ''));
 ipcMain.on('widget-state', (e, st) => {
   if (st && typeof st === 'object') {

@@ -113,6 +113,8 @@ contextBridge.exposeInMainWorld('app', {
   onHotkey: (cb) => ipcRenderer.on('hotkey', (e, action) => cb(action)),
   hotkeysPause: (paused) => ipcRenderer.invoke('hotkeys-pause', paused),
   hotkeysStatus: () => ipcRenderer.invoke('hotkeys-status'),
+  // Пипетка по всему экрану
+  pickColor: () => ipcRenderer.invoke('pick-color'),
   // Виджет для OBS
   widgetUrl: () => ipcRenderer.invoke('widget-url'),
   widgetPush: (state) => ipcRenderer.send('widget-state', state),
