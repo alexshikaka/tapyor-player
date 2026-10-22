@@ -1062,7 +1062,16 @@
   html.skin-dos .wavecard .wtitle .t, html.skin-dos .wavecard .t { color: #000000; }
   html.skin-dos .queue-col .qhead h2 { color: #000000; }
   html.skin-crt .pbtn.y { color: var(--prit); }
-  html.skin-crt .cbtn.play { box-shadow: 0 0 0 2px var(--pri), 0 0 18px rgba(0,229,255,.45); }</style>
+  html.skin-crt .cbtn.play { box-shadow: 0 0 0 2px var(--pri), 0 0 18px rgba(0,229,255,.45); }  /* Доводка «Неон-скана»: свечение, неоновая кнопка play, чёткие акценты */
+  html.skin-crt nav button.active { text-shadow: 0 0 10px rgba(255,45,149,.85), 0 0 24px rgba(255,45,149,.45); }
+  html.skin-crt .chip.active { text-shadow: 0 0 12px rgba(0,229,255,.55); }
+  html.skin-crt .sec-h h2, html.skin-crt .qhead h2 { text-shadow: 0 0 12px rgba(255,45,149,.45); }
+  html.skin-crt .cbtn.play { background: var(--pri); color: #08080f; box-shadow: 0 0 0 2px rgba(0,229,255,.85), 0 0 26px rgba(0,229,255,.55); }
+  html.skin-crt .searchbar { box-shadow: inset 0 0 0 2px var(--ln3), 0 0 20px rgba(0,229,255,.10); }
+  html.skin-crt .queue-col { box-shadow: inset 0 0 0 2px var(--ln), 0 0 30px rgba(255,45,149,.20); }
+  html.skin-crt .wavecard { box-shadow: inset 0 0 0 2px var(--ln), 0 0 22px rgba(0,229,255,.10); }
+  html.skin-crt .pbtn.y { text-shadow: none; }
+  html.skin-crt .cbtn.play svg { filter: drop-shadow(0 0 6px rgba(0,229,255,.9)); }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
