@@ -1096,6 +1096,18 @@
   .skin-c { position: relative; border: 2px solid var(--ln); border-radius: 12px; padding: 6px; background: transparent; color: var(--tx); text-align: left; cursor: pointer; font: 600 12.5px Onest, sans-serif; }
   .skin-c:hover { border-color: var(--ln3); }
   .skin-c.on { border-color: var(--ac); }
+  /* Блок цветовой схемы оболочки */
+  .skin-scheme { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ln2); }
+  .skin-scheme .adj { max-width: 420px; }
+  .skin-core { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .sc-item { display: flex; align-items: center; gap: 7px; padding: 5px 9px 5px 6px; border: 1px solid var(--ln2);
+    border-radius: 10px; background: var(--bg2); color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
+  .sc-item:hover { border-color: var(--ln3); color: var(--tx); }
+  .sc-sw { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--ln3); flex: 0 0 auto; }
+  .sc-item b { font: 500 11px 'JetBrains Mono', monospace; color: var(--tx4); text-transform: uppercase; }
+  .sc-reset { margin-left: auto; height: 30px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--ln2);
+    background: transparent; color: var(--tx3); font: 600 12px Onest, sans-serif; cursor: pointer; }
+  .sc-reset:hover { color: var(--tx); border-color: var(--ln3); }
   .skin-c b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .skin-c small { display: block; color: var(--tx4); font-weight: 500; font-size: 11px; margin-top: 3px; }
   .skin-pv { position: relative; height: 62px; margin-bottom: 8px; overflow: hidden; }
@@ -1163,6 +1175,49 @@
   html.skin-retro body::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .35;
     background-image: repeating-conic-gradient(#1f1f23 0 25%, #17171a 0 50%); background-size: 4px 4px; }
   html.skin-retro .app-shell { position: relative; z-index: 1; }
+
+  /* 5. Афиша — стеклянные панели, крупные радиусы и акцент из палитры.
+     Референс: тёмно-красный плеер с большой фотографией артиста, стеклянным поиском
+     и скруглёнными карточками. Цвета приходят из схемы (--bg0, --accent...), поэтому
+     оболочка сразу работает во всех четырёх схемах и в «СВОЕЙ». */
+  html.skin-afisha { --r-panel: 22px; --r-card: 18px; --r-ctl: 12px; }
+  html.skin-afisha .app-shell {
+    background: radial-gradient(120% 130% at 84% -14%, var(--bg2) 0%, var(--bg1) 32%, var(--bg0) 66%, var(--bg00) 100%);
+    border-radius: 0 0 22px 22px;
+  }
+  html.skin-afisha .card, html.skin-afisha .queue-col, html.skin-afisha .searchbar, html.skin-afisha .set-main,
+  html.skin-afisha .wavecard, html.skin-afisha .br-wrap {
+    background: rgba(255,255,255,.045) !important;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 18px;
+    box-shadow: 0 20px 46px rgba(0,0,0,.40);
+    backdrop-filter: blur(14px);
+  }
+  html.skin-afisha .qrow, html.skin-afisha .row, html.skin-afisha .rq, html.skin-afisha .disc {
+    background: rgba(255,255,255,.06);
+    border-radius: 14px;
+  }
+  html.skin-afisha .qrow:hover, html.skin-afisha .row:hover { background: rgba(255,255,255,.10); }
+  html.skin-afisha .pbtn, html.skin-afisha .rq-sm, html.skin-afisha .chip, html.skin-afisha .cbtn {
+    border-radius: 999px;
+  }
+  html.skin-afisha .pbtn.y, html.skin-afisha .upd-go {
+    background: var(--pri);
+    color: #fff;
+    box-shadow: 0 10px 26px rgba(0,0,0,.42);
+    text-shadow: 0 1px 2px rgba(0,0,0,.25);
+  }
+  html.skin-afisha .pbtn.y:hover { filter: brightness(1.08); }
+  html.skin-afisha .searchbar, html.skin-afisha .searchbar input, html.skin-afisha .searchbar .field {
+    border-radius: 999px;
+  }
+  html.skin-afisha .searchbar { padding-left: 18px; }
+  html.skin-afisha nav button.active { background: rgba(255,255,255,.12); border-radius: 999px; }
+  html.skin-afisha .art-n img, html.skin-afisha .cov, html.skin-afisha .q-art img { border-radius: 14px; }
+  html.skin-afisha footer { background: transparent; border-top: 1px solid rgba(255,255,255,.09); }
+  html.skin-afisha .cbtn.play { background: var(--pri); color: #fff; box-shadow: 0 0 0 6px rgba(255,255,255,.06); }
+  html.skin-afisha .sec-h h2 { letter-spacing: -.01em; }
+  html.skin-afisha .set-side button { border-radius: 12px; }
   /* Наборы шрифтов: можно взять шрифт одной оболочки, оставив другую.
      Двойной класс нужен, чтобы перебить правила кожи по специфичности. */
   html.font-mono.font-mono *, html.font-mono.font-mono body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
@@ -1355,6 +1410,12 @@
                 <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
                 <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
                 <div class="adj adj-font"><span>Шрифт</span><select class="field skin-font-sel" id="skinFontSel" aria-label="Шрифт оболочки"></select></div>
+              </div>
+
+              <div class="skin-scheme" id="skinSchemeRow" hidden>
+                <div class="adj adj-font"><span>Цветовая схема</span><select class="field" id="skinSchemeSel" aria-label="Цветовая схема оболочки"></select></div>
+                <div class="skin-core" id="skinCoreRow"></div>
+                <div class="te-note" style="margin-top:0">Основные цвета оболочки. Поменяешь любой — схема станет «СВОЯ».</div>
               </div>
 
               <div id="lookThemes">
@@ -1851,11 +1912,198 @@ window.onerror = function(msg, src, line){
   })();
   // ===== Оболочки в стиле пиксель-арт =====
   var SKINS = [
-    { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0' },
-    { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' },
-    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca' }
+    { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0', pixel: true },
+    { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff', pixel: true },
+    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca', pixel: true },
+    { id: 'afisha', name: 'Афиша', sub: 'стекло и красный градиент', tag: 'новое', bg: '#1a0705', card: '#2a0d0a', line: '#5a1d18', txt: '#f6edea', btn: '#e04a4a', pixel: false }
   ];
   var curSkin = '', skinAdj = { b: 100, s: 100, c: 100 };
+  // ── Цветовые схемы оболочек ────────────────────────────────────────────────
+  // У каждой оболочки есть «основные цвета» (ядро) и 4 готовые схемы.
+  // Меняешь любой основной цвет руками — схема становится «СВОЯ».
+  // Из ядра выводятся все CSS-переменные оболочки (см. skinVarsFromCore).
+  var SKIN_CORE = [
+    { k: 'bg',      n: 'Фон' },
+    { k: 'panel',   n: 'Панели' },
+    { k: 'surface', n: 'Поверхности' },
+    { k: 'line',    n: 'Границы' },
+    { k: 'text',    n: 'Текст' },
+    { k: 'accent',  n: 'Акцент' },
+    { k: 'button',  n: 'Кнопки' }
+  ];
+  var SKIN_SCHEMES = {
+    dos: [
+      { id: 'classic', name: 'Классика VGA', core: { bg: '#007878', panel: '#C0C0C0', surface: '#D0D0D0', line: '#808080', text: '#000000', accent: '#000080', button: '#C0C0C0' } },
+      { id: 'norton',  name: 'Нортон',        core: { bg: '#202020', panel: '#303030', surface: '#3A3A3A', line: '#5A5A5A', text: '#D8D8D8', accent: '#A8D8A8', button: '#B8B8B8' } },
+      { id: 'amber',   name: 'Янтарь',        core: { bg: '#2A1C00', panel: '#3A2A08', surface: '#46330B', line: '#7A5A18', text: '#FFCC66', accent: '#FFB000', button: '#C08A20' } },
+      { id: 'turbo',   name: 'Турбо-синий',   core: { bg: '#000A2A', panel: '#0A1A44', surface: '#102458', line: '#2A4A9A', text: '#D6E4FF', accent: '#4A8AFF', button: '#2A5AC0' } }
+    ],
+    crt: [
+      { id: 'neon',   name: 'Неон',          core: { bg: '#0B0B12', panel: '#12101E', surface: '#191527', line: '#3A2F5C', text: '#F2EEFF', accent: '#FF2D95', button: '#00E5FF' } },
+      { id: 'phosphor', name: 'Зелёный фосфор', core: { bg: '#04100A', panel: '#071A12', surface: '#0A2418', line: '#1F5A3A', text: '#CFFFE4', accent: '#33FF99', button: '#33FF99' } },
+      { id: 'ambercrt', name: 'Янтарный ЭЛТ', core: { bg: '#120B04', panel: '#1C1208', surface: '#24180C', line: '#5A3A12', text: '#FFE7C2', accent: '#FFAE33', button: '#FFC766' } },
+      { id: 'bluecrt',  name: 'Синий ЭЛТ',   core: { bg: '#050A18', panel: '#08122A', surface: '#0C1938', line: '#24406E', text: '#DCEBFF', accent: '#4DA6FF', button: '#7FD0FF' } }
+    ],
+    retro: [
+      { id: 'graphite', name: 'Графит',       core: { bg: '#1B1B1E', panel: '#26262A', surface: '#303035', line: '#5C5C64', text: '#E9E9EC', accent: '#8AA4C8', button: '#C6C6CA' } },
+      { id: 'win95',    name: 'Win 95',       core: { bg: '#008080', panel: '#C0C0C0', surface: '#D4D0C8', line: '#808080', text: '#000000', accent: '#000080', button: '#C0C0C0' } },
+      { id: 'plum',     name: 'Слива',        core: { bg: '#1E1420', panel: '#2A1C2E', surface: '#35243A', line: '#5E4066', text: '#F0E6F2', accent: '#C08AD8', button: '#D6C6DA' } },
+      { id: 'olive',    name: 'Олива',        core: { bg: '#15180F', panel: '#1F2416', surface: '#2A301D', line: '#4E5A36', text: '#EEF2E2', accent: '#A8C86A', button: '#C6CEB4' } }
+    ],
+    afisha: [
+      { id: 'red',     name: 'Красная афиша', core: { bg: '#1A0705', panel: '#2A0D0A', surface: '#351210', line: '#5A1D18', text: '#F6EDEA', accent: '#E04A4A', button: '#E04A4A' } },
+      { id: 'blue',    name: 'Синяя ночь',    core: { bg: '#060A16', panel: '#0C1426', surface: '#121C33', line: '#24365A', text: '#E8EEF8', accent: '#4A7BF0', button: '#4A7BF0' } },
+      { id: 'emerald', name: 'Изумруд',       core: { bg: '#04120D', panel: '#081F16', surface: '#0C2A1E', line: '#1E4A38', text: '#E6F7EF', accent: '#2FBF80', button: '#2FBF80' } },
+      { id: 'amber',   name: 'Янтарь',        core: { bg: '#150E04', panel: '#221708', surface: '#2E1F0B', line: '#5A3D14', text: '#F8EEDD', accent: '#E0A03A', button: '#E0A03A' } }
+    ]
+  };
+  var curSkinScheme = {};   // id оболочки → id схемы | 'custom'
+  var curSkinCore = {};     // id оболочки → свои цвета (когда 'custom')
+  function skinSchemeList(id){ return SKIN_SCHEMES[id] || []; }
+  function skinSchemeById(id, sid){ var a = skinSchemeList(id); for (var i = 0; i < a.length; i++) if (a[i].id === sid) return a[i]; return null; }
+  function skinDefaultCore(id){ var a = skinSchemeList(id); return a.length ? a[0].core : null; }
+  function skinCoreOf(id){
+    if (curSkinCore[id]) return curSkinCore[id];
+    var s = skinSchemeById(id, curSkinScheme[id]) || skinSchemeList(id)[0];
+    return s ? s.core : null;
+  }
+  // Ядро → все переменные оболочки. Правила: фоновые оттенки смешиваем с фоном,
+  // текст — ступени от основного к фону, акцент даёт ac2/acr/acbg.
+  function skinVarsFromCore(c){
+    if (!c) return null;
+    var dark = (function(){
+      var r = parseInt(String(c.text).slice(1, 3), 16) || 0;
+      var g = parseInt(String(c.text).slice(3, 5), 16) || 0;
+      var b = parseInt(String(c.text).slice(5, 7), 16) || 0;
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.55;
+    })();
+    var rgb = wgHex2rgb(c.accent);
+    return {
+      '--bg00': wgMix(c.bg, '#000000', dark ? 0.32 : 0.10),
+      '--bg0': c.bg,
+      '--bg1': c.panel,
+      '--bg2': c.surface,
+      '--bg3': wgMix(c.surface, c.text, 0.07),
+      '--bg4': wgMix(c.surface, c.text, 0.14),
+      '--ln': c.line,
+      '--ln2': wgMix(c.line, c.bg, 0.45),
+      '--ln3': wgMix(c.line, c.text, 0.30),
+      '--tx': c.text,
+      '--tx2': wgMix(c.text, c.bg, 0.16),
+      '--tx3': wgMix(c.text, c.bg, 0.32),
+      '--tx4': wgMix(c.text, c.bg, 0.48),
+      '--tx5': wgMix(c.text, c.bg, 0.62),
+      '--ac': c.accent,
+      '--ac2': wgMix(c.accent, '#FFFFFF', 0.28),
+      '--acr': rgb.join(','),
+      '--acbg': wgMix(c.panel, c.accent, 0.18),
+      '--pri': c.button,
+      '--prit': dark ? '#101013' : '#FFFFFF',
+      '--hov': dark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)'
+    };
+  }
+  var SKIN_VAR_KEYS = ['--bg00','--bg0','--bg1','--bg2','--bg3','--bg4','--ln','--ln2','--ln3','--tx','--tx2','--tx3','--tx4','--tx5','--ac','--ac2','--acr','--acbg','--pri','--prit','--hov'];
+  function clearSkinVars(){ var d = document.documentElement; SKIN_VAR_KEYS.forEach(function (k){ d.style.removeProperty(k); }); }
+  function applySkinVars(id){
+    var core = skinCoreOf(id); if (!core) return;
+    var v = skinVarsFromCore(core); if (!v) return;
+    var d = document.documentElement;
+    Object.keys(v).forEach(function (k){ d.style.setProperty(k, v[k]); });
+  }
+  function skinSchemesStore(){
+    var out = {};
+    Object.keys(curSkinScheme).forEach(function (id){
+      if (curSkinScheme[id] === 'custom' && curSkinCore[id]) out[id] = { id: 'custom', core: curSkinCore[id] };
+      else if (curSkinScheme[id]) out[id] = { id: curSkinScheme[id] };
+    });
+    return out;
+  }
+  function saveSkinSchemes(){
+    var data = skinSchemesStore();
+    try { localStorage.setItem('tapSkinSchemes', JSON.stringify(data)); } catch (e) {}
+    if (A.setSetting) A.setSetting('skinSchemes', data);
+  }
+  function loadSkinSchemes(data){
+    curSkinScheme = {}; curSkinCore = {};
+    if (!data) return;
+    Object.keys(data).forEach(function (id){
+      var v = data[id] || {};
+      if (v.id === 'custom' && v.core) { curSkinScheme[id] = 'custom'; curSkinCore[id] = v.core; }
+      else if (v.id) curSkinScheme[id] = v.id;
+    });
+  }
+  function setSkinScheme(id, sid, save){
+    if (!id) return;
+    curSkinScheme[id] = sid;
+    delete curSkinCore[id];
+    applySkinVars(id);
+    if (save) saveSkinSchemes();
+    renderSkinScheme();
+  }
+  function setSkinCoreColor(id, key, hex){
+    if (!id) return;
+    var core = Object.assign({}, skinCoreOf(id) || {});
+    core[key] = String(hex).toUpperCase();
+    curSkinCore[id] = core;
+    curSkinScheme[id] = 'custom';
+    applySkinVars(id);
+    saveSkinSchemes();
+    renderSkinScheme();
+  }
+  function resetSkinScheme(id){
+    var first = skinSchemeList(id)[0]; if (!first) return;
+    curSkinScheme[id] = first.id;
+    delete curSkinCore[id];
+    applySkinVars(id);
+    saveSkinSchemes();
+    renderSkinScheme();
+  }
+  function renderSkinScheme(){
+    var row = $('skinSchemeRow');
+    var sel = $('skinSchemeSel');
+    var box = $('skinCoreRow');
+    if (!row || !sel || !box) return;
+    row.hidden = !curSkin;
+    if (!curSkin) return;
+    var list = skinSchemeList(curSkin);
+    var custom = curSkinScheme[curSkin] === 'custom';
+    var opts = list.map(function (s){ return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('');
+    if (custom) opts += '<option value="custom">СВОЯ</option>';
+    sel.innerHTML = opts;
+    sel.value = custom ? 'custom' : (curSkinScheme[curSkin] || (list[0] && list[0].id) || '');
+    var core = skinCoreOf(curSkin) || {};
+    box.innerHTML = SKIN_CORE.map(function (c){
+      var hex = core[c.k] || '#000000';
+      return '<button class="sc-item" type="button" data-sc="' + c.k + '" title="' + c.n + ': ' + hex + '">' +
+        '<i class="sc-sw" style="background:' + hex + '"></i><span>' + c.n + '</span><b>' + hex + '</b></button>';
+    }).join('') + '<button class="sc-reset" type="button" id="skinSchemeReset" title="Вернуться к первой схеме">↺ Сбросить</button>';
+    sel.onchange = function(){
+      if (sel.value === 'custom') return;
+      setSkinScheme(curSkin, sel.value, true);
+      toast('Схема: ' + (skinSchemeById(curSkin, sel.value) || {}).name);
+    };
+    box.onclick = function(e){
+      var b = e.target.closest('[data-sc]');
+      if (b) {
+        var key = b.dataset.sc;
+        var name = (SKIN_CORE.filter(function (x){ return x.k === key; })[0] || {}).n || key;
+        var skin = skinById(curSkin);
+        colOpenFor((skin ? skin.name + ' · ' : '') + name, (core[key] || '#000000'), function (hex){
+          setSkinCoreColor(curSkin, key, hex);
+        }, function(){ renderSkinScheme(); });
+        return;
+      }
+      if (e.target.id === 'skinSchemeReset') resetSkinScheme(curSkin);
+    };
+  }
+  // Пипетка в блоке схем: применяем к выбранному основному цвету
+  function skinPickColor(){
+    var row = $('skinSchemeRow');
+    if (!row || row.hidden) return;
+    var key = row.dataset.pickKey;
+    if (!key) return;
+    A.pickColor && A.pickColor().then(function (hex){ if (hex) setSkinCoreColor(curSkin, key, hex); });
+  }
   // Набор шрифтов: '' — как в оболочке, иначе один из наборов
   var SKIN_FONTS = [
     { id: '', name: 'Как в оболочке' },
@@ -1905,6 +2153,7 @@ window.onerror = function(msg, src, line){
     var d = document.documentElement;
     if (SKINS) SKINS.forEach(function (s){ d.classList.remove('skin-' + s.id); });
     d.classList.remove('pixel-skin');
+    if (typeof clearSkinVars === 'function') clearSkinVars();
     curSkin = '';
   }
   // Применить оболочку; '' — выключить и вернуться к теме
@@ -1915,12 +2164,15 @@ window.onerror = function(msg, src, line){
       if (typeof clearCustomVars === 'function') clearCustomVars();
       d.classList.remove('theme-mono', 'theme-light');
       curSkin = s.id;
-      d.classList.add('pixel-skin', 'skin-' + s.id);
+      d.classList.add('skin-' + s.id);
+      if (s.pixel !== false) d.classList.add('pixel-skin');
+      if (typeof applySkinVars === 'function') applySkinVars(s.id);
       curThemeId = '';
     }
     try { localStorage.setItem('tapSkin', curSkin); } catch (e) {}
     if (save && A.setSetting) A.setSetting('skin', curSkin);
     // Без оболочки возвращаем выбранную тему
+    if (!s && typeof clearSkinVars === 'function') clearSkinVars();
     if (!s) applyTheme(themeLocal() || 'violet', false);
     renderSkinList();
     renderThemeList();
@@ -1942,6 +2194,7 @@ window.onerror = function(msg, src, line){
     }).join('');
     var row = $('skinAdjRow'); if (row) row.hidden = !curSkin;
     var themes = $('lookThemes'); if (themes) themes.hidden = !!curSkin;
+    if (typeof renderSkinScheme === 'function') renderSkinScheme();
     renderFontSeg();
     applySkinAdj(null, false);
   }
@@ -3738,7 +3991,7 @@ window.onerror = function(msg, src, line){
   // События редактора
 // ===== Современное окно выбора цвета =====
 // Системный диалог Electron рисует лупу только внутри окна, поэтому цвета выбираем своим окном.
-var COL = { key: null, h: 0, s: 0, v: 0, drag: false };
+var COL = { key: null, h: 0, s: 0, v: 0, drag: false, onPick: null, onClose: null };
 
 function colRgb(hex){
   var h = String(hex || '').replace('#', '');
@@ -3799,7 +4052,7 @@ function colSet(hex, silent){
   if ($('colB')) $('colB').value = Math.round(rgb.b);
   if ($('colHue')) $('colHue').value = Math.round(COL.h);
   colDrawSV();
-  COL.key && colApply(hx, silent);
+  if (COL.onPick) COL.onPick(hx); else if (COL.key) colApply(hx, silent);
 }
 
 function colApply(hex, silent){
@@ -3815,25 +4068,44 @@ function colApply(hex, silent){
 }
 
 function colOpen(key){
-  colBind();
   var inp = document.querySelector('[data-tc="' + key + '"]');
   if (!inp) return;
-  COL.key = key;
   var label = { bg: 'Фон', text: 'Текст', accent: 'Акцент', primary: 'Главная кнопка' };
-  if ($('colTitle')) $('colTitle').textContent = 'Цвет: ' + (label[key] || key);
+  colOpenFor('Цвет: ' + (label[key] || key), inp.value || '#000000', function (hex){
+    if (inp.value.toUpperCase() !== hex.toUpperCase()) {
+      inp.value = hex;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    var sw = document.querySelector('[data-tcopen="' + key + '"]');
+    if (sw) sw.style.background = hex;
+  });
+}
+
+// Универсальное открытие окна цвета: заголовок, начальный цвет и обработчик выбора
+function colOpenFor(title, hex, onPick, onClose){
+  colBind();
+  COL.key = null;
+  COL.onPick = onPick || null;
+  COL.onClose = onClose || null;
+  if ($('colTitle')) $('colTitle').textContent = title || 'Цвет';
   var box = $('colv');
+  if (!box) return;
   box.hidden = false;
-  colSet(inp.value || '#000000', true);
-  setTimeout(function(){ box.classList.add('on'); }, 10);
-  var hex = $('colHex'); if (hex) setTimeout(function(){ hex.focus(); hex.select(); }, 60);
+  colSet(hex || '#000000', true);
+  var inp = $('colHex'); if (inp) setTimeout(function(){ inp.focus(); inp.select(); }, 60);
   colPresets();
 }
 
-function colClose(){ var box = $('colv'); if (box) box.hidden = true; COL.key = null; }
+function colClose(){
+  var box = $('colv'); if (box) box.hidden = true;
+  COL.key = null;
+  var cb = COL.onClose; COL.onPick = null; COL.onClose = null;
+  if (typeof cb === 'function') try { cb(); } catch (e) {}
+}
 
 function colPresets(){
-  var box = $('colPresets'); if (!box || !COL.key) return;
-  var t = themeById(curThemeId);
+  var box = $('colPresets'); if (!box) return;
+  var t = curThemeId ? themeById(curThemeId) : null;
   var list = [];
   if (t) list = list.concat([t.bg, t.text, t.accent, t.primary].filter(Boolean));
   list = list.concat(['#0E0F13', '#15161C', '#1D1F26', '#272A33', '#FFFFFF', '#ECEDF2', '#9B87FF', '#284CB8', '#FFD43B', '#4ADE9A', '#FF5A52', '#16B1F3']);
@@ -3963,6 +4235,8 @@ $('teEd').addEventListener('click', async function(e){
     var id = A.getSetting ? await A.getSetting('theme') : null;
     applyTheme(id || themeLocal() || 'violet', false);
     var sk = (A.getSetting ? await A.getSetting('skin') : '') || (function (){ try { return localStorage.getItem('tapSkin') || ''; } catch (e) { return ''; } })();
+  var schemesRaw = (A.getSetting ? await A.getSetting('skinSchemes') : null) || (function (){ try { return JSON.parse(localStorage.getItem('tapSkinSchemes') || 'null'); } catch (e) { return null; } })();
+  if (schemesRaw) loadSkinSchemes(schemesRaw);
     if (sk) applySkin(sk, false);
     var adj = (A.getSetting ? await A.getSetting('skinAdj') : null);
     if (!adj || typeof adj !== 'object') { try { adj = JSON.parse(localStorage.getItem('tapSkinAdj') || 'null'); } catch (e) { adj = null; } }

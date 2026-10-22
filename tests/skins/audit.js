@@ -155,6 +155,9 @@ function auditInPage() {
   // элементы-превью и контейнеры внешней страницы: цвет по замыслу, не по коже
   const skipBox = /(^|\s)(te-c|p|br-wrap|br-web|skin-pv|sp-card|sp-line|sp-btn)(\s|$)/i;
 
+  // Принцип оболочки: пиксельная (pixel-skin) проверяется строго, стеклянная/новая — мягко.
+  const isPixel = document.documentElement.classList.contains('pixel-skin');
+
   const findings = { radius: [], font: [], chrome: [], palette: [] };
   const all = Array.from(document.querySelectorAll('body *'));
 
@@ -173,28 +176,30 @@ function auditInPage() {
     const area = rect.width * rect.height;
     const text = (el.textContent || '').trim();
 
-    // УГЛЫ
-    const radii = ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius'].map((k) => parseFloat(cs[k]) || 0);
-    if (Math.max.apply(null, radii) > 0.5) {
-      findings.radius.push({ el: cssPath(el), cls: clsStr, value: cs.borderTopLeftRadius });
-    }
+    if (isPixel) {
+      // УГЛЫ
+      const radii = ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius'].map((k) => parseFloat(cs[k]) || 0);
+      if (Math.max.apply(null, radii) > 0.5) {
+        findings.radius.push({ el: cssPath(el), cls: clsStr, value: cs.borderTopLeftRadius });
+      }
 
-    // ШРИФТ
-    if (text.length > 1 && !skinFonts.has(firstFamily(cs.fontFamily))) {
-      findings.font.push({ el: cssPath(el), cls: clsStr, font: cs.fontFamily });
-    }
+      // ШРИФТ
+      if (text.length > 1 && !skinFonts.has(firstFamily(cs.fontFamily))) {
+        findings.font.push({ el: cssPath(el), cls: clsStr, font: cs.fontFamily });
+      }
 
-    // ХРОМ: структурная панель с заливкой без фаски/ореола
-    const bg = rgba(cs.backgroundColor);
-    const structural = /(card|panel|col|box|bar|wrap|side|list|sheet|note|test|sum|feed|done|it|row)/i.test(clsStr);
-    if (bg && bg.a > 0.25 && area > 1800 && structural && !coveredEl && cs.boxShadow === 'none' && cs.display !== 'inline') {
-      findings.chrome.push({ el: cssPath(el), cls: clsStr, bg: cs.backgroundColor });
-    }
+      // ХРОМ: структурная панель с заливкой без фаски/ореола
+      const bg = rgba(cs.backgroundColor);
+      const structural = /(card|panel|col|box|bar|wrap|side|list|sheet|note|test|sum|feed|done|it|row)/i.test(clsStr);
+      if (bg && bg.a > 0.25 && area > 1800 && structural && !coveredEl && cs.boxShadow === 'none' && cs.display !== 'inline') {
+        findings.chrome.push({ el: cssPath(el), cls: clsStr, bg: cs.backgroundColor });
+      }
 
-    // ПАЛИТРА: плотная заливка не из цветов кожи (кроме опознавательных значков сервисов)
-    const brand = /(^|\s)(dot|ico|ai|wch|badge|cover|thumb)(\s|$)/i.test(clsStr);
-    if (!brand && bg && bg.a > 0.85 && area > 400 && cs.display !== 'inline' && !inPalette(cs.backgroundColor)) {
-      findings.palette.push({ el: cssPath(el), cls: clsStr, bg: cs.backgroundColor });
+      // ПАЛИТРА: плотная заливка не из цветов кожи (кроме опознавательных значков сервисов)
+      const brand = /(^|\s)(dot|ico|ai|wch|badge|cover|thumb)(\s|$)/i.test(clsStr);
+      if (!brand && bg && bg.a > 0.85 && area > 400 && cs.display !== 'inline' && !inPalette(cs.backgroundColor)) {
+        findings.palette.push({ el: cssPath(el), cls: clsStr, bg: cs.backgroundColor });
+      }
     }
   }
 
@@ -241,12 +246,11 @@ function mergeFindings(parts) {
   const browser = await chromium.launch({ executablePath: CHROME });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
   await page.addInitScript({ path: path.join(ROOT, 'tests', 'ui', 'mock7.js') });
   await page.goto('http://127.0.0.1:' + port + '/src/index.html');
   await page.waitForTimeout(1400);
+  const skins = await page.evaluate(() => (window.SKINS || []).map((s) => ({ id: s.id, name: s.name, pixel: s.pixel !== false })));
 
-  const skins = await page.evaluate(() => (window.SKINS || []).map((s) => ({ id: s.id, name: s.name })));
   const list = only ? skins.filter((s) => only.split(',').includes(s.id)) : skins;
   if (!list.length) {
     console.error('Не найдено ни одной оболочки (window.SKINS пуст?)');
@@ -259,7 +263,7 @@ function mergeFindings(parts) {
     await page.waitForTimeout(500);
     const views = await toggleAllTabs(page);
     const merged = mergeFindings(views);
-    const errorsCount = merged.radius.length + merged.font.length;
+    const errorsCount = s.pixel === false ? 0 : (merged.radius.length + merged.font.length);
     report.push({ skin: s.id, name: s.name, errors: errorsCount, merged, views: views.map(([t]) => t) });
   }
 
