@@ -477,8 +477,8 @@
   /* Список выдачи раскрывается из строки поиска: тот же фон, без границы, общее скругление */
   .smode-pop { display: none; top: 46px; border: 0; background: var(--bg3); border-radius: 0 0 var(--r-panel) var(--r-panel); padding: var(--sp-2); box-shadow: 0 18px 34px rgba(0,0,0,.45); }
   .smode-pop.open { display: block; }
-  /* пока список открыт, у поля снизу углы прямые — получается одно окно */
-  .searchwrap:has(.smode-pop.open) .searchbar { border-radius: var(--r-panel) var(--r-panel) 0 0; border-bottom-color: transparent; }
+  /* пока список открыт, поле и список сливаются в одно окно: без рамки и с общим фоном */
+  .searchwrap:has(.smode-pop.open) .searchbar { border-color: transparent; border-radius: var(--r-panel) var(--r-panel) 0 0; }
   .smp-item { padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
   .smp-item:hover { background: var(--bg4); }
   .smp-item .n { font-size: 13.5px; color: var(--tx); font-weight: 500; }
