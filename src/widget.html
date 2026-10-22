@@ -45,7 +45,7 @@
 
   .dock-empty { color: var(--tx4); font-size: 12px; text-align: center; padding: 18px 8px; }
   /* Цвета палитры: суммы, статусы и полоски слева берут цвета схемы (--ok / --wait / --err) */
-  .dock-feed .rq { transition: background-color .25s ease, color .25s ease; }
+  .dock-feed .rq { background: var(--card-bg, var(--bg2)); transition: background-color .25s ease, color .25s ease; }
   .dock-feed .rq-h .amt { color: var(--ok, #4ADE9A); }
   .dock-feed .rq-it.ex { border-color: var(--ok, #4ADE9A); }
   .dock-feed .rq-it.db { border-color: var(--wait, #FFD43B); }

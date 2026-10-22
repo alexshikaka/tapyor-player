@@ -5891,6 +5891,8 @@ function yamiVars(id){
     '--bg0': p.bg,
     '--bg1': p.panel,
     '--bg2': p.surf,
+    // Карточки сообщений темнее поверхностей: смешиваем поверхность с фоном палитры
+    '--card-bg': dark ? wgMix(p.surf, p.bg, 0.55) : p.surf,
     '--bg3': wgMix(p.surf, p.tx, 0.06),
     '--bg4': wgMix(p.surf, p.tx, 0.12),
     '--ln': p.line,
