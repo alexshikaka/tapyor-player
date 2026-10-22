@@ -382,6 +382,8 @@
   .qn-row .qn-c { width: 26px; height: 26px; border-radius: 5px; background: var(--bg4); flex: 0 0 auto; overflow: hidden; }
   .qn-row { cursor: pointer; }
   .qn-row.dragging { opacity: .35; }
+  .qn-row.drop-before { box-shadow: inset 0 2px 0 var(--ac); }
+  .qn-row.drop-after { box-shadow: inset 0 -2px 0 var(--ac); }
   .qn-row .qn-c { position: relative; }
   .qn-ov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); opacity: 0; transition: opacity .12s; color: #fff; }
   .qn-row:hover .qn-ov, .qn-row.playing .qn-ov { opacity: 1; }
@@ -2963,12 +2965,20 @@ function renderSkinScheme(){
   function moveItem(from, to){
     if (from < 0 || from >= queue.length) return;
     var wasCur = from === current;
+    var curObj = queue[current];
     if (!wasCur) to = Math.max(to, current + 1);
     if (to === from || to === from + 1) return;
     var item = queue.splice(from, 1)[0];
     if (from < to) to--;
     queue.splice(to, 0, item);
-    if (wasCur) current = to;   // играющий трек продолжает играть на новом месте
+    // индекс играющего трека пересчитываем по объекту — он мог сдвинуться
+    // сыгранный трек, перетащенный ниже играющего, снова становится активным
+    if (!wasCur && item.played && current >= 0 && queue.indexOf(item) > current) item.played = false;
+    current = curObj ? queue.indexOf(curObj) : -1;
+    if (wasCur) {
+      // всё, что выше играющего, считается отыгравшим; всё, что ниже — активной очередью
+      queue.forEach(function (v, idx){ v.played = idx < current; });
+    }
     renderQueue(); saveToday(); prefetchNext();
   }
   // «Играть сейчас»: несыгранная — сразу после текущей и включаем; сыгранная — копия следующей (история не откатывается)
@@ -3086,7 +3096,7 @@ function renderSkinScheme(){
   }
 
   // Перетаскивание несыгранных песен
-var dragFrom = -1, dragWave = -1, dropTo = -1;
+var dragFrom = -1, dragWave = -1, dropTo = -1, dropWaveTo = -1;
   function clearDrop(){ var ms = document.querySelectorAll('#queue .drop-before, #queue .drop-after'); for (var k = 0; k < ms.length; k++) ms[k].classList.remove('drop-before', 'drop-after'); }
   (function(){
     var box = $('queue');
@@ -3103,6 +3113,18 @@ var dragFrom = -1, dragWave = -1, dropTo = -1;
       if (dragFrom < 0 && dragWave < 0) return;
       e.preventDefault();
       clearDrop();
+      // волна: если наведено на строку волны — переставляем внутри волны
+      if (dragWave >= 0) {
+        var wr = e.target.closest && e.target.closest('.qn-row');
+        if (wr) {
+          var wj = parseInt(wr.dataset.w, 10), wrc = wr.getBoundingClientRect();
+          var wto = e.clientY > wrc.top + wrc.height / 2 ? wj + 1 : wj;
+          dropWaveTo = wto; dropTo = -1;
+          if (wto <= wj) wr.classList.add('drop-before'); else wr.classList.add('drop-after');
+          return;
+        }
+      }
+      dropWaveTo = -1;
       var r = e.target.closest && e.target.closest('.qrow');
       var to;
       if (!r) to = queue.length;
@@ -3115,8 +3137,17 @@ var dragFrom = -1, dragWave = -1, dropTo = -1;
     box.addEventListener('drop', function(e){
       if (dragFrom < 0 && dragWave < 0) return;
       e.preventDefault();
+      // перестановка внутри волны
+      if (dragWave >= 0 && dropWaveTo >= 0) {
+        var wf = dragWave, wt2 = dropWaveTo; dragWave = -1; dropWaveTo = -1; clearDrop();
+        if (wt2 === wf || wt2 === wf + 1) return;
+        var witem = waveBuf.splice(wf, 1)[0]; if (!witem) return;
+        if (wf < wt2) wt2--;
+        waveBuf.splice(wt2, 0, witem);
+        renderQueue(); return;
+      }
       if (dragWave >= 0) {
-        var wj = dragWave; dragWave = -1; clearDrop();
+        var wj = dragWave; dragWave = -1; dropWaveTo = -1; clearDrop();
         var wt = waveBuf.splice(wj, 1)[0]; if (!wt) return;
         wt.bg = false; wt.played = false;
         var at = Math.max(current + 1, Math.min(dropTo < 0 ? queue.length : dropTo, queue.length));
@@ -3127,7 +3158,7 @@ var dragFrom = -1, dragWave = -1, dropTo = -1;
       var f = dragFrom; dragFrom = -1; clearDrop();
       moveItem(f, dropTo);
     });
-    box.addEventListener('dragend', function(){ dragFrom = -1; dragWave = -1; clearDrop(); var d = box.querySelector('.dragging'); if (d) d.classList.remove('dragging'); });
+    box.addEventListener('dragend', function(){ dragFrom = -1; dragWave = -1; dropWaveTo = -1; clearDrop(); var d = box.querySelector('.dragging'); if (d) d.classList.remove('dragging'); });
   })();
 
   // Лента за сегодня (день начинается в 6 утра — стримы идут за полночь)
