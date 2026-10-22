@@ -5,7 +5,8 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --publish always"
+    "dist": "electron-builder --publish always",
+    "audit:skins": "node tests/skins/audit.js"
   },
   "author": "shikaka",
   "license": "UNLICENSED",

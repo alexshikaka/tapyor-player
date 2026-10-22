@@ -1000,30 +1000,15 @@
     box-shadow: inset -2px -2px 0 rgba(0,0,0,.40), inset 2px 2px 0 rgba(255,255,255,.16); }
   html.pixel-skin .pbtn:active, html.pixel-skin .rq-sm:active, html.pixel-skin .chip:active {
     box-shadow: inset 2px 2px 0 rgba(0,0,0,.45); transform: translate(1px, 1px); }
+  html.pixel-skin .my-side, html.pixel-skin .plnote { box-shadow: inset 0 0 0 2px var(--ln2); }
+  html.pixel-skin .br-col { box-shadow: inset -2px -2px 0 rgba(0,0,0,.40), inset 2px 2px 0 rgba(255,255,255,.20); }
   html.pixel-skin .wavecard, html.pixel-skin .qrow, html.pixel-skin .row, html.pixel-skin .disc, html.pixel-skin .rq {
     box-shadow: inset 0 0 0 2px var(--ln2); }
 
-  /* 1. Гамебой — четыре оттенка зелёного и сетка жидкого кристалла */
-  html.skin-gb { --bg00:#081f08; --bg0:#0f380f; --bg1:#123f12; --bg2:#17421a; --bg3:#1b4a1b; --bg4:#22581f;
-    --ln:#2f6b26; --ln2:#1f4a1f; --ln3:#8bac0f; --tx:#c3e23a; --tx2:#b6d81e; --tx3:#a8cf1b; --tx4:#9bbc0f; --tx5:#8bac0f;
-    --ac:#9bbc0f; --ac2:#c3e23a; --acr:155,188,15; --pri:#9bbc0f; --prit:#0f380f; --hov:rgba(155,188,15,.10); }
-  html.skin-gb body::after { content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-    background: repeating-linear-gradient(90deg, rgba(0,0,0,.055) 0 1px, transparent 1px 4px); }
-  html.skin-gb .pbtn.y { box-shadow: inset -2px -2px 0 rgba(15,56,15,.6), inset 2px 2px 0 rgba(255,255,255,.5); }
-
-  /* 2. Аркада — палитра PICO-8, жёсткие чёрные контуры и тени */
-  html.skin-pico { --bg00:#0d1428; --bg0:#121a33; --bg1:#1d2b53; --bg2:#253866; --bg3:#2f4576; --bg4:#3b548c;
-    --ln:#3b548c; --ln2:#253866; --ln3:#5f7ab8; --tx:#fff1e8; --tx2:#d8d3cf; --tx3:#b6aec4; --tx4:#9a92ab; --tx5:#83769c;
-    --ac:#ff77a8; --ac2:#ffa0c4; --acr:255,119,168; --pri:#ffec27; --prit:#1d2b53; --hov:rgba(255,241,232,.08); }
-  html.skin-pico .card, html.skin-pico .queue-col, html.skin-pico .searchbar {
-    box-shadow: inset 0 0 0 2px #000000, 5px 5px 0 #0a0f1e; }
-  html.skin-pico .pbtn, html.skin-pico .rq-sm, html.skin-pico .chip { box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.45); }
-  html.skin-pico .pbtn.y { box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.55), 4px 4px 0 #0a0f1e; }
-
-  /* 3. VGA / DOS — серые панели с фаской, как в 90-х */
+  /* 1. VGA / DOS — серые панели с фаской, как в 90-х */
   html.skin-dos { --bg00:#006464; --bg0:#007878; --bg1:#c0c0c0; --bg2:#d0d0d0; --bg3:#c0c0c0; --bg4:#b4b4b4;
     --ln:#808080; --ln2:#a8a8a8; --ln3:#ffffff; --tx:#000000; --tx2:#101010; --tx3:#2a2a2a; --tx4:#4a4a4a; --tx5:#5c5c5c;
-    --ac:#000080; --ac2:#1084d0; --acr:0,0,128; --pri:#c0c0c0; --prit:#000000; --hov:rgba(0,0,0,.08); }
+    --ac:#000080; --ac2:#1084d0; --acr:0,0,128; --acbg:#9CA5B9; --pri:#c0c0c0; --prit:#000000; --hov:rgba(0,0,0,.08); }
   html.skin-dos *, html.skin-dos body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
   html.skin-dos h1, html.skin-dos h2, html.skin-dos .tbrand .name, html.skin-dos .sec-h h2 { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
   html.skin-dos .card, html.skin-dos .queue-col, html.skin-dos .searchbar, html.skin-dos .set-main {
@@ -1037,7 +1022,7 @@
   /* 4. Неон-скан — CRT: скан-линии, виньетка и свечение */
   html.skin-crt { --bg00:#05040a; --bg0:#0b0b12; --bg1:#12101e; --bg2:#191527; --bg3:#211a33; --bg4:#2a2140;
     --ln:#3a2f5c; --ln2:#241c3c; --ln3:#6b4fd0; --tx:#f2eeff; --tx2:#cfc7ea; --tx3:#a89fd0; --tx4:#847bad; --tx5:#645c86;
-    --ac:#ff2d95; --ac2:#ff77b8; --acr:255,45,149; --pri:#00e5ff; --prit:#0a0a14; --hov:rgba(255,45,149,.10); }
+    --ac:#ff2d95; --ac2:#ff77b8; --acr:255,45,149; --acbg:#291C3E; --pri:#00e5ff; --prit:#0a0a14; --hov:rgba(255,45,149,.10); }
   html.skin-crt body::after { content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
     background: radial-gradient(130% 100% at 50% 50%, transparent 62%, rgba(0,0,0,.30) 100%); }
 
@@ -1093,7 +1078,7 @@
     background: rgba(240,238,255, calc((1 - var(--sk-c)) * .30)); }  /* 5. Ретро-десктоп — серо-чёрный, фаски и кнопки как в 95-м */
   html.skin-retro { --bg00:#131315; --bg0:#1b1b1e; --bg1:#26262a; --bg2:#303035; --bg3:#3a3a40; --bg4:#4a4a51;
     --ln:#5c5c64; --ln2:#3e3e45; --ln3:#7c7c86; --tx:#e9e9ec; --tx2:#c9c9cf; --tx3:#a9a9b1; --tx4:#8a8a93; --tx5:#72727c;
-    --ac:#8aa4c8; --ac2:#abc2de; --acr:138,164,200; --pri:#c6c6ca; --prit:#101013; --hov:rgba(255,255,255,.07); }
+    --ac:#8aa4c8; --ac2:#abc2de; --acr:138,164,200; --acbg:#333940; --pri:#c6c6ca; --prit:#101013; --hov:rgba(255,255,255,.07); }
   html.skin-retro *, html.skin-retro body { font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; letter-spacing: 0; }
   html.skin-retro h1, html.skin-retro h2, html.skin-retro .tbrand .name, html.skin-retro .sec-h h2 {
     font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; font-weight: 700; }
@@ -1710,8 +1695,6 @@
   })();
   // ===== Оболочки в стиле пиксель-арт =====
   var SKINS = [
-    { id: 'gb',   name: 'Гамебой',   sub: '4 оттенка зелёного',    tag: '4 цвета',  bg: '#0f380f', card: '#1b4a1b', line: '#8bac0f', txt: '#9bbc0f', btn: '#9bbc0f' },
-    { id: 'pico', name: 'Аркада',    sub: 'палитра PICO-8',        tag: '16 цветов', bg: '#121a33', card: '#2f4576', line: '#ff77a8', txt: '#fff1e8', btn: '#ffec27' },
     { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0' },
     { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff' },
     { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca' }
