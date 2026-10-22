@@ -11,47 +11,59 @@
     --ok:#4ADE9A; --wait:#FFD43B; --bad:#FF8A7A;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:transparent}
-  body{font-family:var(--font);color:var(--tx);-webkit-font-smoothing:antialiased}
-  .wg{
-    width:100%;max-width:340px;display:flex;flex-direction:column;gap:6px;
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:8px 8px 6px;overflow:hidden;
-  }
-  .wg-head{display:flex;align-items:center;gap:6px;padding:0 2px 4px;border-bottom:1px solid var(--line)}
-  .wg-head .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);flex:0 0 auto}
-  .wg-head b{font-size:11.5px;font-weight:700;letter-spacing:.02em}
-  .wg-head .cnt{font-size:10.5px;color:var(--tx3);margin-left:auto}
-  .tg{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
-  .tg span{font-size:10px;color:var(--tx3);font-weight:600}
-  .tg .sw{width:22px;height:12px;border-radius:6px;background:var(--line);position:relative;transition:background .15s}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{font-family:var(--font);color:var(--tx);background:var(--bg);-webkit-font-smoothing:antialiased}
+  .wg{height:100%;display:flex;flex-direction:column;min-height:0}
+
+  /* Шапка панели */
+  .head{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--card)}
+  .head .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);flex:0 0 auto}
+  .head b{font-size:12px;font-weight:700;letter-spacing:.02em}
+  .head .cnt{font-size:10.5px;color:var(--tx3);margin-left:auto;white-space:nowrap}
+  .tg{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;margin-left:6px}
+  .tg span{font-size:10px;color:var(--tx3);font-weight:600;white-space:nowrap}
+  .tg .sw{width:22px;height:12px;border-radius:6px;background:var(--line);position:relative;transition:background .15s;flex:0 0 auto}
   .tg .sw::after{content:'';position:absolute;top:2px;left:2px;width:8px;height:8px;border-radius:50%;background:var(--tx3);transition:transform .15s,background .15s}
   .tg.on .sw{background:var(--ac)}
   .tg.on .sw::after{transform:translateX(10px);background:var(--pri)}
-  .feed{display:flex;flex-direction:column;gap:4px;min-height:44px}
-  .it{display:flex;flex-direction:column;gap:1px;padding:4px 6px;border-radius:8px;background:rgba(255,255,255,.03)}
-  .it .who{display:flex;align-items:baseline;gap:5px;font-size:10.5px;color:var(--tx2)}
-  .it .who b{font-size:11px;color:var(--tx);font-weight:700}
-  .it .amt{color:var(--pri);font-weight:700;font-size:10px}
-  .it .txt{font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .it .ttl{font-size:11.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .it .st{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-  .it .st.q{color:var(--ok)} .it .st.w{color:var(--wait)} .it .st.n{color:var(--bad)}
-  .empty{font-size:10.5px;color:var(--tx3);padding:8px 4px;text-align:center}
-  .bar{display:flex;align-items:center;gap:4px;padding-top:5px;border-top:1px solid var(--line)}
+
+  /* Лента сообщений — прокручивается, занимает всё место */
+  .feed{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 8px;display:flex;flex-direction:column;gap:5px;scrollbar-width:thin}
+  .feed::-webkit-scrollbar{width:8px}
+  .feed::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .feed::-webkit-scrollbar-track{background:transparent}
+
+  .msg{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;background:var(--card);border-left:2px solid var(--line)}
+  .msg.queued{border-left-color:var(--ok)}
+  .msg.waiting{border-left-color:var(--wait)}
+  .msg.found{border-left-color:var(--ac)}
+  .msg.look{border-left-color:var(--bad)}
+  .row1{display:flex;align-items:baseline;gap:6px;font-size:10.5px;color:var(--tx2)}
+  .row1 b{font-size:11px;color:var(--tx);font-weight:700}
+  .row1 .amt{color:var(--pri);font-weight:700;font-size:10px}
+  .row1 .ago{color:var(--tx3);margin-left:auto;white-space:nowrap;font-size:9.5px}
+  .txt{font-size:10.5px;color:var(--tx3);word-break:break-word}
+  .ttl{font-size:11.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .st{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .st.q{color:var(--ok)} .st.w{color:var(--wait)} .st.n{color:var(--bad)}
+  .empty{font-size:10.5px;color:var(--tx3);padding:14px 6px;text-align:center}
+
+  /* Плеер внизу */
+  .bar{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:6px 8px;border-top:1px solid var(--line);background:var(--card)}
   .bar .np{flex:1;min-width:0;font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bar .np b{color:var(--tx2);font-weight:600}
-  .cb{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;
-      background:transparent;color:var(--tx2);cursor:pointer;padding:0}
+  .cb{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;
+      background:transparent;color:var(--tx2);cursor:pointer;padding:0;flex:0 0 auto}
   .cb:hover{background:rgba(255,255,255,.08);color:var(--tx)}
   .cb svg{width:11px;height:11px;fill:currentColor}
-  .cb.play{background:var(--pri);color:#0E0F13;width:24px;height:24px}
+  .cb.play{background:var(--pri);color:#0E0F13;width:26px;height:26px}
   .cb.play:hover{background:var(--pri);opacity:.9}
+  .time{font-size:9.5px;color:var(--tx3);min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
-<div class="wg" id="wg">
-  <div class="wg-head">
+<div class="wg">
+  <div class="head">
     <span class="dot"></span>
     <b>Заказы</b>
     <span class="cnt" id="cnt">—</span>
@@ -60,7 +72,9 @@
       <i class="sw"></i>
     </label>
   </div>
-  <div class="feed" id="feed"><div class="empty">Заказов пока нет</div></div>
+
+  <div class="feed" id="feed"><div class="empty">Сообщений пока нет</div></div>
+
   <div class="bar">
     <button class="cb" data-cmd="prev" title="Назад" aria-label="Назад">
       <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14l-10-7z"/></svg>
@@ -72,6 +86,7 @@
       <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10-7z"/></svg>
     </button>
     <span class="np" id="np">ничего не играет</span>
+    <span class="time" id="tm">0:00</span>
   </div>
 </div>
 
@@ -80,11 +95,13 @@
   var feedEl = document.getElementById('feed');
   var cntEl = document.getElementById('cnt');
   var npEl = document.getElementById('np');
+  var tmEl = document.getElementById('tm');
   var ppEl = document.getElementById('pp');
   var tgEl = document.getElementById('exactTg');
-  var last = null;
+  var stickBottom = true;
 
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+  function fmt(t){ t = Math.max(0, Math.round(t || 0)); var m = Math.floor(t / 60), s = t % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
 
   function applyTheme(t){
     if (!t) return;
@@ -101,32 +118,49 @@
     if (t.font) r.setProperty('--font', t.font);
   }
 
-  function statusOf(o){
-    if (o.status === 'queued') return '<span class="st q">в очереди</span>';
-    if (o.status === 'playing') return '<span class="st q">играет</span>';
-    if (o.status === 'waiting') return '<span class="st w">ждёт</span>';
+  function ago(ts){
+    if (!ts) return '';
+    var m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) return 'только что';
+    if (m < 60) return m + ' мин';
+    var h = Math.round(m / 60);
+    if (h < 24) return h + ' ч';
+    return Math.round(h / 24) + ' д';
+  }
+
+  function statusHtml(st){
+    if (st === 'queued') return '<span class="st q">в очереди</span>';
+    if (st === 'playing') return '<span class="st q">играет</span>';
+    if (st === 'waiting') return '<span class="st w">ждёт</span>';
     return '<span class="st n">ищу</span>';
   }
 
   function render(st){
     if (!st) return;
-    last = st;
     applyTheme(st.theme);
     if (st.scale) document.documentElement.style.zoom = (Math.max(50, Math.min(200, st.scale)) / 100);
-    document.body.style.width = '100%';
 
     tgEl.classList.toggle('on', !!st.reqAuto);
     tgEl.setAttribute('aria-pressed', st.reqAuto ? 'true' : 'false');
 
-    var orders = (st.orders || []).slice(0, 6);
-    cntEl.textContent = orders.length ? orders.length + ' в ленте' : 'пусто';
-    feedEl.innerHTML = orders.length ? orders.map(function(o){
-      var who = o.who ? '<b>' + esc(o.who) + '</b>' : '<b>Аноним</b>';
-      var amt = o.amt ? '<span class="amt">' + esc(o.amt) + (o.cur ? ' ' + esc(o.cur) : '') + '</span>' : '';
-      var txt = o.text ? '<div class="txt">' + esc(o.text) + '</div>' : '';
-      var ttl = o.title ? '<div class="ttl">' + esc(o.title) + '</div>' : '';
-      return '<div class="it"><div class="who">' + who + amt + '<span style="margin-left:auto">' + statusOf(o) + '</span></div>' + txt + ttl + '</div>';
-    }).join('') : '<div class="empty">Заказов пока нет</div>';
+    var msgs = st.messages || [];
+    cntEl.textContent = msgs.length ? msgs.length + ' сообщ.' : 'пусто';
+
+    var nearBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 40;
+    if (nearBottom) stickBottom = true;
+
+    feedEl.innerHTML = msgs.length ? msgs.map(function(m){
+      var who = m.who ? '<b>' + esc(m.who) + '</b>' : '<b>Аноним</b>';
+      var amt = m.amt ? '<span class="amt">' + esc(m.amt) + (m.cur ? ' ' + esc(m.cur) : '') + '</span>' : '';
+      var txt = m.text ? '<div class="txt">' + esc(m.text) + '</div>' : '';
+      var ttl = m.title ? '<div class="ttl">' + esc(m.title) + '</div>' : '';
+      return '<div class="msg ' + (m.status || 'look') + '">'
+        + '<div class="row1">' + who + amt + statusHtml(m.status) + '<span class="ago">' + esc(ago(m.at)) + '</span></div>'
+        + txt + ttl + '</div>';
+    }).join('') : '<div class="empty">Сообщений пока нет</div>';
+
+    // новые сообщения — внизу, если пользователь не отлистал вверх
+    if (stickBottom) feedEl.scrollTop = feedEl.scrollHeight;
 
     var playing = st.np && st.np.playing;
     ppEl.innerHTML = playing
@@ -135,7 +169,13 @@
     npEl.innerHTML = st.np && st.np.title
       ? '<b>' + esc(st.np.title) + '</b>' + (st.np.artist ? ' · ' + esc(st.np.artist) : '')
       : 'ничего не играет';
+    tmEl.textContent = fmt(st.np && st.np.pos);
   }
+
+  // если пользователь отлистал вверх — не дёргаем ленту вниз
+  feedEl.addEventListener('scroll', function(){
+    stickBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 40;
+  });
 
   function cmd(action){
     fetch('/widget/cmd/' + encodeURIComponent(action), { method: 'POST' }).catch(function(){});
@@ -155,17 +195,8 @@
     }).catch(function(){});
   });
 
-  // Живые обновления из приложения
   var es = new EventSource('/widget/events');
   es.onmessage = function(e){ try { render(JSON.parse(e.data)); } catch (err) {} };
-  es.onerror = function(){ /* OBS переподключится сам */ };
-
-  // Запасной путь: раз в 5 секунд подтягиваем состояние, если поток молчит
-  setInterval(function(){
-    if (es.readyState === 2) {
-      fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
-    }
-  }, 5000);
 
   fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
 })();

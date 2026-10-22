@@ -54,6 +54,7 @@ const DEFAULTS = {
   preferLocal: true, libInSearch: true,
   reqPrice: 100, reqCurrency: 'RUB', reqAuto: false,
   mediaKeys: true,
+  widgetPort: 47654, widgetLook: 'current', widgetScale: 100,
   hotkeys: { playPause: 'Ctrl+Alt+P', next: 'Ctrl+Alt+Right', prev: 'Ctrl+Alt+Left', like: 'Ctrl+Alt+L', shake: 'Ctrl+Alt+S', volUp: 'Ctrl+Alt+Up', volDown: 'Ctrl+Alt+Down' }
 };
 function cfg(key) { const s = readSettingsFile(); return s[key] !== undefined ? s[key] : DEFAULTS[key]; }
@@ -458,6 +459,7 @@ async function serveLocal(req, res, p) {
 const widgetClients = new Set();
 let widgetState = { orders: [], np: { title: '', artist: '', playing: false }, reqAuto: false, scale: 100, theme: null };
 let serverPort = 0;
+let httpServerRef = null;
 
 function widgetBroadcast() {
   const payload = 'data: ' + JSON.stringify(widgetState) + '\n\n';
@@ -477,7 +479,17 @@ function readBody(req) {
 
 // Крошечный локальный веб-сервер — отдаёт страницу приложения по http,
 // чтобы встроенный плеер YouTube работал (из file:// он не запускается).
-function startServer() {
+// Свободен ли порт: если занят, вернём 0 (система даст любой свободный)
+function pickPort(preferred) {
+  return new Promise((resolve) => {
+    if (!preferred) return resolve(0);
+    const probe = http.createServer();
+    probe.once('error', () => resolve(0));
+    probe.listen(preferred, '127.0.0.1', () => probe.close(() => resolve(preferred)));
+  });
+}
+
+function startServer(preferredPort) {
   const root = __dirname;
   const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json', '.ico': 'image/x-icon' };
   const server = http.createServer(async (req, res) => {
@@ -525,6 +537,7 @@ function startServer() {
           s[body.key] = body.value;
           fs.writeFileSync(settingsFile(), JSON.stringify(s, null, 2));
           if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('widget-setting', { key: body.key, value: body.value });
+          if (body.key === 'widgetPort') restartServer(Number(body.value) || 0);
         }
       } catch (e) {
         log('виджет: настройки ' + e.message);
@@ -545,9 +558,13 @@ function startServer() {
       res.end(data);
     });
   });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => {
-    serverPort = server.address().port;
-    resolve(serverPort);
+  httpServerRef = server;
+  return pickPort(preferredPort).then((port) => new Promise((resolve) => {
+    server.listen(port, '127.0.0.1', () => {
+      serverPort = server.address().port;
+      log('сервер на порту ' + serverPort + (preferredPort && serverPort !== preferredPort ? ' (запрошен ' + preferredPort + ', занят)' : ''));
+      resolve(serverPort);
+    });
   }));
 }
 
@@ -746,7 +763,7 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   ipcMain.handle('get-version', () => app.getVersion());
 
-  const port = await startServer();
+  const port = await startServer(Number(cfg('widgetPort')) || 0);
   appUrl = 'http://127.0.0.1:' + port + '/index.html';
 
   // Поиск по YouTube (без ключа и входа)
@@ -855,12 +872,24 @@ ipcMain.handle('get-setting', (e, key) => { const v = readSettings()[key]; retur
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }
     if (key === 'autoStart') applyAutoStart();
+  if (key === 'widgetPort') { restartServer(Number(value) || 0); return true; }
     if (key === 'theme' || key === 'themeBar') applyThemeWindow();
     if (key === 'mediaKeys' || key === 'hotkeys') return applyHotkeys();
     if (key === 'npEnabled' || key === 'nowPlayingFormat' || key === 'npIdle' || key === 'nowPlayingPath') writeNowPlaying(lastNpInfo, true);
     return true;
   });
-  function applyAutoStart() {
+  // Перезапуск локального сервера на другом порту (нужно только для смены адреса панели)
+async function restartServer(port) {
+  try { if (httpServerRef) httpServerRef.close(); } catch (e) {}
+  await new Promise((r) => setTimeout(r, 250));
+  const actual = await startServer(port);
+  serverPort = actual;
+  appUrl = 'http://127.0.0.1:' + actual + '/index.html';
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.loadURL(appUrl);
+  return actual;
+}
+
+function applyAutoStart() {
     try { if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!cfg('autoStart'), args: ['--hidden'] }); }
     catch (err) { log('автозапуск: ' + err.message); }
   }

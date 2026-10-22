@@ -1458,12 +1458,12 @@
 
           <section id="sObs">
             <div class="sec-h"><h2>OBS и стрим</h2><span>Виджет с заказами и название трека на экране</span></div>
-        <!-- Виджет для OBS: отдельное окно-источник с лентой заказов и кнопками плеера -->
+        <!-- Панель для OBS: лента сообщений с кнопками плеера, открывается в доке OBS -->
         <div class="card">
           <div class="srow" style="align-items:flex-start">
             <div class="sl">
-              <div class="st">Виджет с заказами для OBS</div>
-              <div class="sd">В OBS добавь источник «Браузер» и вставь адрес ниже. Внутри — лента заказов и маленькие кнопки плеера.</div>
+              <div class="st">Панель с сообщениями для OBS</div>
+              <div class="sd">В OBS: «Вид» → «Панели» → «Пользовательские панели браузера» → вставь адрес. Внутри — лента сообщений и кнопки плеера.</div>
               <div class="path" id="wgUrl" style="margin-top:8px">…</div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-self:flex-end">
@@ -1472,7 +1472,15 @@
             </div>
           </div>
           <div class="srow">
-            <div class="sl"><label class="st" for="wgLook">Оформление виджета</label>
+            <div class="sl"><label class="st" for="wgPort">Порт</label>
+              <div class="sd">Постоянный адрес панели: http://127.0.0.1:порт/widget. Меняй, если порт занят</div></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input id="wgPort" class="field" type="number" min="1024" max="65535" step="1" style="width:110px">
+              <button class="btn" id="wgPortApply">Применить</button>
+            </div>
+          </div>
+          <div class="srow">
+            <div class="sl"><label class="st" for="wgLook">Оформление панели</label>
               <div class="sd">Как в текущей теме, или конкретная оболочка, или конкретная тема</div></div>
             <select id="wgLook" class="field" style="flex:0 1 280px">
               <option value="current">Как в текущей теме</option>
@@ -1489,7 +1497,7 @@
             </select>
           </div>
           <div class="srow">
-            <div class="sl"><div class="st">Масштаб виджета</div><div class="sd">Размер текста и кнопок внутри виджета</div></div>
+            <div class="sl"><div class="st">Масштаб панели</div><div class="sd">Размер текста и кнопок внутри панели</div></div>
             <div style="display:flex;align-items:center;gap:10px;flex:0 1 320px">
               <input id="wgScale" type="range" min="60" max="160" step="5" style="flex:1" aria-label="Масштаб виджета">
               <span id="wgScaleVal" class="mono" style="min-width:44px;text-align:right">100%</span>
@@ -1499,8 +1507,6 @@
             <div class="sl"><div class="st">Точные — сразу в очередь</div><div class="sd">Заказ, который точно определился, сразу встаёт в очередь</div></div>
             <button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button>
           </div>
-        </div>
-            <div class="card">
               <div class="srow">
                 <div class="sl"><div class="st">Писать название трека в файл</div><div class="sd">В OBS: источник «Текст (GDI+)» → «Читать из файла» → выбери этот файл</div></div>
                 <button class="toggle" data-set-tg="npEnabled" aria-label="Писать название трека в файл"><span></span></button>
@@ -5840,31 +5846,33 @@ function widgetTheme(){
   };
 }
 
-function widgetOrders(){
+function widgetMessages(){
   var out = [];
   var now = queue[current];
   (RQ.list || []).forEach(function(r){
     if (r.state === 'dismissed') return;
-    (r.items || []).forEach(function(it){
+    var at = r.got || r.at || 0;
+    var who = r.name || '';
+    var amt = r.amount != null ? (Math.round(r.amount * 100) / 100) : null;
+    var cur = (CURSYM && CURSYM[r.currency]) || r.currency || '';
+    var text = r.text || '';
+    var items = r.items || [];
+    if (!items.length) {
+      out.push({ at: at, who: who, amt: amt, cur: cur, text: text, title: '', status: 'look' });
+      return;
+    }
+    items.forEach(function(it){
       var t = it.track;
       var title = t ? ((t.author ? t.author + ' — ' : '') + t.title) : (it.query || '');
       var status = 'look';
       if (it.state === 'added') status = 'queued';
       else if (t && now && now.title === t.title) status = 'playing';
       else if (rqExact(it)) status = 'waiting';
-      out.push({
-        at: r.got || r.at || 0,
-        who: r.name || '',
-        amt: r.amount != null ? (Math.round(r.amount * 100) / 100) : null,
-        cur: (CURSYM && CURSYM[r.currency]) || r.currency || '',
-        text: r.text || '',
-        title: title,
-        status: status
-      });
+      out.push({ at: at, who: who, amt: amt, cur: cur, text: text, title: title, status: status });
     });
   });
-  out.sort(function(a, b){ return b.at - a.at; });
-  return out.slice(0, 8);
+  out.sort(function(a, b){ return a.at - b.at; });
+  return out.slice(0, 80);
 }
 
 function pushWidget(force){
@@ -5873,11 +5881,12 @@ function pushWidget(force){
   try {
     var playing = !!queue[current] && !document.body.classList.contains('is-paused');
     var st = {
-      orders: widgetOrders(),
+      messages: widgetMessages(),
       np: {
         title: queue[current] ? (queue[current].title || '') : '',
         artist: queue[current] ? (queue[current].author || queue[current].artist || '') : '',
-        playing: playing
+        playing: playing,
+        pos: (typeof master === "function" && master() && master().currentTime) || 0
       },
       reqAuto: !!RQ.auto,
       scale: WG.scale || 100,
@@ -5928,6 +5937,14 @@ function initWidgetUi(){
   var urlEl = $('wgUrl'), copyBtn = $('wgCopy'), openBtn = $('wgOpen');
   var lookSel = $('wgLook'), scaleEl = $('wgScale'), scaleVal = $('wgScaleVal');
   if (A.widgetUrl) A.widgetUrl().then(function(u){ WG.url = u || ''; if (urlEl) urlEl.textContent = WG.url || 'нет адреса'; });
+  var portEl = $('wgPort'), portBtn = $('wgPortApply');
+  if (portEl && A.getSetting) A.getSetting('widgetPort').then(function(v){ if (v) portEl.value = v; });
+  if (portBtn) portBtn.onclick = function(){
+    var v = Number(portEl.value);
+    if (!v || v < 1024 || v > 65535) { toast('Порт должен быть от 1024 до 65535'); return; }
+    if (A.setSetting) A.setSetting('widgetPort', v);
+    toast('Порт ' + v + ': страница перезапустится, адрес в OBS — http://127.0.0.1:' + v + '/widget');
+  };
   if (A.getSetting) {
     A.getSetting('widgetLook').then(function(v){ WG.look = v || 'current'; if (lookSel) lookSel.value = WG.look; pushWidget(true); });
     A.getSetting('widgetScale').then(function(v){ WG.scale = Number(v) || 100; if (scaleEl) scaleEl.value = WG.scale; if (scaleVal) scaleVal.textContent = WG.scale + '%'; pushWidget(true); });
