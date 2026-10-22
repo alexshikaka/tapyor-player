@@ -5,7 +5,7 @@
 <title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
-<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _ss = localStorage.getItem('tapSkinAdj'); if (_ss) { try { var _a = JSON.parse(_ss) || {}; var _b = Math.max(20, Math.min(100, _a.b == null ? 100 : +_a.b)), _s2 = Math.max(0, Math.min(100, _a.s == null ? 100 : +_a.s)), _c = Math.max(0, Math.min(100, _a.c == null ? 100 : +_a.c)); _d.style.setProperty('--sk-b', (_b / 100).toFixed(2)); _d.style.setProperty('--sk-s', (_s2 / 100).toFixed(2)); _d.style.setProperty('--sk-c', (0.62 + 0.38 * (_c / 100)).toFixed(3)); } catch (e) {} } } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
+<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _sf = localStorage.getItem('tapSkinFont'); if (_sf) { _d.classList.add('font-' + _sf); } var _ss = localStorage.getItem('tapSkinAdj'); if (_ss) { try { var _a = JSON.parse(_ss) || {}; var _b = Math.max(20, Math.min(100, _a.b == null ? 100 : +_a.b)), _s2 = Math.max(0, Math.min(100, _a.s == null ? 100 : +_a.s)), _c = Math.max(0, Math.min(100, _a.c == null ? 100 : +_a.c)); _d.style.setProperty('--sk-b', (_b / 100).toFixed(2)); _d.style.setProperty('--sk-s', (_s2 / 100).toFixed(2)); _d.style.setProperty('--sk-c', (0.62 + 0.38 * (_c / 100)).toFixed(3)); } catch (e) {} } } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
 <style>
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
     --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; --hov: rgba(255,255,255,.05); --hov2: rgba(255,255,255,.07); --hov3: rgba(255,255,255,.09);
@@ -1112,7 +1112,17 @@
   /* Сетка-дизеринг на «рабочем столе» */
   html.skin-retro body::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .35;
     background-image: repeating-conic-gradient(#1f1f23 0 25%, #17171a 0 50%); background-size: 4px 4px; }
-  html.skin-retro .app-shell { position: relative; z-index: 1; }</style>
+  html.skin-retro .app-shell { position: relative; z-index: 1; }  /* Наборы шрифтов: можно взять шрифт одной оболочки, оставив другую */
+  html.font-onest *, html.font-onest body { font-family: Onest, 'Segoe UI', system-ui, sans-serif !important; }
+  html.font-mono *, html.font-mono body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
+  html.font-retro *, html.font-retro body { font-family: Tahoma, 'Segoe UI', Onest, sans-serif !important; }
+  html.font-pixel *, html.font-pixel body { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace !important; }
+  html.font-pixel h1, html.font-pixel h2, html.font-pixel .tbrand .name, html.font-pixel .sec-h h2 {
+    font-family: 'Press Start 2P', 'Pixelify Sans', monospace !important; }
+  .adj-font { margin-top: 10px; }
+  /* Блок цветовой темы — под карточками, с отбивкой */
+  #lookThemes { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ln2); }
+  .adj-font .te-seg { flex-wrap: wrap; }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
@@ -1329,26 +1339,25 @@
           </section>
 
           <section id="sLook">
-            <div class="sec-h"><h2>Оформление</h2><span>Оболочки, темы и редактор</span></div>
+            <div class="sec-h"><h2>Оформление</h2><span>Оболочка и цветовая тема</span></div>
             <div class="card" style="padding:18px 20px">
-              <div class="look-group">
-                <div class="look-h">Оболочки</div>
-                <div class="te-note" style="margin-top:0">Пиксель-арт стиль поверх приложения: жёсткие углы, фаски, свои шрифты. Включение оболочки выключает цветовую тему.</div>
-                <div class="skin-grid" id="skinGrid"></div>
-                <div class="skin-soft" id="skinAdjRow" hidden>
-                  <div class="adj"><span>Яркость</span><input type="range" data-adj="b" min="20" max="100" value="100" aria-label="Яркость оболочки"><b data-adjv="b">100%</b></div>
-                  <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
-                  <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
-                  <div class="presets">
-                    <button data-preset="100,100,100">Как в дизайне</button>
-                    <button data-preset="100,75,88">Мягко</button>
-                    <button data-preset="72,55,82">Ночь</button>
-                  </div>
+              <div class="skin-grid" id="skinGrid"></div>
+
+              <div class="skin-soft" id="skinAdjRow" hidden>
+                <div class="adj"><span>Яркость</span><input type="range" data-adj="b" min="20" max="100" value="100" aria-label="Яркость оболочки"><b data-adjv="b">100%</b></div>
+                <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
+                <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
+                <div class="adj adj-font"><span>Шрифт</span><div class="te-seg" id="skinFontSeg"></div></div>
+                <div class="presets">
+                  <button data-preset="100,100,100">Как в дизайне</button>
+                  <button data-preset="100,75,88">Мягко</button>
+                  <button data-preset="72,55,82">Ночь</button>
                 </div>
               </div>
-              <div class="look-group">
+
+              <div id="lookThemes">
                 <div class="look-h">Цветовая тема</div>
-                <div class="te-note" style="margin-top:0">Цвета интерфейса. Выбор темы выключает оболочку.</div>
+                <div class="te-note" style="margin-top:0">Цвета интерфейса. Работает со стандартной оболочкой.</div>
                 <div class="te-list" id="teList"></div>
                 <div class="te" id="teEd" hidden></div>
               </div>
@@ -1708,6 +1717,30 @@
     { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca' }
   ];
   var curSkin = '', skinAdj = { b: 100, s: 78, c: 90 };
+  // Набор шрифтов: '' — как в оболочке, иначе один из наборов
+  var SKIN_FONTS = [
+    { id: '', name: 'Как в оболочке' },
+    { id: 'onest', name: 'Как в дизайне' },
+    { id: 'mono', name: 'VGA / DOS' },
+    { id: 'pixel', name: 'Неон-скан' },
+    { id: 'retro', name: 'Ретро-десктоп' }
+  ];
+  var curFont = '';
+  function applySkinFont(id, save){
+    curFont = id || '';
+    var d = document.documentElement;
+    ['onest', 'mono', 'pixel', 'retro'].forEach(function (k){ d.classList.remove('font-' + k); });
+    if (curFont) d.classList.add('font-' + curFont);
+    try { localStorage.setItem('tapSkinFont', curFont); } catch (e) {}
+    if (save && A.setSetting) A.setSetting('skinFont', curFont);
+    renderFontSeg();
+  }
+  function renderFontSeg(){
+    var seg = $('skinFontSeg'); if (!seg) return;
+    seg.innerHTML = SKIN_FONTS.map(function (f){
+      return '<button data-font="' + f.id + '"' + (curFont === f.id ? ' class="on"' : '') + '>' + esc(f.name) + '</button>';
+    }).join('');
+  }
   // Ручки оболочки: яркость, насыщенность, контраст — независимо друг от друга
   function applySkinAdj(next, save){
     if (next) { if (next.b != null) skinAdj.b = next.b; if (next.s != null) skinAdj.s = next.s; if (next.c != null) skinAdj.c = next.c; }
@@ -1758,7 +1791,11 @@
   }
   function renderSkinList(){
     var box = $('skinGrid'); if (!box) return;
-    box.innerHTML = SKINS.map(function (s){
+    // «Стандарт» — всегда первый: это режим с цветовой темой
+    var std = '<button class="skin-c' + (curSkin ? '' : ' on') + '" data-skin="" title="Стандартный интерфейс с цветовой темой">' +
+      '<div class="skin-pv" style="background:var(--bg2);box-shadow:inset 0 0 0 2px var(--ln)"><i class="sp-line" style="background:var(--tx3);top:28px;width:64%"></i></div>' +
+      '<b>Стандарт</b><small>цветовая тема</small></button>';
+    box.innerHTML = std + SKINS.map(function (s){
       return '<button class="skin-c' + (curSkin === s.id ? ' on' : '') + '" data-skin="' + s.id + '" title="Включить оболочку «' + esc(s.name) + '»">' +
         '<div class="skin-pv" style="background:' + s.bg + '">' +
           '<i class="sp-card" style="background:' + s.card + ';box-shadow:inset 0 0 0 2px ' + s.line + '"></i>' +
@@ -1766,11 +1803,10 @@
           '<i class="sp-btn" style="background:' + s.btn + ';box-shadow:inset -2px -2px 0 rgba(0,0,0,.4)"></i>' +
         '</div><b>' + esc(s.name) + '</b><small>' + esc(s.sub) + '</small>' +
         (curSkin === s.id ? '<span class="skin-tag">вкл</span>' : '') + '</button>';
-    }).join('') +
-      '<button class="skin-c' + (curSkin ? '' : ' on') + '" data-skin="" title="Вернуться к обычному интерфейсу">' +
-        '<div class="skin-pv" style="background:var(--bg2);box-shadow:inset 0 0 0 2px var(--ln)"><i class="sp-line" style="background:var(--tx3);top:28px;width:64%"></i></div>' +
-        '<b>Без оболочки</b><small>обычный интерфейс</small></button>';
+    }).join('');
     var row = $('skinAdjRow'); if (row) row.hidden = !curSkin;
+    var themes = $('lookThemes'); if (themes) themes.hidden = !!curSkin;
+    renderFontSeg();
     applySkinAdj(null, false);
   }
   function bindSkins(){
@@ -1790,6 +1826,10 @@
       box.addEventListener('click', function (e){
         var b = e.target.closest('[data-preset]'); if (!b) return;
         setSkinPreset(b.dataset.preset);
+      });
+      box.addEventListener('click', function (e){
+        var f = e.target.closest('button[data-font]'); if (!f) return;
+        applySkinFont(f.dataset.font || '', true);
       });
     }
     renderSkinList();
@@ -3610,6 +3650,8 @@
     var adj = (A.getSetting ? await A.getSetting('skinAdj') : null);
     if (!adj || typeof adj !== 'object') { try { adj = JSON.parse(localStorage.getItem('tapSkinAdj') || 'null'); } catch (e) { adj = null; } }
     applySkinAdj(adj || { b: 100, s: 78, c: 90 }, false);
+    var fnt = (A.getSetting ? await A.getSetting('skinFont') : '') || (function (){ try { return localStorage.getItem('tapSkinFont') || ''; } catch (e) { return ''; } })();
+    applySkinFont(fnt, false);
   })();
   function rankCtx(){ return { lcOn: true, ymFull: ymLoggedIn && ymPlus, ymOn: true, ytOn: ytUsable(), ytLogged: typeof ytLogged === 'function' && ytLogged(), scOn: SVC.scOn, auOn: SVC.auOn, order: srcOrder }; }
 

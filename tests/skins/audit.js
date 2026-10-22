@@ -82,7 +82,7 @@ function auditInPage() {
     if (!rules) continue;
     for (const rule of Array.from(rules)) {
       const sel = rule.selectorText || '';
-      if (!/pixel-skin|skin-/.test(sel)) continue;
+      if (!/pixel-skin|skin-|font-(onest|mono|pixel|retro)/.test(sel)) continue;
       for (const part of sel.split(',')) {
         const m = part.match(/\.([A-Za-z0-9_-]+)/g) || [];
         for (const one of m) covered.add(one.slice(1));
