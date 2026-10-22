@@ -63,7 +63,7 @@
     </label>
   </div>
 
-  <div class="dock-feed" id="feed"><div class="dock-empty">Сообщений пока нет</div></div>
+  <div class="dock-feed" id="feed"><div class="dock-empty">Подключаюсь к Тапёру…</div></div>
 
   <div class="dock-bar">
     <button class="db" data-cmd="prev" title="Назад" aria-label="Назад">
@@ -168,7 +168,11 @@
   });
 
   var es = new EventSource('/widget/events');
-  es.onmessage = function(e){ try { render(JSON.parse(e.data)); } catch (err) {} };
+  var gotState = false;
+  es.onmessage = function(e){ try { gotState = true; render(JSON.parse(e.data)); } catch (err) {} };
+  setTimeout(function(){
+    if (!gotState) feedEl.innerHTML = '<div class="dock-empty">Нет связи с Тапёром.<br>Проверь, что программа запущена.</div>';
+  }, 4000);
   fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
 })();
 </script>

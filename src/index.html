@@ -1467,6 +1467,7 @@
               <div class="st">Панель с сообщениями для OBS</div>
               <div class="sd">В OBS: «Вид» → «Панели» → «Пользовательские панели браузера» → вставь адрес. Внутри — лента сообщений и кнопки плеера.</div>
               <div class="path" id="wgUrl" style="margin-top:8px">…</div>
+              <div class="sd" id="wgWarn" hidden style="margin-top:6px;color:#FFB86B"></div>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-self:flex-end">
               <button class="btn" id="wgCopy">Скопировать адрес</button>
@@ -6012,7 +6013,21 @@ function initWidgetUi(){
     };
   }
   var portEl = $('wgPort'), portBtn = $('wgPortApply');
-  if (portEl && A.getSetting) A.getSetting('widgetPort').then(function(v){ if (v) portEl.value = v; });
+  // Проверка: не занял ли постоянный порт кто-то другой — тогда адрес в OBS не совпадёт
+  function checkPortWarn(want){
+    var warn = $('wgWarn');
+    if (!warn) return;
+    var real = Number((WG.url.match(/:(\d+)\/widget/) || [])[1] || 0);
+    if (want && real && Number(want) !== real) {
+      warn.hidden = false;
+      warn.textContent = 'Порт ' + want + ' занят другой программой — панель сейчас на ' + real + '. Адрес в OBS: ' + WG.url;
+    } else {
+      warn.hidden = true;
+    }
+  }
+  var wantPort = null;
+  if (A.getSetting) A.getSetting('widgetPort').then(function(v){ wantPort = Number(v) || null; checkPortWarn(wantPort); if (portEl && v) portEl.value = v; });
+  if (A.widgetUrl) setTimeout(function(){ checkPortWarn(wantPort); }, 1500);
   if (portBtn) portBtn.onclick = function(){
     var v = Number(portEl.value);
     if (!v || v < 1024 || v > 65535) { toast('Порт должен быть от 1024 до 65535'); return; }

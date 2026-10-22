@@ -838,6 +838,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('get-version', () => app.getVersion());
 
   const port = await startServer(Number(cfg('widgetPort')) || 0);
+  log('панель для OBS: http://127.0.0.1:' + port + '/widget');
   appUrl = 'http://127.0.0.1:' + port + '/index.html';
 
   // Поиск по YouTube (без ключа и входа)
