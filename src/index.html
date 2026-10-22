@@ -760,10 +760,12 @@
   /* Полоса прокрутки — своя, снаружи скруглённого контейнера */
   .set-main { scrollbar-width: none; }
   .set-main::-webkit-scrollbar { width: 0; height: 0; }
-  .set-bar { position: absolute; right: 0; top: 8px; bottom: 8px; width: 6px; display: none; pointer-events: none; z-index: 6; }
+  .set-bar { position: absolute; right: -3px; top: 8px; bottom: 8px; width: 12px; display: none; z-index: 6; cursor: pointer; }
   .set-bar.on { display: block; }
-  .set-bar i { position: absolute; left: 0; right: 0; top: 0; height: 40px; border-radius: 3px; background: color-mix(in srgb, var(--tx) 20%, transparent); }
+  .set-bar i { position: absolute; left: 3px; right: 3px; top: 0; height: 40px; border-radius: 3px; background: color-mix(in srgb, var(--tx) 20%, transparent); cursor: grab; transition: background .15s; }
   .set:hover .set-bar i { background: color-mix(in srgb, var(--tx) 30%, transparent); }
+  .set .set-bar:hover i { background: color-mix(in srgb, var(--ac) 70%, transparent); }
+  .set .set-bar i.drag { background: var(--ac); cursor: grabbing; }
   .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--gutter); margin: 0; box-sizing: border-box; height: 100%; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
@@ -1525,6 +1527,28 @@
     box.addEventListener('scroll', upd);
     window.addEventListener('resize', upd);
     setInterval(upd, 500);
+    // перетаскивание ползунка и клик по дорожке
+    bar.addEventListener('mousedown', function(e){
+      var view = box.clientHeight, total = box.scrollHeight;
+      if (total - view <= 2) return;
+      e.preventDefault();
+      var h = Math.max(28, Math.round(view * view / total));
+      var rect = bar.getBoundingClientRect();
+      var y = e.clientY - rect.top;
+      var top = parseFloat((thumb.style.transform || '').replace(/[^0-9.\-]/g, '')) || 0;
+      var track = Math.max(1, view - h - 16);
+      if (y < top || y > top + h) {
+        var pos = Math.min(Math.max(0, (y - h / 2) / track), 1);
+        box.scrollTop = pos * (total - view);
+        return;
+      }
+      thumb.classList.add('drag');
+      var startY = e.clientY, startTop = box.scrollTop, k = (total - view) / track;
+      function move(ev){ box.scrollTop = startTop + (ev.clientY - startY) * k; }
+      function up(){ thumb.classList.remove('drag'); document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
     setTimeout(upd, 300);
   })();
   // ===== Вкладки =====
