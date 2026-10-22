@@ -920,8 +920,8 @@
   .reqv { flex: 1 1 auto; min-width: 0; padding: 0 0 0 var(--gutter); display: flex; flex-direction: column; gap: var(--sp-3); }
   .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   /* Кнопки в шапке заказов — одного размера и формы */
-  .rq-acts .pbtn, .rq-acts .rq-sm { height: 32px; padding: 0 12px; border-radius: var(--r-ctl); font: 600 12.5px Onest, sans-serif; }
-  .rq-sm { height: 32px; padding: 0 12px; border-radius: var(--r-ctl); border: 0; background: var(--hov); color: var(--tx2); font: 600 12.5px Onest, sans-serif; cursor: pointer; }
+  .rq-acts .pbtn, .rq-acts .rq-sm { height: 32px; padding: 0 14px; border-radius: 999px; font: 600 12.5px Onest, sans-serif; line-height: 1; }
+  .rq-sm { height: 32px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--hov); color: var(--tx2); font: 600 12.5px Onest, sans-serif; line-height: 1; cursor: pointer; }
   .rq-sm:hover { color: var(--tx); border-color: var(--ln3); }
   .rq-sm.hl { background: rgba(var(--acr),.16); color: var(--ac2); border-color: transparent; }
   .rq-svc { font-size: 12px; color: var(--tx4); display: flex; gap: 8px; align-items: center; }
@@ -1048,7 +1048,7 @@
 
     <section class="view reqv" id="viewReq" hidden aria-label="Заказы">
       <div class="col-head">
-        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>＋ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
+        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>+ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
       </div>
       <div class="rq-sum" id="rqSum" hidden></div>
       <div class="rq-list" id="rqList"></div>
@@ -4283,7 +4283,7 @@
     var sm = rqSummary(vis);
     $('rqSum').hidden = !sm.html; $('rqSum').innerHTML = sm.html;
     var nPend = act.filter(function (x){ return !x.it.state; }).length; // ждут решения
-    $('rqAddAll').hidden = !nPend; $('rqAddAll').textContent = '＋ Все точные в очередь (' + nPend + ')';
+    $('rqAddAll').hidden = !nPend; $('rqAddAll').textContent = '+ Все точные в очередь (' + nPend + ')';
 
     var h = '';
     if (RQ.testOpen) h += '<div class="rq-test"><input id="rqtText" style="flex:1 1 280px" placeholder="Текст доната, например: Привет! Кино — Кукушка" value="' + esc(RQ.testText || '') + '"><input id="rqtAmt" type="number" style="width:100px" value="' + esc(RQ.testAmt || 100) + '" aria-label="Сумма"><button class="pbtn qadd" id="rqtGo">Разобрать</button><span class="sd" style="color:var(--tx4);font-size:12px">Пробный заказ не уходит никуда — только сюда</span></div>';
