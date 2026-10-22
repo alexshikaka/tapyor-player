@@ -5,7 +5,7 @@
 <title>Тапёр</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
-<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _sf = localStorage.getItem('tapSkinFont'); if (_sf) { _d.classList.add('font-' + _sf); } var _ss = localStorage.getItem('tapSkinAdj'); if (_ss) { try { var _a = JSON.parse(_ss) || {}; var _b = Math.max(20, Math.min(100, _a.b == null ? 100 : +_a.b)), _s2 = Math.max(0, Math.min(100, _a.s == null ? 100 : +_a.s)), _c = Math.max(0, Math.min(100, _a.c == null ? 100 : +_a.c)); _d.style.setProperty('--sk-b', (_b / 100).toFixed(2)); _d.style.setProperty('--sk-s', (_s2 / 100).toFixed(2)); _d.style.setProperty('--sk-c', (0.62 + 0.38 * (_c / 100)).toFixed(3)); } catch (e) {} } } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
+<script>try { var _t = localStorage.getItem('tapTheme'), _d = document.documentElement, _s = localStorage.getItem('tapSkin'); if (_s) { _d.classList.add('pixel-skin', 'skin-' + _s); var _sf = localStorage.getItem('tapSkinFont'); if (_sf) { _d.classList.add('font-' + _sf); } var _ss = localStorage.getItem('tapSkinAdj'); if (_ss) { try { var _a = JSON.parse(_ss) || {}; var _b = Math.max(20, Math.min(100, _a.b == null ? 100 : +_a.b)), _s2 = Math.max(0, Math.min(100, _a.s == null ? 100 : +_a.s)), _c = Math.max(0, Math.min(100, _a.c == null ? 100 : +_a.c)); _d.style.setProperty('--sk-b', (_b / 100).toFixed(2)); _d.style.setProperty('--sk-s', (_s2 / 100).toFixed(2)); _d.style.setProperty('--sk-c', (0.62 + 0.38 * (_c / 100)).toFixed(3)); } catch (e) {} } } if (_t === 'mono') _d.classList.add('theme-mono'); else if (_t === 'light') _d.classList.add('theme-light-default'); else if (_t && _t.indexOf('c:') === 0) { var _v = JSON.parse(localStorage.getItem('tapThemeVars') || 'null'); if (_v) { _d.classList.add('theme-custom'); if (_v._light) _d.classList.add('theme-light'); for (var _k in _v) if (_k[0] !== '_') _d.style.setProperty('--' + _k, _v[_k]); } } } catch (e) {}</script>
 <style>
   :root { --bg00: #07070A; --bg0: #0E0F13; --bg1: #15161C; --bg2: #181A21; --bg3: #1E2029; --bg4: #2A2D38; --ln: #2C2F3A; --ln2: #23252F; --ln3: #3A3D4A;
     --tx: #ECEDF2; --tx2: #C9CBD4; --tx3: #9EA2B0; --tx4: #8A8E9C; --tx5: #7C8090; --ac: #9B87FF; --ac2: #B9A9FF; --acr: 155,135,255; --acbg: #221F33; --pri: #FFD43B; --prit: #0E0F13; --hov: rgba(255,255,255,.05); --hov2: rgba(255,255,255,.07); --hov3: rgba(255,255,255,.09);
@@ -1135,7 +1135,16 @@
   .adj-font { margin-top: 10px; }
   /* Блок цветовой темы — под карточками, с отбивкой */
   #lookThemes { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ln2); }
-  .adj-font .skin-font-sel { width: 220px; height: 34px; font: 500 13px Onest, sans-serif; cursor: pointer; }</style>
+  .adj-font .skin-font-sel { width: 220px; height: 34px; font: 500 13px Onest, sans-serif; cursor: pointer; }  /* ===== Встроенная светлая тема ===== */
+  html.theme-light-default {
+    --bg00:#EDEFF4; --bg0:#F5F6F9; --bg1:#FFFFFF; --bg2:#F0F2F7; --bg3:#E9ECF3; --bg4:#DDE1EA;
+    --ln:#D5DAE4; --ln2:#E4E8F0; --ln3:#C3CAD8;
+    --tx:#14161B; --tx2:#3B414D; --tx3:#5C6371; --tx4:#7E8595; --tx5:#9BA2B1;
+    --ac:#6C4BE0; --ac2:#4A2FB8; --acr:108,75,224; --acbg:#EDE8FE;
+    --pri:#FFD43B; --prit:#14161B; --hov:rgba(20,22,27,.055);
+    color-scheme: light;
+  }
+  html.theme-light-default .qglow.idle { background: radial-gradient(130% 60% at 50% 0%, var(--acbg), transparent 72%); }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
@@ -3484,19 +3493,21 @@
   var TE = { open: false, tone: 'violet', chars: 'tone', pmode: 'dark', variants: [], loading: false, saveT: null };
   var BUILTIN = [
     { id: 'violet', name: 'Фиолетовая', sub: 'встроенная', sw: ['#15161C', '#0E0F13', '#9B87FF', '#FFD43B'] },
-    { id: 'mono', name: 'Монохром', sub: 'встроенная', sw: ['#161616', '#0F0F0F', '#D4D4D4', '#E8E8E8'] }
+    { id: 'mono', name: 'Монохром', sub: 'встроенная', sw: ['#161616', '#0F0F0F', '#D4D4D4', '#E8E8E8'] },
+    { id: 'light', name: 'Светлая', sub: 'встроенная', sw: ['#F5F6F9', '#FFFFFF', '#6C4BE0', '#FFD43B'] }
   ];
-  function clearCustomVars(){ var d = document.documentElement; THEME_KEYS.forEach(function (k){ d.style.removeProperty('--' + k); }); d.classList.remove('theme-custom', 'theme-light'); }
+  function clearCustomVars(){ var d = document.documentElement; THEME_KEYS.forEach(function (k){ d.style.removeProperty('--' + k); }); d.classList.remove('theme-custom', 'theme-light', 'theme-light-default'); }
   function themeById(id){ return myThemes.find(function (t){ return 'c:' + t.id === id; }) || null; }
   // Применить тему; save — запомнить выбор
   function applyTheme(id, save){
     clearSkinClass();
     var d = document.documentElement, t = id && id.indexOf('c:') === 0 ? themeById(id) : null;
     if (id && id.indexOf('c:') === 0 && !t) id = 'violet';
-    if (id !== 'mono' && !t) id = 'violet';
+    if (id !== 'mono' && id !== 'light' && !t) id = 'violet';
     curThemeId = id;
     clearCustomVars();
     d.classList.toggle('theme-mono', id === 'mono');
+    d.classList.toggle('theme-light-default', id === 'light');
     var bar = null;
     if (t) {
       var v = TapTheme.build(t);
