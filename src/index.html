@@ -1122,7 +1122,7 @@
   .adj-font { margin-top: 10px; }
   /* Блок цветовой темы — под карточками, с отбивкой */
   #lookThemes { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--ln2); }
-  .adj-font .te-seg { flex-wrap: wrap; }</style>
+  .adj-font .skin-font-sel { width: 220px; height: 34px; font: 500 13px Onest, sans-serif; cursor: pointer; }</style>
 </head>
 <body data-tab="search">
   <div class="app-shell">
@@ -1347,7 +1347,7 @@
                 <div class="adj"><span>Яркость</span><input type="range" data-adj="b" min="20" max="100" value="100" aria-label="Яркость оболочки"><b data-adjv="b">100%</b></div>
                 <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
                 <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
-                <div class="adj adj-font"><span>Шрифт</span><div class="te-seg" id="skinFontSeg"></div></div>
+                <div class="adj adj-font"><span>Шрифт</span><select class="field skin-font-sel" id="skinFontSel" aria-label="Шрифт оболочки"></select></div>
                 <div class="presets">
                   <button data-preset="100,100,100">Как в дизайне</button>
                   <button data-preset="100,75,88">Мягко</button>
@@ -1736,10 +1736,11 @@
     renderFontSeg();
   }
   function renderFontSeg(){
-    var seg = $('skinFontSeg'); if (!seg) return;
-    seg.innerHTML = SKIN_FONTS.map(function (f){
-      return '<button data-font="' + f.id + '"' + (curFont === f.id ? ' class="on"' : '') + '>' + esc(f.name) + '</button>';
+    var sel = $('skinFontSel'); if (!sel) return;
+    sel.innerHTML = SKIN_FONTS.map(function (f){
+      return '<option value="' + f.id + '">' + esc(f.name) + '</option>';
     }).join('');
+    sel.value = curFont;
   }
   // Ручки оболочки: яркость, насыщенность, контраст — независимо друг от друга
   function applySkinAdj(next, save){
@@ -1827,9 +1828,9 @@
         var b = e.target.closest('[data-preset]'); if (!b) return;
         setSkinPreset(b.dataset.preset);
       });
-      box.addEventListener('click', function (e){
-        var f = e.target.closest('button[data-font]'); if (!f) return;
-        applySkinFont(f.dataset.font || '', true);
+      box.addEventListener('change', function (e){
+        if (!e.target || e.target.id !== 'skinFontSel') return;
+        applySkinFont(e.target.value || '', true);
       });
     }
     renderSkinList();
