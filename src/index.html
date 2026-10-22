@@ -1173,124 +1173,6 @@
 
 
 
-  /* 5. Афиша — «стекло поверх афиши»: многослойное стекло, воздух между зонами,
-     сетка карточек и плавающий подвал. Цвета приходят из схемы оболочки. */
-  html.skin-afisha { --r-panel: 24px; --r-card: 18px; --r-ctl: 14px; --r-tab: 999px; }
-
-  /* Фон: несколько мягких «сияний» + очень тихая зернистость, как в liquid glass */
-  html.skin-afisha .app-shell {
-    position: relative;
-    background:
-      radial-gradient(58% 46% at 78% -6%, var(--bg2) 0%, transparent 62%),
-      radial-gradient(46% 40% at 6% 22%, var(--bg1) 0%, transparent 66%),
-      radial-gradient(80% 60% at 50% 118%, var(--bg1) 0%, transparent 60%),
-      var(--bg0);
-    border-radius: 0 0 24px 24px;
-  }
-  html.skin-afisha .app-shell::after {
-    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .22; mix-blend-mode: soft-light;
-    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-  }
-
-  /* Воздух между зонами: шапка, контент, очередь и подвал не липнут */
-  html.skin-afisha .hrow { margin: 0 18px; }
-  html.skin-afisha .hrow1 { margin-top: 12px; margin-bottom: 6px; }
-  html.skin-afisha main { gap: 16px; padding: 0 18px 18px; }
-  html.skin-afisha .results-col { padding-left: 0; gap: 14px; }
-  html.skin-afisha .queue-col { margin: 0; }
-  /* небольшой зазор между рабочей областью и подвалом */
-  html.skin-afisha footer { margin: 6px 18px 18px; }
-
-  /* Стекло: два слоя (градиент + размытие), светлая кромка и мягкая тень */
-  html.skin-afisha .card, html.skin-afisha .queue-col, html.skin-afisha .searchbar, html.skin-afisha .set-main,
-  html.skin-afisha .wavecard, html.skin-afisha .br-wrap {
-    background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 100%) !important;
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 20px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(0,0,0,.10), 0 22px 48px rgba(0,0,0,.38);
-    backdrop-filter: blur(22px) saturate(140%);
-  }
-  /* Очередь — главная стеклянная панель с подсветкой акцента */
-  html.skin-afisha .queue-col { position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 26px 60px rgba(0,0,0,.45), 0 0 60px -20px var(--ac); }
-
-  /* Шапка: постерные заголовки и капсульная навигация */
-  html.skin-afisha .tbrand .name, html.skin-afisha .sec-h h2, html.skin-afisha .qhead h2, html.skin-afisha .look-h {
-    font-weight: 800; letter-spacing: -.02em;
-  }
-  html.skin-afisha .sec-h h2 { font-size: 26px; }
-  html.skin-afisha nav button { border-radius: 999px; padding: 8px 16px; transition: background-color .16s ease, color .16s ease; }
-  html.skin-afisha nav button.active { background: rgba(255,255,255,.14); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
-
-  /* Поиск и строка источников: капсулы с воздухом */
-  html.skin-afisha .searchbar {
-    padding-left: 20px; border-radius: 999px; margin-bottom: 12px;
-    background: rgba(255,255,255,.085) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 10px 26px rgba(0,0,0,.28);
-  }
-  html.skin-afisha .searchbar input, html.skin-afisha .searchbar .field { border-radius: 999px; background: transparent; }
-  html.skin-afisha #chips { gap: 8px; margin: 0 2px 10px; }
-  html.skin-afisha .chip { border-radius: 999px; padding: 6px 14px; background: rgba(255,255,255,.06); }
-  html.skin-afisha .chip.active { background: rgba(255,255,255,.14); }
-
-  /* Выдача: карточки-плитки с крупной обложкой */
-  html.skin-afisha .tarea > div {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 16px; padding-bottom: 20px;
-  }
-  html.skin-afisha .tarea .row {
-    display: flex; flex-direction: column; align-items: stretch; gap: 10px;
-    padding: 10px 10px 12px;
-    background: linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.03) 100%);
-    border: 1px solid rgba(255,255,255,.10); border-radius: 18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(0,0,0,.26);
-    transition: transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s ease, background-color .18s ease;
-  }
-  html.skin-afisha .tarea .row:hover {
-    transform: translateY(-4px);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 22px 40px rgba(0,0,0,.40), 0 0 40px -18px var(--ac);
-  }
-  html.skin-afisha .tarea .row .cover-wrap {
-    width: 100%; height: auto !important; aspect-ratio: 1 / 1; border-radius: 14px; overflow: hidden;
-    position: relative; flex: 0 0 auto; box-shadow: 0 14px 28px rgba(0,0,0,.45);
-  }
-  html.skin-afisha .tarea .row .cover { width: 100% !important; height: 100% !important; object-fit: cover; border-radius: 14px; }
-  html.skin-afisha .tarea .row .meta { min-width: 0; }
-  html.skin-afisha .tarea .row .t { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  html.skin-afisha .tarea .row .s { font-size: 12px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  html.skin-afisha .tarea .row .dur { font-size: 11px; color: var(--tx4); }
-  html.skin-afisha .pls { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); gap: 16px; overflow: visible; height: auto !important; padding-bottom: 8px; }
-  html.skin-afisha .plc {
-    width: auto; flex-direction: column; align-items: stretch; gap: 8px; padding: 10px;
-    background: linear-gradient(180deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.03) 100%);
-    border: 1px solid rgba(255,255,255,.10); border-radius: 18px; box-shadow: 0 12px 26px rgba(0,0,0,.28);
-    transition: transform .18s ease, box-shadow .18s ease;
-  }
-  html.skin-afisha .plc:hover { transform: translateY(-3px); box-shadow: 0 20px 38px rgba(0,0,0,.38), 0 0 36px -18px var(--ac); }
-  html.skin-afisha .plc img, html.skin-afisha .plc .ph { width: 100%; height: auto !important; aspect-ratio: 1 / 1; border-radius: 12px; }
-  html.skin-afisha .plc .mm { flex: none; min-width: 0; }
-
-  /* Очередь: крупные обложки в мягких карточках, с отступами друг от друга */
-  html.skin-afisha .qrow {
-    background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09);
-    border-radius: 16px; padding: 8px 10px; margin-bottom: 8px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
-    transition: background-color .16s ease, transform .16s ease;
-  }
-  html.skin-afisha .qrow:hover { background: rgba(255,255,255,.10); transform: translateX(2px); }
-  html.skin-afisha .qrow .cov, html.skin-afisha .qrow img { width: 48px; height: 48px; border-radius: 12px; }
-
-  /* Подвал: плавающая капсула */
-  html.skin-afisha footer {
-    background: linear-gradient(180deg, rgba(255,255,255,.11) 0%, rgba(255,255,255,.04) 100%);
-    border-top: 0; border-radius: 22px; padding: 10px 20px;
-    backdrop-filter: blur(24px) saturate(140%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 20px 44px rgba(0,0,0,.42);
-  }
-  html.skin-afisha .cbtn { border-radius: 999px; }
-  html.skin-afisha .cbtn.play { background: var(--pri); color: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.45), 0 0 32px -10px var(--pri); }
-  html.skin-afisha .pbtn, html.skin-afisha .rq-sm, html.skin-afisha .chip { border-radius: 999px; }
-  html.skin-afisha .pbtn.y, html.skin-afisha .upd-go { background: var(--pri); color: #fff; box-shadow: 0 10px 26px rgba(0,0,0,.42); }
-  html.skin-afisha .pbtn.y:hover { filter: brightness(1.08); }
-  html.skin-afisha .set-side button { border-radius: 12px; }
-  html.skin-afisha .art-n img, html.skin-afisha .cov, html.skin-afisha .q-art img { border-radius: 14px; }
   /* Наборы шрифтов: можно взять шрифт одной оболочки, оставив другую.
      Двойной класс нужен, чтобы перебить правила кожи по специфичности. */
   html.font-mono.font-mono *, html.font-mono.font-mono body { font-family: 'JetBrains Mono', ui-monospace, monospace !important; }
@@ -1988,8 +1870,7 @@ window.onerror = function(msg, src, line){
   var SKINS = [
     { id: 'dos',  name: 'VGA / DOS', sub: 'серые панели с фаской', tag: '90-е',     bg: '#007878', card: '#c0c0c0', line: '#000080', txt: '#000000', btn: '#c0c0c0', pixel: true },
     { id: 'crt',  name: 'Неон-скан', sub: 'CRT и свечение',        tag: 'CRT',      bg: '#0b0b12', card: '#191527', line: '#ff2d95', txt: '#f2eeff', btn: '#00e5ff', pixel: true },
-    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca', pixel: true },
-    { id: 'afisha', name: 'Афиша', sub: 'стекло и красный градиент', tag: 'новое', bg: '#1a0705', card: '#2a0d0a', line: '#5a1d18', txt: '#f6edea', btn: '#e04a4a', pixel: false }
+    { id: 'retro', name: 'Ретро-десктоп', sub: 'серо-чёрный, фаски 95-го', tag: '90-е', bg: '#1b1b1e', card: '#3a3a40', line: '#74747c', txt: '#e9e9ec', btn: '#c6c6ca', pixel: true }
   ];
   var curSkin = '', skinAdj = { b: 100, s: 100, c: 100 };
   // ── Цветовые схемы оболочек ────────────────────────────────────────────────
@@ -2036,16 +1917,6 @@ window.onerror = function(msg, src, line){
       { id: 'motif', name: 'Motif / CDE', desc: 'Пыльный сланец и серый металл Unix-рабочих станций: Solaris, HP-UX, первые CDE.',
         core: { bg: '#3E4A56', panel: '#8A9AA8', surface: '#A6B2BE', line: '#5C6B78', text: '#0F1418', accent: '#C46A1E', button: '#A6B2BE' } }
     ],
-    afisha: [
-      { id: 'poster', name: 'Концертный постер', desc: 'Шелкография афиш 60-х: кремовая бумага, красный и чёрный, крупный шрифт.',
-        core: { bg: '#F2E8D5', panel: '#FBF5E9', surface: '#E8DCC6', line: '#C9B79A', text: '#1A1410', accent: '#D0342C', button: '#D0342C' } },
-      { id: 'vinyl', name: 'Винил', desc: 'Матовый конверт пластинки: чёрный картон, кремовый шрифт и оранжевая наклейка лейбла.',
-        core: { bg: '#141312', panel: '#1D1B19', surface: '#272421', line: '#3E3A35', text: '#F0E7D8', accent: '#E07A3A', button: '#E07A3A' } },
-      { id: 'club', name: 'Ночной клуб', desc: 'Тёмный зал, кислотный лайм и циан — свет софитов и лазеров.',
-        core: { bg: '#0A0A0C', panel: '#121216', surface: '#1A1A20', line: '#2E2E38', text: '#EAF7E6', accent: '#B6FF3C', button: '#B6FF3C' } },
-      { id: 'red', name: 'Красная афиша', desc: 'Тёмно-красный градиент референса: сцена, бархат и большой портрет артиста.',
-        core: { bg: '#1A0705', panel: '#2A0D0A', surface: '#351210', line: '#5A1D18', text: '#F6EDEA', accent: '#E04A4A', button: '#E04A4A' } }
-    ]
   };
   var curSkinScheme = {};   // id оболочки → id схемы | 'custom'
   var curSkinCore = {};     // id оболочки → свои цвета (когда 'custom')
@@ -2269,7 +2140,8 @@ function renderSkinScheme(){
   function skinById(id){ for (var i = 0; i < SKINS.length; i++) if (SKINS[i].id === id) return SKINS[i]; return null; }
   function clearSkinClass(){
     var d = document.documentElement;
-    if (SKINS) SKINS.forEach(function (s){ d.classList.remove('skin-' + s.id); });
+    // Снимаем любые классы skin-* — даже от удалённых оболочек
+    Array.prototype.slice.call(d.classList).forEach(function (c){ if (c.indexOf('skin-') === 0) d.classList.remove(c); });
     d.classList.remove('pixel-skin');
     if (typeof clearSkinVars === 'function') clearSkinVars();
     curSkin = '';
