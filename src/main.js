@@ -675,6 +675,17 @@ async function pickScreenColor() {
   });
 }
 
+// Масштаб интерфейса: zoomFactor + пропорциональный минимум окна,
+// чтобы при уменьшении масштаба окно можно было сжимать дальше.
+const UI_MIN_W = 900, UI_MIN_H = 600;
+function applyUiZoom(win, f) {
+  if (!win) return 1;
+  const z = Math.min(1.4, Math.max(0.6, Number(f) || 1));
+  win.webContents.setZoomFactor(z);
+  try { win.setMinimumSize(Math.max(420, Math.round(UI_MIN_W * z)), Math.max(300, Math.round(UI_MIN_H * z))); } catch (e) {}
+  return win.webContents.getZoomFactor();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -702,10 +713,9 @@ function createWindow() {
 
   // Масштаб интерфейса из настроек — применяем до первой отрисовки, без «прыжка»
   mainWindow.webContents.on('did-finish-load', () => {
-    const z = Math.min(1.4, Math.max(0.6, Number(cfg('uiZoom')) || 1));
-    if (z !== 1) mainWindow.webContents.setZoomFactor(z);
-  });
+    applyUiZoom(mainWindow, cfg('uiZoom') || 1);
 
+  });
   // Не открывать новые окна (ссылки и т.п.) — всё остаётся в программе
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
@@ -916,9 +926,7 @@ app.whenReady().then(async () => {
   // Масштаб интерфейса: колесо/ползунок в шапке меняет zoomFactor окна
   ipcMain.handle('ui-zoom', (e, f) => {
     const w = BrowserWindow.fromWebContents(e.sender); if (!w) return 1;
-    const z = Math.min(1.4, Math.max(0.6, Number(f) || 1));
-    w.webContents.setZoomFactor(z);
-    return w.webContents.getZoomFactor();
+    return applyUiZoom(w, f);
   });
   ipcMain.handle('ui-zoom-get', (e) => {
     const w = BrowserWindow.fromWebContents(e.sender);
