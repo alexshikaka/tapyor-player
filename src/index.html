@@ -755,8 +755,15 @@
 
   /* Настройки */
   /* Прокручивается только колонка с карточками: её скругление режет контент при прокрутке */
-  .set { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
-  /* Полоса прокрутки — как в выдаче поиска: тонкая, появляется при наведении */
+  /* Прокручивается только колонка с карточками: её скругление режет контент при прокрутке */
+  .set { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; position: relative; }
+  /* Полоса прокрутки — своя, снаружи скруглённого контейнера */
+  .set-main { scrollbar-width: none; }
+  .set-main::-webkit-scrollbar { width: 0; height: 0; }
+  .set-bar { position: absolute; right: 0; top: 8px; bottom: 8px; width: 6px; display: none; pointer-events: none; z-index: 6; }
+  .set-bar.on { display: block; }
+  .set-bar i { position: absolute; left: 0; right: 0; top: 0; height: 40px; border-radius: 3px; background: color-mix(in srgb, var(--tx) 20%, transparent); }
+  .set:hover .set-bar i { background: color-mix(in srgb, var(--tx) 30%, transparent); }
   .set-in { display: flex; flex-wrap: wrap; gap: var(--sp-6); padding: 0 var(--gutter); margin: 0; box-sizing: border-box; height: 100%; }
   .set-side { flex: 1 1 200px; max-width: 230px; display: flex; flex-direction: column; gap: 2px; }
   /* Меню слева стоит на месте, листается только правая часть */
@@ -1309,6 +1316,7 @@
 
         </div>
       </div>
+      <div class="set-bar" id="setBar" aria-hidden="true"><i></i></div>
     </section>
 
     <div class="yl-ov" id="ytDlg" hidden role="dialog" aria-modal="true" aria-label="Вход в YouTube">
@@ -1499,6 +1507,26 @@
   $('setUpdBtn').onclick = function(){ if (A.updateCheck) A.updateCheck(); };
   if (A.onUpdateState) { A.onUpdateState(renderUpdate); A.updateGetState().then(renderUpdate); }
 
+  // Своя полоса прокрутки настроек: живёт снаружи скруглённого контейнера
+  (function(){
+    var box = document.querySelector('.set-main'), bar = document.getElementById('setBar');
+    if (!box || !bar) return;
+    var thumb = bar.firstElementChild;
+    function upd(){
+      var view = box.clientHeight, total = box.scrollHeight;
+      var on = total - view > 2;
+      bar.classList.toggle('on', on);
+      if (!on) return;
+      var h = Math.max(28, Math.round(view * view / total));
+      var y = total > view ? Math.round(box.scrollTop / (total - view) * (view - h)) : 0;
+      thumb.style.height = h + 'px';
+      thumb.style.transform = 'translateY(' + y + 'px)';
+    }
+    box.addEventListener('scroll', upd);
+    window.addEventListener('resize', upd);
+    setInterval(upd, 500);
+    setTimeout(upd, 300);
+  })();
   // ===== Вкладки =====
   var curTab = 'search';
   function setTab(t){
