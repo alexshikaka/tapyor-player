@@ -926,6 +926,13 @@
   @media (prefers-reduced-motion: reduce) { #tabs button.has-req { animation: none; color: #4ADE9A; } }
   .reqv { flex: 1 1 auto; min-width: 0; padding: 0 0 0 var(--gutter); display: flex; flex-direction: column; gap: var(--sp-3); }
   .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  /* Тумблер «Точные — сразу в очередь» прямо в шапке заказов */
+  .rq-exact { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+    padding: 4px 10px; border-radius: 999px; background: var(--bg3); }
+  .rq-exact span:last-child { font: 600 12px Onest, sans-serif; color: var(--tx3); }
+  .rq-exact .toggle { width: 34px; height: 20px; border-radius: 10px; padding: 2px; flex: 0 0 auto; }
+  .rq-exact .toggle span { width: 16px; height: 16px; }
+  #wgScale { accent-color: var(--ac); }
   /* Кнопки в шапке заказов — одного размера и формы */
   .rq-acts .pbtn, .rq-acts .rq-sm { height: 32px; padding: 0 14px; border-radius: 999px; font: 600 12.5px Onest, sans-serif; line-height: 1; }
   .rq-sm { height: 32px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--hov); color: var(--tx2); font: 600 12.5px Onest, sans-serif; line-height: 1; cursor: pointer; }
@@ -1199,7 +1206,7 @@
 
     <section class="view reqv" id="viewReq" hidden aria-label="Заказы">
       <div class="col-head">
-        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>+ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
+        <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><label class="rq-exact" title="Заказы, которые точно определились, сразу встают в очередь"><button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button><span>Точные — сразу в очередь</span></label><button class="pbtn qadd" id="rqAddAll" hidden>+ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
       </div>
       <div class="rq-list" id="rqList"></div>
     </section>
@@ -1225,14 +1232,14 @@
         <aside class="set-side">
           <button data-go="sAcc">Аккаунты</button>
           <button data-go="sHealth">Состояние сервисов</button>
-          <button data-go="sObs">OBS и стрим</button>
-          <button data-go="sStream">Стримерам</button>
           <button data-go="sLook">Оформление</button>
           <button data-go="sSearch">Поиск</button>
           <button data-go="sLocal">Музыка с компьютера</button>
           <button data-go="sPlay">Воспроизведение</button>
           <button data-go="sKeys">Горячие клавиши</button>
           <button data-go="sApp">Программа</button>
+          <button data-go="sObs">OBS и стрим</button>
+          <button data-go="sStream">Стримерам</button>
         </aside>
         <div class="set-main">
 
@@ -1295,67 +1302,6 @@
             </div>
           </section>
 
-          <section id="sStream">
-            <div class="sec-h"><h2>Стримерам</h2><span>Заказы музыки за донаты и своя страница для зрителей</span></div>
-            <div class="card" id="stDon"></div>
-            <div class="sec-h" style="margin-top:18px"><h2 style="font-size:16px">Заказы</h2><span>Как Тапёр принимает песни из донатов</span></div>
-            <div class="card">
-              <div class="srow">
-                <div class="sl"><div class="st">Цена за трек</div><div class="sd">Сколько треков оплачено, Тапёр считает по сумме доната. Не хватает — песня помечается «не хватает суммы», решаешь ты</div></div>
-                <div style="display:flex;gap:8px"><input class="field" id="stPrice" type="number" min="0" step="10" style="width:110px"><select class="field" id="stCur" style="width:90px"><option>RUB</option><option>UAH</option><option>KZT</option><option>USD</option><option>EUR</option></select></div>
-              </div>
-              <div class="srow">
-                <div class="sl"><div class="st">Самый длинный трек</div><div class="sd">Длиннее — пометка «длинный»: сам в очередь не попадёт</div></div>
-                <div style="display:flex;gap:8px;align-items:center"><input class="field" id="stMax" type="number" min="0" step="1" style="width:90px"><span class="sd">мин (0 — без ограничения)</span></div>
-              </div>
-              <div class="srow" style="align-items:flex-start">
-                <div class="sl"><div class="st">Стоп-лист</div><div class="sd">Слова, исполнители и треки, которые ты не ставишь — через запятую или с новой строки. Тапёр ищет их в названии, исполнителе и альбоме</div><textarea class="field st-ta" id="stStop" rows="4" spellcheck="false"></textarea><div><button class="btn ghost" id="stStopReset" style="margin-top:8px">Вернуть список по умолчанию</button></div></div>
-              </div>
-              <div class="srow">
-                <div class="sl"><div class="st">Мат (18+) можно</div><div class="sd">Выключено — треки с пометкой Explicit ждут твоего решения</div></div>
-                <button class="toggle" id="stExplicit" aria-label="Мат можно"><span></span></button>
-              </div>
-              <div class="srow">
-                <div class="sl"><div class="st">Точные — сразу в очередь</div><div class="sd">Песня найдена точно, без спорных пометок и сумма хватает — встаёт в очередь сама. Остальное ждёт тебя во вкладке «Заказы»</div></div>
-                <button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button>
-              </div>
-            </div>
-            <div class="sec-h" style="margin-top:18px"><h2 style="font-size:16px">Сайт-визитка</h2><span>Страница с кнопками доната и инструкцией, как заказать песню</span></div>
-            <div class="card" id="stSite"></div>
-          </section>
-
-          <section id="sObs">
-            <div class="sec-h"><h2>OBS и стрим</h2><span>Название трека на экране стрима</span></div>
-            <div class="card">
-              <div class="srow">
-                <div class="sl"><div class="st">Писать название трека в файл</div><div class="sd">В OBS: источник «Текст (GDI+)» → «Читать из файла» → выбери этот файл</div></div>
-                <button class="toggle" data-set-tg="npEnabled" aria-label="Писать название трека в файл"><span></span></button>
-              </div>
-              <div class="srow">
-                <div class="sl"><div class="st">Файл</div><div class="path" id="setNpPath">…</div></div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;align-self:flex-end">
-                  <button class="btn" id="setNpChoose">Изменить папку…</button>
-                  <button class="btn ghost" id="setNpOpen">Открыть папку</button>
-                </div>
-              </div>
-              <div class="srow" style="align-items:flex-start">
-                <div class="sl"><label class="st" for="setNpFmt">Как писать</label>
-                  <input id="setNpFmt" class="field" style="width:100%;margin-top:6px" spellcheck="false">
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px" id="setNpVars">
-                    <button class="var" data-var="{artist}" title="Исполнитель">{artist}</button>
-                    <button class="var" data-var="{title}" title="Название">{title}</button>
-                    <button class="var" data-var="{album}" title="Альбом (для Яндекса)">{album}</button>
-                    <button class="var" data-var="{source}" title="Откуда трек: Яндекс или YouTube">{source}</button>
-                  </div>
-                  <div class="npprev"><div class="k">Так будет на стриме</div><div class="v" id="setNpPrev"></div></div>
-                </div>
-              </div>
-              <div class="srow">
-                <div class="sl"><label class="st" for="setNpIdle">Когда ничего не играет</label><div class="sd">Пусто — надпись на стриме исчезнет</div></div>
-                <input id="setNpIdle" class="field" placeholder="пусто" style="flex:0 1 260px;font-family:Onest,sans-serif">
-              </div>
-            </div>
-          </section>
 
           <section id="sLook">
             <div class="sec-h"><h2>Оформление</h2><span>Оболочка и цветовая тема</span></div>
@@ -1477,6 +1423,110 @@
               <div class="srow">
                 <div class="sl"><div class="st">Журнал работы</div><div class="sd">Если что-то не играет — скопируй и пришли мне</div></div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="setLogCopy">Скопировать лог</button><button class="btn ghost" id="setLogOpen">Открыть файл</button></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="sStream">
+            <div class="sec-h"><h2>Стримерам</h2><span>Заказы музыки за донаты и своя страница для зрителей</span></div>
+            <div class="card" id="stDon"></div>
+            <div class="sec-h" style="margin-top:18px"><h2 style="font-size:16px">Заказы</h2><span>Как Тапёр принимает песни из донатов</span></div>
+            <div class="card">
+              <div class="srow">
+                <div class="sl"><div class="st">Цена за трек</div><div class="sd">Сколько треков оплачено, Тапёр считает по сумме доната. Не хватает — песня помечается «не хватает суммы», решаешь ты</div></div>
+                <div style="display:flex;gap:8px"><input class="field" id="stPrice" type="number" min="0" step="10" style="width:110px"><select class="field" id="stCur" style="width:90px"><option>RUB</option><option>UAH</option><option>KZT</option><option>USD</option><option>EUR</option></select></div>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Самый длинный трек</div><div class="sd">Длиннее — пометка «длинный»: сам в очередь не попадёт</div></div>
+                <div style="display:flex;gap:8px;align-items:center"><input class="field" id="stMax" type="number" min="0" step="1" style="width:90px"><span class="sd">мин (0 — без ограничения)</span></div>
+              </div>
+              <div class="srow" style="align-items:flex-start">
+                <div class="sl"><div class="st">Стоп-лист</div><div class="sd">Слова, исполнители и треки, которые ты не ставишь — через запятую или с новой строки. Тапёр ищет их в названии, исполнителе и альбоме</div><textarea class="field st-ta" id="stStop" rows="4" spellcheck="false"></textarea><div><button class="btn ghost" id="stStopReset" style="margin-top:8px">Вернуть список по умолчанию</button></div></div>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Мат (18+) можно</div><div class="sd">Выключено — треки с пометкой Explicit ждут твоего решения</div></div>
+                <button class="toggle" id="stExplicit" aria-label="Мат можно"><span></span></button>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Точные — сразу в очередь</div><div class="sd">Песня найдена точно, без спорных пометок и сумма хватает — встаёт в очередь сама. Остальное ждёт тебя во вкладке «Заказы»</div></div>
+                <button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button>
+              </div>
+            </div>
+            <div class="sec-h" style="margin-top:18px"><h2 style="font-size:16px">Сайт-визитка</h2><span>Страница с кнопками доната и инструкцией, как заказать песню</span></div>
+            <div class="card" id="stSite"></div>
+          </section>
+
+          <section id="sObs">
+            <div class="sec-h"><h2>OBS и стрим</h2><span>Виджет с заказами и название трека на экране</span></div>
+        <!-- Виджет для OBS: отдельное окно-источник с лентой заказов и кнопками плеера -->
+        <div class="card">
+          <div class="srow" style="align-items:flex-start">
+            <div class="sl">
+              <div class="st">Виджет с заказами для OBS</div>
+              <div class="sd">В OBS добавь источник «Браузер» и вставь адрес ниже. Внутри — лента заказов и маленькие кнопки плеера.</div>
+              <div class="path" id="wgUrl" style="margin-top:8px">…</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-self:flex-end">
+              <button class="btn" id="wgCopy">Скопировать адрес</button>
+              <button class="btn ghost" id="wgOpen">Открыть</button>
+            </div>
+          </div>
+          <div class="srow">
+            <div class="sl"><label class="st" for="wgLook">Оформление виджета</label>
+              <div class="sd">Как в текущей теме, или конкретная оболочка, или конкретная тема</div></div>
+            <select id="wgLook" class="field" style="flex:0 1 280px">
+              <option value="current">Как в текущей теме</option>
+              <optgroup label="Оболочки">
+                <option value="skin:dos">VGA / DOS</option>
+                <option value="skin:crt">Неон-скан</option>
+                <option value="skin:retro">Ретро-десктоп</option>
+              </optgroup>
+              <optgroup label="Темы">
+                <option value="theme:violet">Фиолетовая</option>
+                <option value="theme:mono">Монохром</option>
+                <option value="theme:light">Светлая</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="srow">
+            <div class="sl"><div class="st">Масштаб виджета</div><div class="sd">Размер текста и кнопок внутри виджета</div></div>
+            <div style="display:flex;align-items:center;gap:10px;flex:0 1 320px">
+              <input id="wgScale" type="range" min="60" max="160" step="5" style="flex:1" aria-label="Масштаб виджета">
+              <span id="wgScaleVal" class="mono" style="min-width:44px;text-align:right">100%</span>
+            </div>
+          </div>
+          <div class="srow">
+            <div class="sl"><div class="st">Точные — сразу в очередь</div><div class="sd">Заказ, который точно определился, сразу встаёт в очередь</div></div>
+            <button class="toggle" data-set-tg="reqAuto" aria-label="Точные сразу в очередь"><span></span></button>
+          </div>
+        </div>
+            <div class="card">
+              <div class="srow">
+                <div class="sl"><div class="st">Писать название трека в файл</div><div class="sd">В OBS: источник «Текст (GDI+)» → «Читать из файла» → выбери этот файл</div></div>
+                <button class="toggle" data-set-tg="npEnabled" aria-label="Писать название трека в файл"><span></span></button>
+              </div>
+              <div class="srow">
+                <div class="sl"><div class="st">Файл</div><div class="path" id="setNpPath">…</div></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-self:flex-end">
+                  <button class="btn" id="setNpChoose">Изменить папку…</button>
+                  <button class="btn ghost" id="setNpOpen">Открыть папку</button>
+                </div>
+              </div>
+              <div class="srow" style="align-items:flex-start">
+                <div class="sl"><label class="st" for="setNpFmt">Как писать</label>
+                  <input id="setNpFmt" class="field" style="width:100%;margin-top:6px" spellcheck="false">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px" id="setNpVars">
+                    <button class="var" data-var="{artist}" title="Исполнитель">{artist}</button>
+                    <button class="var" data-var="{title}" title="Название">{title}</button>
+                    <button class="var" data-var="{album}" title="Альбом (для Яндекса)">{album}</button>
+                    <button class="var" data-var="{source}" title="Откуда трек: Яндекс или YouTube">{source}</button>
+                  </div>
+                  <div class="npprev"><div class="k">Так будет на стриме</div><div class="v" id="setNpPrev"></div></div>
+                </div>
+              </div>
+              <div class="srow">
+                <div class="sl"><label class="st" for="setNpIdle">Когда ничего не играет</label><div class="sd">Пусто — надпись на стриме исчезнет</div></div>
+                <input id="setNpIdle" class="field" placeholder="пусто" style="flex:0 1 260px;font-family:Onest,sans-serif">
               </div>
             </div>
           </section>
@@ -1634,6 +1684,13 @@
 <script src="reqparse.js"></script>
 <script>
   var A = window.app || {};
+
+// Ошибку страницы не глотаем: пишем в консоль и заново отправляем виджету настоящее состояние
+window.onerror = function(msg, src, line){
+  try { console.error('Тапёр: ' + msg + ' (' + (src || '') + ':' + line + ')'); } catch (e) {}
+  setTimeout(function(){ try { if (typeof pushWidget === 'function') pushWidget(true); } catch (e) {} }, 400);
+  return false;
+};
   function $(id){ return document.getElementById(id); }
   function setHint(t){ var h = $('hint'); if (h) h.textContent = t; } // подсказки поиска необязательны
   function noop(){}
@@ -1875,7 +1932,7 @@
 
   var PLAY_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>';
   var PAUSE_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
-  function setPlayIcon(sym){ $('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; document.body.classList.toggle('is-paused', sym !== '⏸'); }
+  function setPlayIcon(sym){ $('playpause').innerHTML = (sym === '⏸') ? PAUSE_SVG : PLAY_SVG; document.body.classList.toggle('is-paused', sym !== '⏸'); if (typeof pushWidget === 'function') pushWidget(); }
   setPlayIcon('▶');
   function master(){ return mode === 'iframe' ? ytx : (mode === 'ymweb' ? ymx : ((mode === 'split' || mode === 'audio') ? aud : video)); }
 
@@ -4580,6 +4637,7 @@
     var go = $('rqtGo'); if (go) { go.onclick = rqRunTest; $('rqtText').onkeydown = function(e){ if (e.key === 'Enter') rqRunTest(); }; }
     rqBadge();
   }
+    if (typeof pushWidget === "function") pushWidget();
   function rqBadge(){
     var b = $('reqBadge'); if (!b) return;
     // Счётчик — сколько заказов ждут решения (ещё не встали в очередь)
@@ -5755,6 +5813,135 @@
     A.getSetting('auEnabled').then(function (v){ SVC.auOn = v !== false; });
   } else { axInit(); }
 
+// ===== Виджет для OBS =====
+// Лента заказов и мини-плеер живут в отдельной странице /widget (источник «Браузер» в OBS).
+var WG = { look: 'current', scale: 100, url: '' };
+var wgLast = '';
+var WG_PALETTES = {
+  violet: { bg: '#0E0F13', card: '#15161C', line: '#2C2F3A', tx: '#ECEDF2', tx2: '#C9CBD4', tx3: '#9EA2B0', ac: '#9B87FF', pri: '#FFD43B', radius: 12, font: "'Onest','Segoe UI',sans-serif" },
+  mono:   { bg: '#0F0F0F', card: '#161616', line: '#2F2F2F', tx: '#EDEDED', tx2: '#CBCBCB', tx3: '#A2A2A2', ac: '#D4D4D4', pri: '#E8E8E8', radius: 12, font: "'Onest','Segoe UI',sans-serif" },
+  light:  { bg: '#F5F6F9', card: '#FFFFFF', line: '#D5DAE4', tx: '#14161B', tx2: '#3B414D', tx3: '#5C6371', ac: '#6C4BE0', pri: '#FFD43B', radius: 12, font: "'Onest','Segoe UI',sans-serif" },
+  dos:    { bg: '#007878', card: '#C0C0C0', line: '#808080', tx: '#000000', tx2: '#101010', tx3: '#2A2A2A', ac: '#000080', pri: '#C0C0C0', radius: 0, font: "'JetBrains Mono',Consolas,monospace" },
+  crt:    { bg: '#0B0B12', card: '#191527', line: '#3A2F5C', tx: '#F2EEFF', tx2: '#CFC7EA', tx3: '#A89FD0', ac: '#FF2D95', pri: '#00E5FF', radius: 0, font: "'JetBrains Mono',Consolas,monospace" },
+  retro:  { bg: '#1B1B1E', card: '#26262A', line: '#5C5C64', tx: '#E9E9EC', tx2: '#C9C9CF', tx3: '#A9A9B1', ac: '#3B5F8A', pri: '#C0C0C0', radius: 0, font: 'Tahoma,sans-serif' }
+};
+
+function widgetTheme(){
+  var look = WG.look || 'current';
+  if (look.indexOf('theme:') === 0) return WG_PALETTES[look.slice(6)] || WG_PALETTES.violet;
+  if (look.indexOf('skin:') === 0) return WG_PALETTES[look.slice(5)] || WG_PALETTES.crt;
+  var cs = getComputedStyle(document.documentElement);
+  function v(n, d){ var x = (cs.getPropertyValue(n) || '').trim(); return x || d; }
+  return {
+    bg: v('--bg0', '#0E0F13'), card: v('--bg1', '#15161C'), line: v('--ln', '#2C2F3A'),
+    tx: v('--tx', '#ECEDF2'), tx2: v('--tx2', '#C9CBD4'), tx3: v('--tx3', '#9EA2B0'),
+    ac: v('--ac', '#9B87FF'), pri: v('--pri', '#FFD43B'), radius: 12,
+    font: "'Onest','Segoe UI',sans-serif"
+  };
+}
+
+function widgetOrders(){
+  var out = [];
+  var now = queue[current];
+  (RQ.list || []).forEach(function(r){
+    if (r.state === 'dismissed') return;
+    (r.items || []).forEach(function(it){
+      var t = it.track;
+      var title = t ? ((t.author ? t.author + ' — ' : '') + t.title) : (it.query || '');
+      var status = 'look';
+      if (it.state === 'added') status = 'queued';
+      else if (t && now && now.title === t.title) status = 'playing';
+      else if (rqExact(it)) status = 'waiting';
+      out.push({
+        at: r.got || r.at || 0,
+        who: r.name || '',
+        amt: r.amount != null ? (Math.round(r.amount * 100) / 100) : null,
+        cur: (CURSYM && CURSYM[r.currency]) || r.currency || '',
+        text: r.text || '',
+        title: title,
+        status: status
+      });
+    });
+  });
+  out.sort(function(a, b){ return b.at - a.at; });
+  return out.slice(0, 8);
+}
+
+function pushWidget(force){
+  if (!A.widgetPush) return;
+  if (typeof RQ === 'undefined' || !RQ || typeof queue === 'undefined' || typeof current === 'undefined') return;
+  try {
+    var playing = !!queue[current] && !document.body.classList.contains('is-paused');
+    var st = {
+      orders: widgetOrders(),
+      np: {
+        title: queue[current] ? (queue[current].title || '') : '',
+        artist: queue[current] ? (queue[current].author || queue[current].artist || '') : '',
+        playing: playing
+      },
+      reqAuto: !!RQ.auto,
+      scale: WG.scale || 100,
+      theme: widgetTheme()
+    };
+    var sig = JSON.stringify(st);
+    if (!force && sig === wgLast) return;
+    wgLast = sig;
+    A.widgetPush(st);
+  } catch (err) {
+    try { A.widgetPush({ orders: [], np: { title: 'ERR ' + (err && err.message), artist: '', playing: false }, reqAuto: false, scale: 100, theme: null }); } catch (e) {}
+  }
+}
+
+// команды из виджета
+if (A.onWidgetCmd) A.onWidgetCmd(function(action){
+  if (action === 'playpause') { var b = $('playpause'); if (b) b.click(); }
+  else if (action === 'next') { var n = $('next'); if (n) n.click(); }
+  else if (action === 'prev') { var p = $('prev'); if (p) p.click(); }
+  else if (action === 'like') { var l = $('likeBtn'); if (l && !l.hidden) l.click(); }
+  setTimeout(function(){ pushWidget(true); }, 120);
+});
+
+// настройка из виджета (тумблер «Точные»)
+if (A.onWidgetSetting) A.onWidgetSetting(function(s){
+  if (!s || !s.key) return;
+  if (s.key === 'reqAuto') {
+    RQ.auto = !!s.value;
+    syncReqAuto();
+  } else if (s.key === 'widgetLook') {
+    WG.look = s.value || 'current';
+    var sel = $('wgLook'); if (sel) sel.value = WG.look;
+  } else if (s.key === 'widgetScale') {
+    WG.scale = Number(s.value) || 100;
+    var sl = $('wgScale'); if (sl) sl.value = WG.scale;
+    var sv = $('wgScaleVal'); if (sv) sv.textContent = WG.scale + '%';
+  }
+  pushWidget(true);
+});
+
+function syncReqAuto(){
+  var els = document.querySelectorAll('[data-set-tg="reqAuto"]');
+  Array.prototype.forEach.call(els, function(el){ setTg(el, RQ.auto); });
+}
+
+// интерфейс в «Настройки → OBS и стрим»
+function initWidgetUi(){
+  var urlEl = $('wgUrl'), copyBtn = $('wgCopy'), openBtn = $('wgOpen');
+  var lookSel = $('wgLook'), scaleEl = $('wgScale'), scaleVal = $('wgScaleVal');
+  if (A.widgetUrl) A.widgetUrl().then(function(u){ WG.url = u || ''; if (urlEl) urlEl.textContent = WG.url || 'нет адреса'; });
+  if (A.getSetting) {
+    A.getSetting('widgetLook').then(function(v){ WG.look = v || 'current'; if (lookSel) lookSel.value = WG.look; pushWidget(true); });
+    A.getSetting('widgetScale').then(function(v){ WG.scale = Number(v) || 100; if (scaleEl) scaleEl.value = WG.scale; if (scaleVal) scaleVal.textContent = WG.scale + '%'; pushWidget(true); });
+    A.getSetting('reqAuto').then(function(v){ RQ.auto = !!v; syncReqAuto(); pushWidget(true); });
+  }
+  if (copyBtn) copyBtn.onclick = function(){ if (!WG.url) return; navigator.clipboard.writeText(WG.url).then(function(){ toast('Адрес виджета скопирован'); }).catch(function(){ prompt('Скопируй адрес:', WG.url); }); };
+  if (openBtn) openBtn.onclick = function(){ if (WG.url) A.openExternal(WG.url); };
+  if (lookSel) lookSel.onchange = function(){ WG.look = lookSel.value; if (A.setSetting) A.setSetting('widgetLook', WG.look); pushWidget(true); };
+  if (scaleEl) {
+    scaleEl.oninput = function(){ WG.scale = Number(scaleEl.value); if (scaleVal) scaleVal.textContent = WG.scale + '%'; pushWidget(true); };
+    scaleEl.onchange = function(){ if (A.setSetting) A.setSetting('widgetScale', WG.scale); };
+  }
+}
+
   // ===== Настройки =====
   function setTg(el, on){ el.classList.toggle('on', !!on); el.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   var tgs = document.querySelectorAll('[data-set-tg]');
@@ -5770,6 +5957,7 @@
       if (key === 'ytEnabled') { SVC.ytOn = on; renderSvc(); }
       if (key === 'ymWebFallback') SVC.ymweb = on;
       if (key === 'scEnabled') SVC.scOn = on;
+    if (key === 'reqAuto') { RQ.auto = on; syncReqAuto(); pushWidget(true); }
       if (key === 'auEnabled') SVC.auOn = on;
     };
   });
@@ -6336,6 +6524,8 @@
     ytAuthRefresh().then(refreshAcctYt);
   });
   refreshAcct();
+initWidgetUi();
+setInterval(function(){ pushWidget(false); }, 1500);
   refreshAcctYt();
   renderWaveUi();
 

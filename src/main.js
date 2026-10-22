@@ -452,14 +452,87 @@ async function serveLocal(req, res, p) {
   }
 }
 
+// ── Виджет для OBS ──────────────────────────────────────────────────────────
+// Отдельная страница /widget, которую OBS берёт источником «Браузер».
+// Приложение присылает ей состояние по SSE, а она возвращает команды плееру.
+const widgetClients = new Set();
+let widgetState = { orders: [], np: { title: '', artist: '', playing: false }, reqAuto: false, scale: 100, theme: null };
+let serverPort = 0;
+
+function widgetBroadcast() {
+  const payload = 'data: ' + JSON.stringify(widgetState) + '\n\n';
+  for (const res of widgetClients) {
+    try { res.write(payload); } catch (e) { widgetClients.delete(res); }
+  }
+}
+
+function readBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; if (body.length > 200000) req.destroy(); });
+    req.on('end', () => { try { resolve(JSON.parse(body || '{}')); } catch (e) { resolve({}); } });
+    req.on('error', () => resolve({}));
+  });
+}
+
 // Крошечный локальный веб-сервер — отдаёт страницу приложения по http,
 // чтобы встроенный плеер YouTube работал (из file:// он не запускается).
 function startServer() {
   const root = __dirname;
   const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json', '.ico': 'image/x-icon' };
-  const server = http.createServer((req, res) => {
+  const server = http.createServer(async (req, res) => {
     let p = decodeURIComponent((req.url || '/').split('?')[0]);
     if (p === '/') p = '/index.html';
+
+    // Виджет OBS: страница, поток состояния и команды плееру
+    if (p === '/widget' || p === '/widget/') {
+      fs.readFile(path.join(root, 'widget.html'), (err, data) => {
+        if (err) { res.writeHead(500); res.end('widget not found'); return; }
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(data);
+      });
+      return;
+    }
+    if (p === '/widget/state') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(widgetState));
+      return;
+    }
+    if (p === '/widget/events') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-store',
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.write('retry: 2000\n\n');
+      res.write('data: ' + JSON.stringify(widgetState) + '\n\n');
+      widgetClients.add(res);
+      req.on('close', () => widgetClients.delete(res));
+      return;
+    }
+    if (p.startsWith('/widget/cmd/')) {
+      const action = p.slice('/widget/cmd/'.length);
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('widget-cmd', action);
+      res.writeHead(204); res.end();
+      return;
+    }
+    if (p === '/widget/setting' && req.method === 'POST') {
+      try {
+        const body = await readBody(req);
+        if (body && typeof body.key === 'string') {
+          const s = readSettingsFile();
+          s[body.key] = body.value;
+          fs.writeFileSync(settingsFile(), JSON.stringify(s, null, 2));
+          if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('widget-setting', { key: body.key, value: body.value });
+        }
+      } catch (e) {
+        log('виджет: настройки ' + e.message);
+      }
+      res.writeHead(204); res.end();
+      return;
+    }
+
     // Свои файлы с компьютера: только из списка Тапёра и только для окна Тапёра (метка в cookie)
     if (p.startsWith('/lfile/') || p.startsWith('/lcover/')) { serveLocal(req, res, p); return; }
     const file = path.normalize(path.join(root, p));
@@ -472,7 +545,10 @@ function startServer() {
       res.end(data);
     });
   });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server.address().port)));
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => {
+    serverPort = server.address().port;
+    resolve(serverPort);
+  }));
 }
 
 function createWindow() {
@@ -765,7 +841,16 @@ app.whenReady().then(async () => {
   // Настройки (запоминаются между запусками)
   const settingsPath = () => path.join(app.getPath('userData'), 'settings.json');
   const readSettings = () => { try { return JSON.parse(fs.readFileSync(settingsPath(), 'utf8')); } catch (e) { return {}; } };
-  ipcMain.handle('get-setting', (e, key) => { const v = readSettings()[key]; return v !== undefined ? v : DEFAULTS[key]; });
+  // Виджет OBS: адрес страницы и поток состояния из окна приложения
+ipcMain.handle('widget-url', () => (serverPort ? 'http://127.0.0.1:' + serverPort + '/widget' : ''));
+ipcMain.on('widget-state', (e, st) => {
+  if (st && typeof st === 'object') {
+    widgetState = st;
+    widgetBroadcast();
+  }
+});
+
+ipcMain.handle('get-setting', (e, key) => { const v = readSettings()[key]; return v !== undefined ? v : DEFAULTS[key]; });
   ipcMain.handle('set-setting', (e, key, value) => {
     const s = readSettings(); s[key] = value;
     try { fs.writeFileSync(settingsPath(), JSON.stringify(s, null, 2)); } catch (err) { log('настройки: ошибка записи ' + err.message); }

@@ -113,6 +113,11 @@ contextBridge.exposeInMainWorld('app', {
   onHotkey: (cb) => ipcRenderer.on('hotkey', (e, action) => cb(action)),
   hotkeysPause: (paused) => ipcRenderer.invoke('hotkeys-pause', paused),
   hotkeysStatus: () => ipcRenderer.invoke('hotkeys-status'),
+  // Виджет для OBS
+  widgetUrl: () => ipcRenderer.invoke('widget-url'),
+  widgetPush: (state) => ipcRenderer.send('widget-state', state),
+  onWidgetCmd: (cb) => ipcRenderer.on('widget-cmd', (e, action) => cb(action)),
+  onWidgetSetting: (cb) => ipcRenderer.on('widget-setting', (e, s) => cb(s)),
   getSetting: (key) => ipcRenderer.invoke('get-setting', key),
   setSetting: (key, value) => ipcRenderer.invoke('set-setting', key, value),
   // Заказы со стрима и сервисы донатов

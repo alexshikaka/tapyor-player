@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тапёр — заказы</title>
+<style>
+  :root{
+    --bg:#0E0F13; --card:#15161C; --line:#2C2F3A; --tx:#ECEDF2; --tx2:#C9CBD4; --tx3:#9EA2B0;
+    --ac:#9B87FF; --pri:#FFD43B; --radius:12px; --font:'Onest','Segoe UI',sans-serif;
+    --ok:#4ADE9A; --wait:#FFD43B; --bad:#FF8A7A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:transparent}
+  body{font-family:var(--font);color:var(--tx);-webkit-font-smoothing:antialiased}
+  .wg{
+    width:100%;max-width:340px;display:flex;flex-direction:column;gap:6px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:8px 8px 6px;overflow:hidden;
+  }
+  .wg-head{display:flex;align-items:center;gap:6px;padding:0 2px 4px;border-bottom:1px solid var(--line)}
+  .wg-head .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);flex:0 0 auto}
+  .wg-head b{font-size:11.5px;font-weight:700;letter-spacing:.02em}
+  .wg-head .cnt{font-size:10.5px;color:var(--tx3);margin-left:auto}
+  .tg{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+  .tg span{font-size:10px;color:var(--tx3);font-weight:600}
+  .tg .sw{width:22px;height:12px;border-radius:6px;background:var(--line);position:relative;transition:background .15s}
+  .tg .sw::after{content:'';position:absolute;top:2px;left:2px;width:8px;height:8px;border-radius:50%;background:var(--tx3);transition:transform .15s,background .15s}
+  .tg.on .sw{background:var(--ac)}
+  .tg.on .sw::after{transform:translateX(10px);background:var(--pri)}
+  .feed{display:flex;flex-direction:column;gap:4px;min-height:44px}
+  .it{display:flex;flex-direction:column;gap:1px;padding:4px 6px;border-radius:8px;background:rgba(255,255,255,.03)}
+  .it .who{display:flex;align-items:baseline;gap:5px;font-size:10.5px;color:var(--tx2)}
+  .it .who b{font-size:11px;color:var(--tx);font-weight:700}
+  .it .amt{color:var(--pri);font-weight:700;font-size:10px}
+  .it .txt{font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .it .ttl{font-size:11.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .it .st{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .it .st.q{color:var(--ok)} .it .st.w{color:var(--wait)} .it .st.n{color:var(--bad)}
+  .empty{font-size:10.5px;color:var(--tx3);padding:8px 4px;text-align:center}
+  .bar{display:flex;align-items:center;gap:4px;padding-top:5px;border-top:1px solid var(--line)}
+  .bar .np{flex:1;min-width:0;font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar .np b{color:var(--tx2);font-weight:600}
+  .cb{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;
+      background:transparent;color:var(--tx2);cursor:pointer;padding:0}
+  .cb:hover{background:rgba(255,255,255,.08);color:var(--tx)}
+  .cb svg{width:11px;height:11px;fill:currentColor}
+  .cb.play{background:var(--pri);color:#0E0F13;width:24px;height:24px}
+  .cb.play:hover{background:var(--pri);opacity:.9}
+</style>
+</head>
+<body>
+<div class="wg" id="wg">
+  <div class="wg-head">
+    <span class="dot"></span>
+    <b>Заказы</b>
+    <span class="cnt" id="cnt">—</span>
+    <label class="tg" id="exactTg" title="Точные — сразу в очередь">
+      <span>Точные</span>
+      <i class="sw"></i>
+    </label>
+  </div>
+  <div class="feed" id="feed"><div class="empty">Заказов пока нет</div></div>
+  <div class="bar">
+    <button class="cb" data-cmd="prev" title="Назад" aria-label="Назад">
+      <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14l-10-7z"/></svg>
+    </button>
+    <button class="cb play" id="pp" data-cmd="playpause" title="Пауза / играть" aria-label="Пауза / играть">
+      <svg viewBox="0 0 24 24"><path d="M8 5l12 7-12 7z"/></svg>
+    </button>
+    <button class="cb" data-cmd="next" title="Следующий" aria-label="Следующий">
+      <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10-7z"/></svg>
+    </button>
+    <span class="np" id="np">ничего не играет</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  var feedEl = document.getElementById('feed');
+  var cntEl = document.getElementById('cnt');
+  var npEl = document.getElementById('np');
+  var ppEl = document.getElementById('pp');
+  var tgEl = document.getElementById('exactTg');
+  var last = null;
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+
+  function applyTheme(t){
+    if (!t) return;
+    var r = document.documentElement.style;
+    if (t.bg) r.setProperty('--bg', t.bg);
+    if (t.card) r.setProperty('--card', t.card);
+    if (t.line) r.setProperty('--line', t.line);
+    if (t.tx) r.setProperty('--tx', t.tx);
+    if (t.tx2) r.setProperty('--tx2', t.tx2);
+    if (t.tx3) r.setProperty('--tx3', t.tx3);
+    if (t.ac) r.setProperty('--ac', t.ac);
+    if (t.pri) r.setProperty('--pri', t.pri);
+    if (t.radius != null) r.setProperty('--radius', t.radius + 'px');
+    if (t.font) r.setProperty('--font', t.font);
+  }
+
+  function statusOf(o){
+    if (o.status === 'queued') return '<span class="st q">в очереди</span>';
+    if (o.status === 'playing') return '<span class="st q">играет</span>';
+    if (o.status === 'waiting') return '<span class="st w">ждёт</span>';
+    return '<span class="st n">ищу</span>';
+  }
+
+  function render(st){
+    if (!st) return;
+    last = st;
+    applyTheme(st.theme);
+    if (st.scale) document.documentElement.style.zoom = (Math.max(50, Math.min(200, st.scale)) / 100);
+    document.body.style.width = '100%';
+
+    tgEl.classList.toggle('on', !!st.reqAuto);
+    tgEl.setAttribute('aria-pressed', st.reqAuto ? 'true' : 'false');
+
+    var orders = (st.orders || []).slice(0, 6);
+    cntEl.textContent = orders.length ? orders.length + ' в ленте' : 'пусто';
+    feedEl.innerHTML = orders.length ? orders.map(function(o){
+      var who = o.who ? '<b>' + esc(o.who) + '</b>' : '<b>Аноним</b>';
+      var amt = o.amt ? '<span class="amt">' + esc(o.amt) + (o.cur ? ' ' + esc(o.cur) : '') + '</span>' : '';
+      var txt = o.text ? '<div class="txt">' + esc(o.text) + '</div>' : '';
+      var ttl = o.title ? '<div class="ttl">' + esc(o.title) + '</div>' : '';
+      return '<div class="it"><div class="who">' + who + amt + '<span style="margin-left:auto">' + statusOf(o) + '</span></div>' + txt + ttl + '</div>';
+    }).join('') : '<div class="empty">Заказов пока нет</div>';
+
+    var playing = st.np && st.np.playing;
+    ppEl.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M8 5l12 7-12 7z"/></svg>';
+    npEl.innerHTML = st.np && st.np.title
+      ? '<b>' + esc(st.np.title) + '</b>' + (st.np.artist ? ' · ' + esc(st.np.artist) : '')
+      : 'ничего не играет';
+  }
+
+  function cmd(action){
+    fetch('/widget/cmd/' + encodeURIComponent(action), { method: 'POST' }).catch(function(){});
+  }
+
+  document.querySelectorAll('[data-cmd]').forEach(function(b){
+    b.addEventListener('click', function(){ cmd(b.dataset.cmd); });
+  });
+
+  tgEl.addEventListener('click', function(){
+    var on = !tgEl.classList.contains('on');
+    tgEl.classList.toggle('on', on);
+    fetch('/widget/setting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'reqAuto', value: on })
+    }).catch(function(){});
+  });
+
+  // Живые обновления из приложения
+  var es = new EventSource('/widget/events');
+  es.onmessage = function(e){ try { render(JSON.parse(e.data)); } catch (err) {} };
+  es.onerror = function(){ /* OBS переподключится сам */ };
+
+  // Запасной путь: раз в 5 секунд подтягиваем состояние, если поток молчит
+  setInterval(function(){
+    if (es.readyState === 2) {
+      fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
+    }
+  }, 5000);
+
+  fetch('/widget/state').then(function(r){ return r.json(); }).then(render).catch(function(){});
+})();
+</script>
+</body>
+</html>
