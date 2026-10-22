@@ -1111,8 +1111,8 @@
   .skin-pv .sp-line { left: 16px; top: 20px; width: 56%; height: 4px; }
   .skin-pv .sp-btn { right: 16px; top: 46px; width: 44px; height: 12px; }
   .skin-tag { position: absolute; right: 8px; top: 8px; font: 700 9px Onest, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 2px 5px; border-radius: 4px; background: var(--ac); color: var(--bg0); }  /* Доводка оболочек по превью */
-  html.skin-dos footer { color: #ffffff; }
-  html.skin-dos footer .t, html.skin-dos footer .s, html.skin-dos footer .f-artist { color: #eeeeee; }
+  html.skin-dos footer { color: var(--tx); }
+  html.skin-dos footer .t, html.skin-dos footer .s, html.skin-dos footer .f-artist { color: var(--tx2); }
   html.skin-dos .wavecard { background: #c0c0c0 !important; }
   html.skin-dos .wavecard .wtitle .t, html.skin-dos .wavecard .t { color: #000000; }
   html.skin-dos .queue-col .qhead h2 { color: #000000; }
@@ -1164,7 +1164,7 @@
   html.skin-retro .sec-h h2 { background: linear-gradient(90deg, #3b5f8a 0%, #2c4767 100%); color: #ffffff; padding: 3px 10px; margin-left: -10px; }
   html.skin-retro .qhead h2 { color: var(--tx); }
   /* Подвал — панель-тулбар с фаской */
-  html.skin-retro footer { background: #24242a; box-shadow: inset 0 2px 0 #4a4a52, inset 0 -2px 0 #0d0d10; }
+  html.skin-retro footer { background: var(--bg1); box-shadow: inset 0 2px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(0,0,0,.35); }
   html.skin-retro .cbtn.play { box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #6a6a72; }
   /* Сетка-дизеринг на «рабочем столе» */
   html.skin-retro body::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .35;
@@ -1889,7 +1889,7 @@ window.onerror = function(msg, src, line){
   var SKIN_SCHEMES = {
     dos: [
       { id: 'norton', name: 'Norton Commander', desc: 'Синие панели файлового менеджера и циановые подписи — символ DOS-эпохи, когда всё делали в двух окнах.',
-        core: { bg: '#0000A8', panel: '#A8A8A8', surface: '#C0C0C0', line: '#000000', text: '#000000', accent: '#00A8A8', button: '#C0C0C0' } },
+        core: { bg: '#0000A8', panel: '#0000C4', surface: '#1010D0', line: '#00A8A8', text: '#E8ECFF', accent: '#00FFFF', button: '#A8A8A8' } },
       { id: 'turbo', name: 'Turbo Pascal', desc: 'Тёмно-синий экран IDE с жёлтыми подсказками — как выглядел первый рабочий день программиста.',
         core: { bg: '#000080', panel: '#000060', surface: '#000070', line: '#00A8A8', text: '#C0C0C0', accent: '#FFFF55', button: '#00A8A8' } },
       { id: 'amber', name: 'Янтарный монитор', desc: 'P3-фосфор: чёрный экран и янтарные буквы — так читали документы до цветных VGA.',
@@ -1909,13 +1909,13 @@ window.onerror = function(msg, src, line){
     ],
     retro: [
       { id: 'win95', name: 'Windows 95', desc: 'Бирюзовый рабочий стол #008080, платина панелей и синий заголовок окна — стартовая кнопка эпохи.',
-        core: { bg: '#008080', panel: '#C0C0C0', surface: '#D4D0C8', line: '#808080', text: '#000000', accent: '#000080', button: '#C0C0C0' } },
+        core: { bg: '#C3C7CB', panel: '#D8DCE0', surface: '#F0F2F4', line: '#8A8F96', text: '#101418', accent: '#000080', button: '#C0C0C0' } },
       { id: 'platinum', name: 'Mac OS Platinum', desc: 'Серый «платиновый» интерфейс Apple 8–9: мягкие тени, синий акцент, никакого глянца.',
         core: { bg: '#DDDDDD', panel: '#ECECEC', surface: '#F5F5F5', line: '#9A9A9A', text: '#1A1A1A', accent: '#3366CC', button: '#DDDDDD' } },
       { id: 'beos', name: 'BeOS', desc: 'Синие окна и жёлтая полоса BeOS R5 — операционная система, которая опередила время.',
         core: { bg: '#1A2A6C', panel: '#3366CC', surface: '#3F73D6', line: '#0B1B45', text: '#FFFFFF', accent: '#FFD400', button: '#FFD400' } },
       { id: 'motif', name: 'Motif / CDE', desc: 'Пыльный сланец и серый металл Unix-рабочих станций: Solaris, HP-UX, первые CDE.',
-        core: { bg: '#3E4A56', panel: '#8A9AA8', surface: '#A6B2BE', line: '#5C6B78', text: '#0F1418', accent: '#C46A1E', button: '#A6B2BE' } }
+        core: { bg: '#2F3A44', panel: '#3E4A56', surface: '#4A5765', line: '#6C7C8C', text: '#E6EDF2', accent: '#E08A3C', button: '#8A9AA8' } }
     ],
   };
   var curSkinScheme = {};   // id оболочки → id схемы | 'custom'

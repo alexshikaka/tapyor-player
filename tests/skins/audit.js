@@ -254,9 +254,28 @@ function mergeFindings(parts) {
   const list = only ? skins.filter((s) => only.split(',').includes(s.id)) : skins;
   if (!list.length) {
     console.error('Не найдено ни одной оболочки (window.SKINS пуст?)');
+
     await browser.close(); srv.close(); process.exit(2);
   }
 
+  // Контраст цветовых схем: текст должен читаться и на фоне, и на панелях
+  const schemeIssues = await page.evaluate(() => {
+    const lum = (hex) => {
+      const n = String(hex).replace('#', '');
+      const v = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+      return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+    };
+    const ratio = (a, b) => { const l1 = lum(a), l2 = lum(b); const hi = Math.max(l1, l2), lo = Math.min(l1, l2); return (hi + 0.05) / (lo + 0.05); };
+    const out = [];
+    Object.keys(window.SKIN_SCHEMES || {}).forEach((skin) => {
+      (window.SKIN_SCHEMES[skin] || []).forEach((s) => {
+        const c = s.core || {};
+        const onBg = ratio(c.text, c.bg), onPanel = ratio(c.text, c.panel);
+        if (onBg < 4.5 || onPanel < 4.5) out.push({ skin, scheme: s.name, onBg: +onBg.toFixed(1), onPanel: +onPanel.toFixed(1) });
+      });
+    });
+    return out;
+  });
   const report = [];
   for (const s of list) {
     await page.evaluate((id) => applySkin(id, false), s.id);
@@ -270,8 +289,9 @@ function mergeFindings(parts) {
   await browser.close();
   srv.close();
 
+  if (schemeIssues.length) console.log('\nКОНТРАСТ СХЕМ — ' + schemeIssues.length + ': ' + schemeIssues.map((s) => s.skin + '/' + s.scheme + ' (' + s.onBg + ', ' + s.onPanel + ')').join(', '));
   if (JSON_OUT) {
-    console.log(JSON.stringify({ report, pageErrors: errors }, null, 2));
+    console.log(JSON.stringify({ report, pageErrors: errors, schemeIssues }, null, 2));
   } else {
     const limit = VERBOSE ? 999 : 8;
     let totalErrors = 0;
@@ -293,14 +313,14 @@ function mergeFindings(parts) {
       if (!m.radius.length && !m.font.length && !m.chrome.length && !m.palette.length) console.log('  чисто');
     }
     console.log('\n──────────────────────────────');
-    console.log('Итог: ' + report.length + ' оболочк(и), ошибок: ' + totalErrors);
+    console.log('Итог: ' + report.length + ' оболочк(и), ошибок: ' + totalErrors + (schemeIssues.length ? ', проблем со схемами: ' + schemeIssues.length : ''));
     if (errors.length) {
       console.log('Ошибки страницы: ' + errors.slice(0, 3).join(' | '));
     }
-    console.log(totalErrors ? 'Статус: есть что чинить (код 1)' : 'Статус: чисто (код 0)');
+    console.log((totalErrors || schemeIssues.length) ? 'Статус: есть что чинить (код 1)' : 'Статус: чисто (код 0)');
   }
 
-  process.exit(report.some((r) => r.errors) ? 1 : 0);
+  process.exit(report.some((r) => r.errors) || schemeIssues.length ? 1 : 0);
 })().catch((e) => {
   console.error('Аудит упал:', e);
   process.exit(3);
