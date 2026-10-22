@@ -1096,18 +1096,13 @@
   .skin-c { position: relative; border: 2px solid var(--ln); border-radius: 12px; padding: 6px; background: transparent; color: var(--tx); text-align: left; cursor: pointer; font: 600 12.5px Onest, sans-serif; }
   .skin-c:hover { border-color: var(--ln3); }
   .skin-c.on { border-color: var(--ac); }
-  /* Блок цветовой схемы оболочки */
-  .skin-scheme { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ln2); }
-  .skin-scheme .adj { max-width: 420px; }
-  .skin-core { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .sc-item { display: flex; align-items: center; gap: 7px; padding: 5px 9px 5px 6px; border: 1px solid var(--ln2);
-    border-radius: 10px; background: var(--bg2); color: var(--tx2); font: 500 12px Onest, sans-serif; cursor: pointer; }
-  .sc-item:hover { border-color: var(--ln3); color: var(--tx); }
-  .sc-sw { width: 18px; height: 18px; border-radius: 5px; border: 1px solid var(--ln3); flex: 0 0 auto; }
-  .sc-item b { font: 500 11px 'JetBrains Mono', monospace; color: var(--tx4); text-transform: uppercase; }
-  .sc-reset { margin-left: auto; height: 30px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--ln2);
-    background: transparent; color: var(--tx3); font: 600 12px Onest, sans-serif; cursor: pointer; }
-  .sc-reset:hover { color: var(--tx); border-color: var(--ln3); }
+  /* Цветовая схема оболочки: строки как в редакторе темы, без генератора палитр */
+  .skin-scheme { margin-top: 14px; }
+  .skin-scheme .te-row > span:first-child { width: 110px; }
+  .skin-scheme .te-hex { width: 96px; text-transform: uppercase; }
+  .skin-scheme .te-sw { flex: 0 0 auto; }
+  .skin-scheme .te-pick { flex: 0 0 auto; }
+  .skin-scheme .btn.ghost { height: 30px; padding: 0 12px; font-size: 12px; }
   .skin-c b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .skin-c small { display: block; color: var(--tx4); font-weight: 500; font-size: 11px; margin-top: 3px; }
   .skin-pv { position: relative; height: 62px; margin-bottom: 8px; overflow: hidden; }
@@ -1410,12 +1405,12 @@
                 <div class="adj"><span>Насыщенность</span><input type="range" data-adj="s" min="0" max="100" value="100" aria-label="Насыщенность оболочки"><b data-adjv="s">100%</b></div>
                 <div class="adj"><span>Контраст</span><input type="range" data-adj="c" min="0" max="100" value="100" aria-label="Контраст оболочки"><b data-adjv="c">100%</b></div>
                 <div class="adj adj-font"><span>Шрифт</span><select class="field skin-font-sel" id="skinFontSel" aria-label="Шрифт оболочки"></select></div>
+                <div class="adj adj-font"><span>Цветовая схема</span><select class="field skin-font-sel" id="skinSchemeSel" aria-label="Цветовая схема оболочки"></select></div>
               </div>
 
               <div class="skin-scheme" id="skinSchemeRow" hidden>
-                <div class="adj adj-font"><span>Цветовая схема</span><select class="field" id="skinSchemeSel" aria-label="Цветовая схема оболочки"></select></div>
-                <div class="skin-core" id="skinCoreRow"></div>
                 <div class="te-note" style="margin-top:0">Основные цвета оболочки. Поменяешь любой — схема станет «СВОЯ».</div>
+                <div class="skin-core" id="skinCoreRow"></div>
               </div>
 
               <div id="lookThemes">
@@ -2058,44 +2053,67 @@ window.onerror = function(msg, src, line){
     saveSkinSchemes();
     renderSkinScheme();
   }
-  function renderSkinScheme(){
-    var row = $('skinSchemeRow');
-    var sel = $('skinSchemeSel');
-    var box = $('skinCoreRow');
-    if (!row || !sel || !box) return;
-    row.hidden = !curSkin;
-    if (!curSkin) return;
-    var list = skinSchemeList(curSkin);
-    var custom = curSkinScheme[curSkin] === 'custom';
-    var opts = list.map(function (s){ return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('');
-    if (custom) opts += '<option value="custom">СВОЯ</option>';
-    sel.innerHTML = opts;
-    sel.value = custom ? 'custom' : (curSkinScheme[curSkin] || (list[0] && list[0].id) || '');
-    var core = skinCoreOf(curSkin) || {};
-    box.innerHTML = SKIN_CORE.map(function (c){
-      var hex = core[c.k] || '#000000';
-      return '<button class="sc-item" type="button" data-sc="' + c.k + '" title="' + c.n + ': ' + hex + '">' +
-        '<i class="sc-sw" style="background:' + hex + '"></i><span>' + c.n + '</span><b>' + hex + '</b></button>';
-    }).join('') + '<button class="sc-reset" type="button" id="skinSchemeReset" title="Вернуться к первой схеме">↺ Сбросить</button>';
-    sel.onchange = function(){
-      if (sel.value === 'custom') return;
-      setSkinScheme(curSkin, sel.value, true);
-      toast('Схема: ' + (skinSchemeById(curSkin, sel.value) || {}).name);
-    };
-    box.onclick = function(e){
-      var b = e.target.closest('[data-sc]');
-      if (b) {
-        var key = b.dataset.sc;
-        var name = (SKIN_CORE.filter(function (x){ return x.k === key; })[0] || {}).n || key;
-        var skin = skinById(curSkin);
-        colOpenFor((skin ? skin.name + ' · ' : '') + name, (core[key] || '#000000'), function (hex){
-          setSkinCoreColor(curSkin, key, hex);
-        }, function(){ renderSkinScheme(); });
-        return;
-      }
-      if (e.target.id === 'skinSchemeReset') resetSkinScheme(curSkin);
-    };
-  }
+function renderSkinScheme(){
+  var row = $('skinSchemeRow');
+  var sel = $('skinSchemeSel');
+  var box = $('skinCoreRow');
+  if (!row || !sel || !box) return;
+  var active = !!curSkin;
+  row.hidden = !active;
+  sel.disabled = !active;
+  if (!active) { sel.innerHTML = '<option>Сначала выбери оболочку</option>'; row.hidden = true; return; }
+  var list = skinSchemeList(curSkin);
+  var custom = curSkinScheme[curSkin] === 'custom';
+  var opts = list.map(function (s){ return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('');
+  if (custom) opts += '<option value="custom">СВОЯ</option>';
+  sel.innerHTML = opts;
+  sel.value = custom ? 'custom' : (curSkinScheme[curSkin] || (list[0] && list[0].id) || '');
+  var core = skinCoreOf(curSkin) || {};
+  // Строки как в редакторе темы: подпись, кружок цвета, HEX и пипетка
+  box.innerHTML = SKIN_CORE.map(function (c){
+    var hex = (core[c.k] || '#000000').toUpperCase();
+    return '<div class="te-row"><span>' + c.n + '</span>' +
+      '<button class="te-sw" type="button" data-sc="' + c.k + '" style="background:' + hex + '" title="' + c.n + '"></button>' +
+      '<input class="te-hex" data-sch="' + c.k + '" value="' + hex + '" maxlength="7" spellcheck="false" aria-label="' + c.n + '">' +
+      '<button class="te-pick" type="button" data-scpick="' + c.k + '" title="Взять цвет с экрана" aria-label="Пипетка">' +
+        '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3l2 2-9.5 9.5-2-2L19 3z"/><path d="M11.5 13.5L4 21H2v-2l7.5-7.5"/></svg>' +
+      '</button></div>';
+  }).join('') +
+    '<div class="te-row" style="margin-top:12px"><span></span><button class="btn ghost" type="button" id="skinSchemeReset">↺ Сбросить к первой схеме</button></div>';
+
+  sel.onchange = function(){
+    if (sel.value === 'custom') return;
+    setSkinScheme(curSkin, sel.value, true);
+    toast('Схема: ' + (skinSchemeById(curSkin, sel.value) || {}).name);
+  };
+
+  box.onclick = function(e){
+    var sw = e.target.closest('[data-sc]');
+    if (sw) {
+      var key = sw.dataset.sc;
+      var name = (SKIN_CORE.filter(function (x){ return x.k === key; })[0] || {}).n || key;
+      var skin = skinById(curSkin);
+      colOpenFor((skin ? skin.name + ' · ' : '') + name, (core[key] || '#000000'), function (hex){
+        setSkinCoreColor(curSkin, key, hex);
+      }, function(){ renderSkinScheme(); });
+      return;
+    }
+    var pip = e.target.closest('[data-scpick]');
+    if (pip && A.pickColor) {
+      var k2 = pip.dataset.scpick;
+      A.pickColor().then(function (hex){ if (hex) setSkinCoreColor(curSkin, k2, hex); });
+      return;
+    }
+    if (e.target.id === 'skinSchemeReset') resetSkinScheme(curSkin);
+  };
+
+  box.onchange = function(e){
+    if (!e.target.dataset.sch) return;
+    var v = e.target.value.trim().toUpperCase();
+    if (!/^#[0-9A-F]{6}$/.test(v)) { renderSkinScheme(); return; }
+    setSkinCoreColor(curSkin, e.target.dataset.sch, v);
+  };
+}
   // Пипетка в блоке схем: применяем к выбранному основному цвету
   function skinPickColor(){
     var row = $('skinSchemeRow');
