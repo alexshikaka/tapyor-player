@@ -108,7 +108,9 @@
   .br-addr input { flex: 1; min-width: 0; height: 32px; border-radius: 8px; border: 0; background: var(--bg0); color: var(--tx2); padding: 0 12px; font: 12.5px 'JetBrains Mono', Consolas, monospace; }
   .br-addr input:focus { outline: none; border-color: var(--ac); color: var(--tx); }
   .br-note { font-size: 12.5px; color: var(--tx4); line-height: 1.45; }
-  .br-wrap { flex: 1; min-height: 0; border-radius: var(--r-panel); overflow: hidden; border: 0; background: #fff; display: flex; clip-path: inset(0 round var(--r-panel)); }
+  .br-wrap { position: relative; flex: 1; min-height: 0; border-radius: var(--r-panel); border: 0; background: #fff; display: flex; }
+  /* Поверх страницы — ореол в цвет фона: закрывает квадратные углы страницы, которые не обрезаются скруглением */
+  .br-wrap::after { content: ''; position: absolute; inset: 0; border-radius: var(--r-panel); box-shadow: 0 0 0 14px var(--bg0); pointer-events: none; z-index: 5; }
   .br-web { flex: 1; width: 100%; height: 100%; border: 0; border-radius: var(--r-panel); overflow: hidden; clip-path: inset(0 round var(--r-panel)); }
   .br-empty { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg1); color: var(--tx4); font-size: 14px; text-align: center; padding: 30px; line-height: 1.5; }
   /* Вход в YouTube */
