@@ -332,7 +332,7 @@
   .hsplitter:hover, .hsplitter.drag { background: rgba(var(--acr),.35); }
   body.resizing-v { cursor: row-resize; user-select: none; }
   /* Очередь — отдельная карточка со скруглёнными углами: линия сверху не нужна */
-  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: auto; border: 0; border-radius: var(--r-panel); margin: 0 0 var(--gutter); box-shadow: none; background: var(--bg1); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); min-height: 0; position: relative; transition: box-shadow .16s ease; }
+  .queue-col { flex: 0 0 auto; width: 380px; min-width: 280px; overflow-x: hidden; overflow-y: hidden; border: 0; border-radius: var(--r-panel); margin: 0 0 var(--gutter); box-shadow: none; background: var(--bg1); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); min-height: 0; position: relative; transition: box-shadow .16s ease; }
   /* Полоса прокрутки карточки невидима: прокрутка колесом работает, картину не портит */
   .queue-col { scrollbar-width: none; }
   .queue-col::-webkit-scrollbar { width: 0; height: 0; display: none; }
@@ -399,7 +399,8 @@
   .vmeta .t { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vmeta .s { font-size: 13px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .qlist { flex: 1 1 0; min-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; position: relative; }
+  .queue-col > .qhead, .queue-col > .wavecard, .queue-col > .nowcard, .queue-col > .hsplitter { flex: 0 0 auto; }
+  .qlist { flex: 1 1 0; min-height: 96px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; position: relative; }
   .qcov { position: relative; width: 38px; height: 38px; border-radius: 7px; overflow: hidden; background: var(--bg4); flex: 0 0 auto; cursor: pointer; }
   .qcov img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .qov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); color: #fff; opacity: 0; transition: opacity .12s; }
@@ -3420,10 +3421,10 @@ var dragFrom = -1, dragWave = -1, dropTo = -1, dropWaveTo = -1;
   // Волна: ~10 треков вперёд; после пропуска или лайка первые 3 остаются, остальное Яндекс подбирает заново.
   // Плейлист фоном: весь оставшийся список.
   var WAVE_AHEAD = 10, WAVE_KEEP = 3, qNextOpen = true, waveTopping = false;
-  function bgPreview(){ return (bgOn || bgPending) && (bgSel.kind === 'wave' || bgSel.kind === 'list') ? waveBuf : []; }
+  function bgPreview(){ return (bgSel.kind === 'wave' || bgSel.kind === 'list') ? waveBuf : []; }
   function lastBgTrack(){ if (waveBuf.length) return waveBuf[waveBuf.length - 1]; for (var q = queue.length - 1; q >= 0; q--) if (queue[q].bg) return queue[q]; return null; }
   async function topUpWave(){
-    if (waveTopping || bgSel.kind !== 'wave' || !ymLoggedIn || !A.ymWaveMore || !(bgOn || bgPending)) return;
+    if (waveTopping || bgSel.kind !== 'wave' || !ymLoggedIn || !A.ymWaveMore) return;
     waveTopping = true; var tok = bgToken, added = 0;
     try {
       for (var k = 0; k < 4 && waveBuf.length < WAVE_AHEAD; k++) {
@@ -3437,6 +3438,24 @@ var dragFrom = -1, dragWave = -1, dropTo = -1, dropWaveTo = -1;
       }
     } finally { waveTopping = false; }
     if (added) renderQueue();
+  }
+  var wavePreviewBusy = false;
+  // Всегда держим «Дальше в волне» заполненным: неважно, играет фон или нет
+  async function ensureWavePreview(){
+    if (wavePreviewBusy) return;
+    if (bgSel.kind === 'list') { if (!waveBuf.length) { waveBuf = listOrder(); renderQueue(); } return; }
+    if (bgSel.kind !== 'wave' || !ymLoggedIn) return;
+    wavePreviewBusy = true;
+    try {
+      if (!waveBuf.length) {
+        if (!A.ymWaveStart) return;
+        var tok = ++bgToken;
+        var r = await A.ymWaveStart(waveOpts());
+        if (tok !== bgToken) return;
+        if (r && r.tracks) { waveBuf = r.tracks; renderQueue(); }
+      }
+      if (waveBuf.length < WAVE_AHEAD) topUpWave();
+    } finally { wavePreviewBusy = false; }
   }
   function trimWaveTail(){
     if (bgSel.kind !== 'wave') return;
@@ -3452,7 +3471,10 @@ var dragFrom = -1, dragWave = -1, dropTo = -1, dropWaveTo = -1;
     var isList = bgSel.kind === 'list';
     var wrap = document.createElement('div'); wrap.className = 'qnext';
     var hd = document.createElement('button'); hd.className = 'qn-h'; hd.setAttribute('aria-expanded', qNextOpen ? 'true' : 'false');
-    var nowTxt = isList ? 'играет фоном «' + (bgSel.list.title || 'плейлист') + '»' + (bgSel.shuffle ? ', вперемешку' : '') : 'играет волна «' + (isMyWave() ? 'Моя волна' : bgSel.name) + '»';
+    var bgLive = bgOn || bgPending;
+    var nowTxt = isList
+      ? (bgLive ? 'играет фоном «' : 'выбран фоном «') + (bgSel.list.title || 'плейлист') + '»' + (bgSel.shuffle ? ', вперемешку' : '')
+      : (bgLive ? 'играет волна «' : 'выбрана волна «') + (isMyWave() ? 'Моя волна' : bgSel.name) + '»';
     hd.innerHTML = '<span style="flex:0 0 auto">' + (qNextOpen ? '▾ ' : '▸ ') + (isList ? 'Дальше в плейлисте' : 'Дальше в волне') + ' · ' + list.length + '</span><span class="qn-now">— ' + esc(nowTxt) + '</span>';
     hd.title = isList ? 'Весь оставшийся список' : 'Около 10 треков вперёд; после пропуска или лайка Яндекс подбирает их заново';
     hd.onclick = function(){ qNextOpen = !qNextOpen; renderQueue(); };
@@ -3529,6 +3551,7 @@ var dragFrom = -1, dragWave = -1, dropTo = -1, dropWaveTo = -1;
   if (A.getSetting) {
     A.getSetting('wave').then(function (c){ if (c) waveCfg = Object.assign(waveCfg, c); renderWaveUi(); });
     A.getSetting('bgWave').then(function (b){ if (b && (b.station || b.seeds)) { bgSel = lastWave = { kind: 'wave', station: b.station || 'user:onyourwave', seeds: b.seeds || undefined, name: b.name || 'Волна' }; renderWaveUi(); } });
+    setTimeout(ensureWavePreview, 800);
   }
   function toggleAuto(){ waveCfg.on = !waveCfg.on; saveWaveCfg(); renderWaveUi(); }
   $('waveToggle').onclick = toggleAuto;
@@ -7246,6 +7269,7 @@ function initWidgetUi(){
       if (!$('waveSettings').hidden) loadVariants(); else renderVariants();
     } else { likedSet = new Set(); stations = []; renderGenres(); renderVariants(); }
     renderWaveUi(); renderLike();
+    ensureWavePreview();
   }
 
   acctRender(acctBtn, { logo: YM_LOGO, text: 'Войти в Яндекс' });
