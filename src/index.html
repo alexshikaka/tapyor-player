@@ -5921,6 +5921,14 @@ function pushWidget(force){
     st.htmlClass = document.documentElement.className;
     st.htmlStyle = document.documentElement.getAttribute('style') || '';
     st.bodyClass = document.body.className;
+    // Оформление панели: либо как в приложении, либо заданная тема/оболочка — теми же классами
+    var lk = WG.look || 'current';
+    var DOCK_LOOK = {
+      'theme:violet': '', 'theme:mono': 'theme-mono', 'theme:light': 'theme-light-default',
+      'skin:dos': 'pixel-skin skin-dos', 'skin:crt': 'pixel-skin skin-crt', 'skin:retro': 'pixel-skin skin-retro'
+    };
+    st.dockClass = lk === 'current' ? (st.htmlClass || '') : (DOCK_LOOK[lk] || '');
+    st.dockStyle = lk === 'current' ? (st.htmlStyle || '') : '';
     A.widgetPush(st);
   } catch (err) {
     try { A.widgetPush({ orders: [], np: { title: 'ERR ' + (err && err.message), artist: '', playing: false }, reqAuto: false, scale: 100, theme: null }); } catch (e) {}

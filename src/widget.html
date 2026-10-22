@@ -97,8 +97,8 @@
   function applySkin(st){
     if (!st) return;
     // те же классы темы и оболочки, что в приложении
-    document.documentElement.className = st.htmlClass || '';
-    document.documentElement.setAttribute('style', st.htmlStyle || '');
+    document.documentElement.className = st.dockClass != null ? st.dockClass : (st.htmlClass || '');
+    document.documentElement.setAttribute('style', st.dockStyle != null ? st.dockStyle : (st.htmlStyle || ''));
     if (st.scale) document.documentElement.style.zoom = (Math.max(50, Math.min(200, st.scale)) / 100);
   }
 
