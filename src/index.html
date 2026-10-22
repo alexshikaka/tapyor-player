@@ -927,9 +927,6 @@
   .rq-svc { font-size: 12px; color: var(--tx4); display: flex; gap: 8px; align-items: center; }
   .rq-svc i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; background: var(--tx5); }
   .rq-svc i.ok { background: #4ADE9A; } .rq-svc i.bad { background: #FF5A52; }
-  .rq-sum { background: var(--bg3); border: 0; border-radius: var(--r-card); padding: 10px 14px; font-size: 13px; color: var(--tx2); line-height: 1.55; }
-  .rq-sum b { color: var(--tx); font-weight: 600; }
-  .rq-sum .g { color: #4ADE9A; } .rq-sum .y { color: #FFD43B; } .rq-sum .r { color: #FF8A84; }
   .rq-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
   .rq { background: var(--bg2); border: 0; border-radius: var(--r-card); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
   /* Активные заказы — зелёная подложка (те, что ждут решения) */
@@ -1050,7 +1047,6 @@
       <div class="col-head">
         <span class="rq-acts"><span class="rq-svc" id="rqSvc"></span><button class="pbtn qadd" id="rqAddAll" hidden>+ Все точные в очередь</button><button class="rq-sm" id="rqTest" title="Проверить, как Тапёр разберёт сообщение">Пробный заказ</button><button class="rq-sm" id="rqClear" title="Удалить всю историю заказов: сообщения, активные и выполненные">Очистить</button></span>
       </div>
-      <div class="rq-sum" id="rqSum" hidden></div>
       <div class="rq-list" id="rqList"></div>
     </section>
 
@@ -4242,22 +4238,6 @@
       '<div class="tm"><div class="tt">' + esc(t.author ? t.author + ' — ' + t.title : t.title) + '</div><div class="ts">' + esc((r.name || 'Аноним') + ' · ' + rqMoney(r) + ' · ' + srcName(t)) + '</div></div></div>' +
       '<div class="rq-b"><button class="rq-sm" data-rq="return" data-id="' + it._id + '">↩ Вернуть в заказы</button></div></div>';
   }
-  function rqSummary(vis){
-    var ex = [], db = [], rj = [];
-    vis.forEach(function (r){ (r.items || []).forEach(function (it){
-      if (it.state) return;
-      var c = rqCls(it);
-      var nm = it.track ? (it.track.author ? it.track.author + ' — ' : '') + it.track.title : '«' + (it.query || it.link || '') + '»';
-      if (c === 'ex') ex.push(nm);
-      else if (c === 'rj') rj.push(nm + ' (' + rqFlags(it).filter(function (x){ return RQ_REJECT[x.k]; }).map(function (x){ return x.t; }).join(', ') + ')');
-      else db.push(nm);
-    }); });
-    var parts = [];
-    if (ex.length) parts.push('<b class="g">Точно:</b> ' + esc(ex.join(', ')));
-    if (db.length) parts.push('<b class="y">Под сомнением:</b> ' + esc(db.join(', ')));
-    if (rj.length) parts.push('<b class="r">Спорные:</b> ' + esc(rj.join('; ')));
-    return { html: parts.join('<br>'), ex: ex.length, any: ex.length + db.length + rj.length };
-  }
   // Перерисовать вкладку заказов сразу, если она открыта (трек заиграл или доиграл)
   function rqSync(){ if (curTab === 'req') rqRender(); }
   function rqRender(){
@@ -4279,9 +4259,6 @@
       });
     });
     act.sort(function (a, b){ return (a.r.got || 0) - (b.r.got || 0); }); // кто раньше заказал — тот выше
-
-    var sm = rqSummary(vis);
-    $('rqSum').hidden = !sm.html; $('rqSum').innerHTML = sm.html;
     var nPend = act.filter(function (x){ return !x.it.state; }).length; // ждут решения
     $('rqAddAll').hidden = !nPend; $('rqAddAll').textContent = '+ Все точные в очередь (' + nPend + ')';
 
