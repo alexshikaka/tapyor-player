@@ -43,6 +43,20 @@
   .conn.on { color: var(--ok, #4ADE9A); }
   .conn.on i { background: var(--ok, #4ADE9A); box-shadow: 0 0 6px var(--ok, #4ADE9A); }
 
+  /* ── Yami: шрифт OBS и прямые углы во всех элементах панели ── */
+  html.yami, html.yami body, html.yami button, html.yami input, html.yami .rq, html.yami .dock-head, html.yami .dock-bar {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif !important;
+  }
+  html.yami *, html.yami *::before, html.yami *::after { border-radius: 0 !important; }
+  /* Кнопка «＋ В очередь» — яркая акцентная, как кнопка в OBS */
+  .dock-feed .pbtn.qadd { background: var(--ac, #284CB8) !important; color: #FFFFFF !important; font-weight: 700; }
+  .dock-feed .pbtn.qadd:hover { background: var(--ac2, #476BD7) !important; }
+  html.yami .dock-feed .pbtn.qadd { border-radius: 0; }
+  /* Плашка «уже в очереди» приходит с инлайновым жёлтым — перекрашиваем в цвет схемы */
+  .dock-feed .rq-fl span {
+    color: var(--wait, #FFD43B) !important;
+    background: var(--wait-bg, rgba(255,212,59,.14)) !important;
+  }
   .dock-empty { color: var(--tx4); font-size: 12px; text-align: center; padding: 18px 8px; }
   /* Цвета палитры: суммы, статусы и полоски слева берут цвета схемы (--ok / --wait / --err) */
   .dock-feed .rq { background: var(--card-bg, var(--bg2)); transition: background-color .25s ease, color .25s ease; }

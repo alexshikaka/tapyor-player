@@ -5915,9 +5915,13 @@ function yamiVars(id){
     '--ok': p.ok,
     '--err': p.err,
     '--wait': p.wait || '#FFD43B',
-    '--r-panel': '14px',
-    '--r-card': '12px',
-    'color-scheme': p.light ? 'light' : 'dark'
+    '--wait-bg': 'rgba(' + wgHex2rgb(p.wait || '#FFD43B').join(',') + ',.16)',
+    // Скругления и шрифт — как в OBS: прямые панели и системный шрифт
+    '--r-panel': '0px',
+    '--r-card': '0px',
+    '--r-ctl': '0px',
+    '--r-tab': '0px',
+    '--font': 'Segoe UI, system-ui, -apple-system, Roboto, Arial, sans-serif',
   };
   return Object.keys(vars).map(function(k){ return k + ':' + vars[k]; }).join(';');
 }
@@ -6009,7 +6013,7 @@ function pushWidget(force){
       'skin:dos': 'pixel-skin skin-dos', 'skin:crt': 'pixel-skin skin-crt', 'skin:retro': 'pixel-skin skin-retro'
     };
     var yamiId = lk.indexOf('yami:') === 0 ? lk.slice(5) : '';
-    st.dockClass = yamiId ? '' : (lk === 'current' ? (st.htmlClass || '') : (DOCK_LOOK[lk] || ''));
+    st.dockClass = yamiId ? ('yami yami-' + yamiId) : (lk === 'current' ? (st.htmlClass || '') : (DOCK_LOOK[lk] || ''));
     st.dockStyle = yamiId ? yamiVars(yamiId) : (lk === 'current' ? (st.htmlStyle || '') : '');
     A.widgetPush(st);
   } catch (err) {
@@ -6018,7 +6022,6 @@ function pushWidget(force){
 }
 
 // команды из виджета
-// Кнопки в доке работают как в приложении: находим такую же кнопку в своём окне и нажимаем
 if (A.onWidgetRq) A.onWidgetRq(function(d){
   if (!d || !d.dataset) return;
   var want = d.dataset;

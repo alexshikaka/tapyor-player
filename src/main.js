@@ -594,6 +594,8 @@ function startServer(preferredPort) {
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404); res.end('not found'); return; }
       const hd = { 'Content-Type': types[path.extname(file).toLowerCase()] || 'application/octet-stream' };
+      // Локальная отдача без кэша: иначе после обновления Chromium может показать старую страницу
+      if (/\.(html|js|css)$/i.test(path.extname(file))) hd['Cache-Control'] = 'no-store';
       if (p === '/index.html') hd['Set-Cookie'] = 'tapk=' + LOCAL_KEY + '; Path=/; HttpOnly; SameSite=Strict';
       res.writeHead(200, hd);
       res.end(data);
