@@ -380,6 +380,12 @@
   .qn-row .qn-c img { filter: grayscale(1); transition: filter .2s; }
   .qn-row:hover .qn-c img { filter: none; }
   .qn-row .qn-c { width: 26px; height: 26px; border-radius: 5px; background: var(--bg4); flex: 0 0 auto; overflow: hidden; }
+  .qn-row { cursor: pointer; }
+  .qn-row.dragging { opacity: .35; }
+  .qn-row .qn-c { position: relative; }
+  .qn-ov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.5); opacity: 0; transition: opacity .12s; color: #fff; }
+  .qn-row:hover .qn-ov, .qn-row.playing .qn-ov { opacity: 1; }
+  .qn-ov svg { display: block; }
   .qn-row .qn-c img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .qn-row .qn-m { flex: 1; min-width: 0; }
   .qn-row .qn-t { font-size: 12.5px; font-weight: 400; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
@@ -2891,7 +2897,8 @@ function renderSkinScheme(){
       var pend = i > current && !v.played;
       r.className = 'qrow' + (isCur ? ' playing' : '') + (v.played && !isCur ? ' done' : '') + (pend ? ' pend' : '');
       r.dataset.i = i; r._q = v;
-      if (pend) { r.draggable = true; r.title = 'Перетащи, чтобы поменять порядок'; }
+      r.draggable = true;
+      r.title = isCur ? 'Играет — можно перетащить' : (pend ? 'Перетащи, чтобы поменять порядок' : 'Сыграно — можно перетащить');
       r.innerHTML =
         '<div class="qcov" title="' + (isCur ? 'Играет' : 'Играть') + '">' + (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
           '<span class="qov">' +
@@ -2955,11 +2962,13 @@ function renderSkinScheme(){
   // Переставить несыгранную песню: to — место вставки (индекс до удаления); выше играющего не ставим
   function moveItem(from, to){
     if (from < 0 || from >= queue.length) return;
-    to = Math.max(to, current + 1);
+    var wasCur = from === current;
+    if (!wasCur) to = Math.max(to, current + 1);
     if (to === from || to === from + 1) return;
     var item = queue.splice(from, 1)[0];
     if (from < to) to--;
     queue.splice(to, 0, item);
+    if (wasCur) current = to;   // играющий трек продолжает играть на новом месте
     renderQueue(); saveToday(); prefetchNext();
   }
   // «Играть сейчас»: несыгранная — сразу после текущей и включаем; сыгранная — копия следующей (история не откатывается)
@@ -3077,17 +3086,21 @@ function renderSkinScheme(){
   }
 
   // Перетаскивание несыгранных песен
-  var dragFrom = -1, dropTo = -1;
+var dragFrom = -1, dragWave = -1, dropTo = -1;
   function clearDrop(){ var ms = document.querySelectorAll('#queue .drop-before, #queue .drop-after'); for (var k = 0; k < ms.length; k++) ms[k].classList.remove('drop-before', 'drop-after'); }
   (function(){
     var box = $('queue');
     box.addEventListener('dragstart', function(e){
+      var w = e.target.closest && e.target.closest('.qn-row');
+      if (w) { dragWave = parseInt(w.dataset.w, 10); w.classList.add('dragging'); closeCtx();
+        try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'wave:' + dragWave); } catch (err) {}
+        return; }
       var r = e.target.closest && e.target.closest('.qrow'); if (!r || !r.draggable) return;
       dragFrom = parseInt(r.dataset.i, 10); r.classList.add('dragging'); closeCtx();
       try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (err) {}
     });
     box.addEventListener('dragover', function(e){
-      if (dragFrom < 0) return;
+      if (dragFrom < 0 && dragWave < 0) return;
       e.preventDefault();
       clearDrop();
       var r = e.target.closest && e.target.closest('.qrow');
@@ -3100,12 +3113,21 @@ function renderSkinScheme(){
       if (to < rows.length) rows[to].classList.add('drop-before'); else if (rows.length) rows[rows.length - 1].classList.add('drop-after');
     });
     box.addEventListener('drop', function(e){
-      if (dragFrom < 0) return;
+      if (dragFrom < 0 && dragWave < 0) return;
       e.preventDefault();
+      if (dragWave >= 0) {
+        var wj = dragWave; dragWave = -1; clearDrop();
+        var wt = waveBuf.splice(wj, 1)[0]; if (!wt) return;
+        wt.bg = false; wt.played = false;
+        var at = Math.max(current + 1, Math.min(dropTo < 0 ? queue.length : dropTo, queue.length));
+        queue.splice(at, 0, wt);
+        renderQueue(); saveToday(); prefetchNext(); topUpWave();
+        return;
+      }
       var f = dragFrom; dragFrom = -1; clearDrop();
       moveItem(f, dropTo);
     });
-    box.addEventListener('dragend', function(){ dragFrom = -1; clearDrop(); var d = box.querySelector('.dragging'); if (d) d.classList.remove('dragging'); });
+    box.addEventListener('dragend', function(){ dragFrom = -1; dragWave = -1; clearDrop(); var d = box.querySelector('.dragging'); if (d) d.classList.remove('dragging'); });
   })();
 
   // Лента за сегодня (день начинается в 6 утра — стримы идут за полночь)
@@ -3396,6 +3418,10 @@ function renderSkinScheme(){
     if (waveBuf.length > WAVE_KEEP) { waveBuf = waveBuf.slice(0, WAVE_KEEP); renderQueue(); }
     topUpWave();
   }
+  function playWaveAt(j){
+    var t = waveBuf.splice(j, 1)[0];
+    if (t) { bgOn = true; bgPending = false; playBgTrack(t); }
+  }
   function renderBgPreview(box){
     var list = bgPreview(); if (!list.length) return;
     var isList = bgSel.kind === 'list';
@@ -3409,15 +3435,20 @@ function renderSkinScheme(){
     if (qNextOpen) {
       var max = isList ? 200 : list.length;
       list.slice(0, max).forEach(function (t, j){
-        var r = document.createElement('div'); r.className = 'qn-row';
-        r.innerHTML = '<div class="qn-c">' + (t.thumb ? '<img src="' + esc(t.thumb) + '" alt="" loading="lazy">' : '') + '</div><div class="qn-m"><div class="qn-t" title="Играть сейчас">' + esc(t.title) + '</div><div class="qn-s">' + esc(t.author || '') + ' · ' + esc(srcName(t)) + '</div></div>';
+        var r = document.createElement('div'); r.className = 'qn-row'; r.dataset.w = j;
+        r.draggable = true; r.title = 'Перетащи в очередь или нажми, чтобы включить';
+        r.innerHTML = '<div class="qn-c">' + (t.thumb ? '<img src="' + esc(t.thumb) + '" alt="" loading="lazy">' : '') +
+          '<span class="qn-ov"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></span></div>' +
+          '<div class="qn-m"><div class="qn-t">' + esc(t.title) + '</div><div class="qn-s">' + esc(t.author || '') + ' · ' + esc(srcName(t)) + '</div></div>';
+        r.ondragstart = function(e){ dragWave = j; r.classList.add('dragging'); closeCtx(); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'wave:' + j); } catch (err) {} };
+        r.ondragend = function(){ dragWave = -1; r.classList.remove('dragging'); clearDrop(); };
+        r.onclick = function(e){ if (e.target.closest('.x')) return; playWaveAt(j); };
         var up = document.createElement('button'); up.className = 'x'; up.title = 'Играть следующим (как заказ)'; up.setAttribute('aria-label', up.title);
         up.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14M12 20V9M7 13l5-5 5 5"></path></svg>';
-        up.onclick = function(){ var t2 = waveBuf.splice(j, 1)[0]; if (t2) addNext(t2); topUpWave(); };
+        up.onclick = function(e){ e.stopPropagation(); var t2 = waveBuf.splice(j, 1)[0]; if (t2) addNext(t2); topUpWave(); };
         var x = document.createElement('button'); x.className = 'x'; x.title = 'Не играть'; x.setAttribute('aria-label', 'Не играть');
         x.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>';
-        x.onclick = function(){ waveBuf.splice(j, 1); renderQueue(); topUpWave(); };
-        r.querySelector('.qn-t').onclick = function(){ var t2 = waveBuf.splice(j, 1)[0]; if (t2) { bgOn = true; bgPending = false; playBgTrack(t2); } };
+        x.onclick = function(e){ e.stopPropagation(); waveBuf.splice(j, 1); renderQueue(); topUpWave(); };
         r.appendChild(up); r.appendChild(x);
         wrap.appendChild(r);
       });
