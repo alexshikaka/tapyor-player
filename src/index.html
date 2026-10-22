@@ -1079,6 +1079,26 @@
   html.skin-dos nav button.active { background: #000080; color: #ffffff; box-shadow: none; }
   html.skin-dos .qrow, html.skin-dos .row, html.skin-dos .rq, html.skin-dos .wavecard { background: var(--bg2); }
 
+  /* Norton Commander: список треков — светлая «бумага» на синем экране.
+     Переменные задаём прямо на строке, поэтому весь текст внутри становится тёмным. */
+  html[data-skn-scheme="norton"] .qrow,
+  html[data-skn-scheme="norton"] .results .row,
+  html[data-skn-scheme="norton"] .rq,
+  html[data-skn-scheme="norton"] .plc,
+  html[data-skn-scheme="norton"] .disc {
+    --bg2: #C6CAD3; --bg3: #D2D6DE; --bg4: #DEE2E8;
+    --tx: #101018; --tx2: #2A2A38; --tx3: #45455A; --tx4: #5C5C74; --tx5: #6E6E86;
+    --ln: #8A90A0; --ln2: #A6ACBA; --ln3: #6E7484;
+    background: #C6CAD3 !important;
+    color: #101018;
+    border-color: #8A90A0;
+    box-shadow: inset 1px 1px 0 #EFF1F4, inset -1px -1px 0 #7A8092;
+  }
+  html[data-skn-scheme="norton"] .qrow:hover,
+  html[data-skn-scheme="norton"] .results .row:hover {
+    background: #D6DAE2 !important;
+  }
+
   /* 4. Неон-скан — CRT: скан-линии, виньетка и свечение */
   html.skin-crt { --bg00:#05040a; --bg0:#0b0b12; --bg1:#12101e; --bg2:#191527; --bg3:#211a33; --bg4:#2a2140;
     --ln:#3a2f5c; --ln2:#241c3c; --ln3:#6b4fd0; --tx:#f2eeff; --tx2:#cfc7ea; --tx3:#a89fd0; --tx4:#847bad; --tx5:#645c86;
@@ -1969,11 +1989,13 @@ window.onerror = function(msg, src, line){
   }
   var SKIN_VAR_KEYS = ['--bg00','--bg0','--bg1','--bg2','--bg3','--bg4','--ln','--ln2','--ln3','--tx','--tx2','--tx3','--tx4','--tx5','--ac','--ac2','--acr','--acbg','--pri','--prit','--hov'];
   function clearSkinVars(){ var d = document.documentElement; SKIN_VAR_KEYS.forEach(function (k){ d.style.removeProperty(k); }); }
+  try { delete document.documentElement.dataset.sknScheme; } catch (e) {}
   function applySkinVars(id){
     var core = skinCoreOf(id); if (!core) return;
     var v = skinVarsFromCore(core); if (!v) return;
     var d = document.documentElement;
     Object.keys(v).forEach(function (k){ d.style.setProperty(k, v[k]); });
+    d.dataset.sknScheme = curSkinScheme[id] || 'original';
   }
   function skinSchemesStore(){
     var out = {};
