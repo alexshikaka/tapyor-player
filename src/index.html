@@ -754,10 +754,8 @@
   .wchip.on-bg { border-color: var(--pri); color: var(--pri); }
 
   /* Настройки */
-  /* Настройки прокручиваются внутри себя; у верхней кромки — мягкое затухание, без «рамки» */
+  /* Настройки прокручиваются внутри себя */
   .set { flex: 1 1 auto; min-width: 0; overflow-y: auto; scrollbar-gutter: stable; }
-  .set::before { content: ''; position: sticky; top: 0; z-index: 4; display: block; height: 22px; margin-bottom: -22px; pointer-events: none;
-    background: linear-gradient(to bottom, var(--bg0) 8%, transparent 100%); }
   .set::-webkit-scrollbar { width: 12px; }
   /* В настройках ползунок виден всегда — его не надо искать наведением */
   .set::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 6px; background-color: color-mix(in srgb, var(--tx) 15%, transparent); }
@@ -1058,7 +1056,6 @@
     <section class="view set" id="viewSettings" hidden aria-label="Настройки">
       <div class="set-in">
         <aside class="set-side">
-          <div class="cap">Настройки</div>
           <button data-go="sAcc">Аккаунты</button>
           <button data-go="sHealth">Состояние сервисов</button>
           <button data-go="sObs">OBS и стрим</button>
