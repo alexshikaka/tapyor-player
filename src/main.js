@@ -521,8 +521,12 @@ function startServer(preferredPort) {
       try {
         const body = await readBody(req);
         log('док: клик ' + JSON.stringify(body && body.dataset ? body.dataset : body));
-        // Действие из дока не должно поднимать окно плеера: запоминаем состояние и возвращаем его
-        if (mainWindow && !mainWindow.isDestroyed()) {
+        if (body && body.focus) {
+          // Кнопка, которая открывает окно приложения (поиск, настройки): показываем его поверх всех
+          dockGuard = null;
+          if (typeof showMainWindow === 'function') showMainWindow();
+        } else if (mainWindow && !mainWindow.isDestroyed()) {
+          // Остальные действия (в очередь, пауза) не должны поднимать окно плеера
           dockGuard = { focused: mainWindow.isFocused(), minimized: mainWindow.isMinimized(), at: Date.now() };
           setTimeout(() => {
             if (!dockGuard || Date.now() - dockGuard.at > 2500 || !mainWindow || mainWindow.isDestroyed()) return;
@@ -725,11 +729,47 @@ function sendUpdateState(st) {
   try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-state', st); } catch (e) {}
 }
 
+// Windows не даёт фоновому процессу забрать фокус. Обходим через AttachThreadInput:
+// цепляемся к потоку активного окна и уже оттуда поднимаем своё.
+function forceForeground(win) {
+  try {
+    const buf = win.getNativeWindowHandle();
+    const hwnd = buf.length >= 8 ? Number(buf.readBigUInt64LE(0)) : buf.readUInt32LE(0);
+    const ps = [
+      "$sig = '[DllImport(\"user32.dll\")] public static extern bool ShowWindow(IntPtr h, int c);",
+      "[DllImport(\"user32.dll\")] public static extern void SwitchToThisWindow(IntPtr h, bool alt);",
+      "[DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr h);'",
+      'Add-Type -Namespace Wf -Name Fg -MemberDefinition $sig',
+      '$h = [IntPtr]' + hwnd,
+      '[Wf.Fg]::ShowWindow($h, 9) | Out-Null',
+      '[Wf.Fg]::SwitchToThisWindow($h, $true)',
+      '[Wf.Fg]::SetForegroundWindow($h) | Out-Null'
+    ].join('; ');
+    require('child_process').execFile('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', ps], { windowsHide: true }, () => {});
+  } catch (e) {}
+}
+
 function showMainWindow() {
   if (!mainWindow) return;
   if (mainWindow.isMinimized()) mainWindow.restore();
-  mainWindow.show();
-  mainWindow.focus();
+  try {
+    mainWindow.show();
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    mainWindow.moveTop();
+    mainWindow.focus();
+    mainWindow.flashFrame(true);
+    mainWindow.once('focus', () => { try { mainWindow.flashFrame(false); } catch (e) {} });
+    // Окно Windows показывает не сразу, поэтому пробуем переключиться несколько раз
+    forceForeground(mainWindow);
+    setTimeout(() => { try { forceForeground(mainWindow); } catch (e) {} }, 400);
+    setTimeout(() => { try { forceForeground(mainWindow); } catch (e) {} }, 1100);
+    clearTimeout(global.__topTimer);
+    global.__topTimer = setTimeout(() => {
+      try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setAlwaysOnTop(false); } catch (e) {}
+    }, 2600);
+  } catch (e) {
+    try { mainWindow.show(); mainWindow.focus(); } catch (err) {}
+  }
 }
 
 function initUpdater() {

@@ -141,10 +141,12 @@
     e.preventDefault();
     var dataset = {};
     for (var k in btn.dataset) if (btn.dataset[k] != null) dataset[k] = btn.dataset[k];
+    // Поиск и настройки показывают окно плеера, остальные кнопки его не трогают
+    var opensWindow = ["find", "textfind", "settings"].indexOf(dataset.rq) >= 0;
     fetch('/widget/rq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dataset: dataset })
+      body: JSON.stringify({ dataset: dataset, focus: opensWindow })
     }).catch(function(){});
   });
 
