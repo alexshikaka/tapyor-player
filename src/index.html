@@ -68,12 +68,12 @@
   .searchwrap { flex: 1 1 auto; min-width: 0; max-width: 820px; display: flex; flex-direction: column; }
   /* Поиск и фильтры живут в самой вкладке «Поиск»: шапка тогда одной строки,
      и очередь воспроизведения начинается на том же уровне, что и в остальных вкладках */
-  .searchtop { display: flex; flex-direction: column; gap: var(--sp-3); }
+  .searchtop { display: flex; flex-direction: column; gap: 6px; }
   .searchtop .searchwrap { max-width: none; }
   .searchtop[hidden] { display: none !important; }
   .searchbar { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 0; border-radius: var(--r-panel); padding: 0 14px; height: 46px; }
   .searchbar input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--tx); font-size: 11.5px; font-weight: 500; }
-  .chips { display: flex; flex-wrap: nowrap; gap: 0; padding: 0; }
+  .chips { display: flex; flex-wrap: nowrap; gap: 0; padding: 0 0 8px; border-bottom: 1px solid rgba(255,255,255,.06); }
   .chip { flex: 1 1 0; min-width: 0; height: 28px; padding: 0 4px; border-radius: 0; border: 0; background: transparent; color: var(--tx3); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer; white-space: nowrap; transition: color .12s; }
   /* Подсвечивается только текст, без плашки */
   .chip:hover { background: transparent; color: var(--tx); }
