@@ -1670,6 +1670,8 @@
     }
     try { localStorage.setItem('tapSkin', curSkin); } catch (e) {}
     if (save && A.setSetting) A.setSetting('skin', curSkin);
+    // Без оболочки возвращаем выбранную тему
+    if (!s) applyTheme(themeLocal() || 'violet', false);
     renderSkinList();
     renderThemeList();
   }
