@@ -1079,23 +1079,62 @@
   html.skin-dos nav button.active { background: #000080; color: #ffffff; box-shadow: none; }
   html.skin-dos .qrow, html.skin-dos .row, html.skin-dos .rq, html.skin-dos .wavecard { background: var(--bg2); }
 
-  /* Norton Commander: список треков — светлая «бумага» на синем экране.
-     Переменные задаём прямо на строке, поэтому весь текст внутри становится тёмным. */
-  html[data-skn-scheme="norton"] .qrow,
-  html[data-skn-scheme="norton"] .results .row,
-  html[data-skn-scheme="norton"] .rq,
-  html[data-skn-scheme="norton"] .plc,
-  html[data-skn-scheme="norton"] .disc {
-    --bg2: #C6CAD3; --bg3: #D2D6DE; --bg4: #DEE2E8;
-    --tx: #101018; --tx2: #2A2A38; --tx3: #45455A; --tx4: #5C5C74; --tx5: #6E6E86;
-    --ln: #8A90A0; --ln2: #A6ACBA; --ln3: #6E7484;
+
+  /* ── Norton Commander: единая концепция «синий экран + светлые окна» ──
+     Экран тёмно-синий, а содержимое — светлые панели с тёмным текстом и
+     циановой рамкой, как окна в NC. Все оттенки наследуются от контейнера,
+     поэтому поиск, плейлисты, очередь и настройки выглядят одинаково. */
+  html[data-skn-scheme="norton"] .results-col,
+  html[data-skn-scheme="norton"] .queue-col,
+  html[data-skn-scheme="norton"] .set-main,
+  html[data-skn-scheme="norton"] .set-side {
+    --bg0: #C6CAD3; --bg1: #CFD3DB; --bg2: #DADEE6; --bg3: #E6E9EF; --bg4: #F2F4F7;
+    --tx: #101018; --tx2: #26263A; --tx3: #41415A; --tx4: #585874; --tx5: #6E6E8C;
+    --ln: #7A8092; --ln2: #9AA0B0; --ln3: #5E6474;
+    --ac: #0000A8; --ac2: #0000D0; --acr: 0,0,168; --acbg: #B9BEC9;
+    --pri: #0000A8; --prit: #FFFFFF; --hov: rgba(0,0,0,.06);
     background: #C6CAD3 !important;
     color: #101018;
-    border-color: #8A90A0;
-    box-shadow: inset 1px 1px 0 #EFF1F4, inset -1px -1px 0 #7A8092;
+    border: 0;
+    box-shadow: 0 0 0 2px #00E5E5, 0 0 0 3px #00004E, inset 1px 1px 0 #EFF1F4, inset -1px -1px 0 #7A8092;
   }
-  html[data-skn-scheme="norton"] .qrow:hover,
-  html[data-skn-scheme="norton"] .results .row:hover {
+  /* Поиск и строка источников — такие же светлые окна, не синие */
+  html[data-skn-scheme="norton"] .searchbar {
+    --tx: #101018; --tx2: #26263A; --tx3: #41415A; --tx4: #585874;
+    background: #E8EBF0 !important; color: #101018;
+    box-shadow: 0 0 0 2px #00E5E5, inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #9AA0B0;
+  }
+  html[data-skn-scheme="norton"] .searchbar input,
+  html[data-skn-scheme="norton"] .searchbar .field { color: #101018; }
+  html[data-skn-scheme="norton"] #chips {
+    background: #C6CAD3 !important;
+    box-shadow: 0 0 0 2px #00E5E5;
+    padding: 4px 6px; border-radius: 6px;
+  }
+  html[data-skn-scheme="norton"] #chips .chip { color: #101018; background: #D6DAE2; }
+  html[data-skn-scheme="norton"] #chips .chip.active { background: #0000A8; color: #FFFFFF; }
+  /* Подвал — светлая полоса функциональных клавиш */
+  html[data-skn-scheme="norton"] footer {
+    --tx: #101018; --tx2: #26263A; --tx3: #41415A; --tx4: #585874;
+    background: #C6CAD3 !important; color: #101018;
+    box-shadow: inset 0 2px 0 #00E5E5, inset 0 -2px 0 #7A8092;
+  }
+  /* Шапка остаётся синей, активная вкладка — циановая плашка */
+  html[data-skn-scheme="norton"] nav button.active { background: #00E5E5; color: #00104A; }
+  /* Кнопки внутри светлых окон наследуют синий акцент (--pri) */
+  html[data-skn-scheme="norton"] .pbtn { box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF; }
+  /* Кнопки внутри светлых окон: синяя плашка с белым текстом, «призрачные» — платина */
+  /* Боковое меню настроек — те же светлые окна, кнопки как в DOS */
+  html[data-skn-scheme="norton"] .set-side { background: #C6CAD3 !important; box-shadow: 0 0 0 2px #00E5E5, 0 0 0 3px #00004E; }
+  html[data-skn-scheme="norton"] .set-side button {
+    background: #C0C0C0 !important; color: #101018 !important;
+    box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF;
+  }
+  html[data-skn-scheme="norton"] .set-side button.active { background: #0000A8 !important; color: #FFFFFF !important; box-shadow: none; }
+  html[data-skn-scheme="norton"] .pbtn:not(.ghost) { background: #0000A8 !important; color: #FFFFFF !important; }
+  html[data-skn-scheme="norton"] .pbtn.ghost { background: #C0C0C0 !important; color: #101018 !important; box-shadow: inset -1px -1px 0 #000000, inset 1px 1px 0 #FFFFFF; }
+  html[data-skn-scheme="norton"] .cbtn.play { background: #0000A8 !important; color: #FFFFFF !important; box-shadow: 0 0 0 2px #00E5E5; }
+  html[data-skn-scheme="norton"] .cbtn { color: #101018; }
     background: #D6DAE2 !important;
   }
 
