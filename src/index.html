@@ -958,13 +958,10 @@
   .rq-it.added { border-color: var(--ln3); }
   .rq-it.added > .rq-lv { color: var(--tx4); }
   /* Лента сообщений и выполненные заказы — сворачиваемые разделы */
-  .rq-sec { font: 700 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 0; }
-  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 14px; margin-top: 2px; }
-  /* Сообщения в ленте должны читаться отдельно друг от друга: линия-разделитель сверху */
-  .rq-feed > .rq, .rq-done > .rq { position: relative; margin-bottom: 14px; }
+  .rq-feed, .rq-done { display: flex; flex-direction: column; gap: 0; margin-top: 2px; }
+  /* Зазор между сообщениями: карточки не слипаются */
+  .rq-feed > .rq, .rq-done > .rq { margin-bottom: 14px; }
   .rq-feed > .rq:last-child, .rq-done > .rq:last-child { margin-bottom: 0; }
-  .rq-feed > .rq + .rq::before, .rq-done > .rq + .rq::before {
-    content: ''; position: absolute; left: 4px; right: 4px; top: -8px; height: 1px; background: var(--ln2); }
   .rq-feed > summary, .rq-done > summary { cursor: pointer; font: 600 11px Onest, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--tx4); padding: 10px 2px 6px; list-style: none; }
   .rq-feed > summary::-webkit-details-marker, .rq-done > summary::-webkit-details-marker { display: none; }
   .rq-feed > summary::before, .rq-done > summary::before { content: '▸ '; }
