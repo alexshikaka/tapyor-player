@@ -474,6 +474,14 @@
   .sg-label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--tx4); padding: 6px 10px 4px; }
   .sg-item { padding: 9px 12px; border-radius: 8px; font-size: 14px; color: var(--tx); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sg-item:hover, .sg-item.active { background: var(--bg4); }
+  /* Список выдачи — то же раскрывающееся окно, что и подсказки поиска */
+  .smode-pop { display: none; }
+  .smode-pop.open { display: block; }
+  .smp-item { padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .smp-item:hover { background: var(--bg4); }
+  .smp-item .n { font-size: 13.5px; color: var(--tx); font-weight: 500; }
+  .smp-item .d { font-size: 11.5px; color: var(--tx4); line-height: 1.35; }
+  .smp-item.on .n { color: var(--ac2); }
 
   /* Окно входа по коду */
   .modal { position: fixed; inset: 0; z-index: 100; background: rgba(5,6,9,.66); display: flex; align-items: center; justify-content: center; -webkit-app-region: no-drag; }
@@ -1001,6 +1009,7 @@
             <button class="smode" id="smode" aria-haspopup="menu" title="Как упорядочивать найденное"><b>Умный</b> ▾</button>
           </div>
           <div class="suggest" id="suggest"></div>
+          <div class="suggest smode-pop" id="smodePop"></div>
         </div>
         <div class="chips" id="chips">
           <button class="chip active" data-f="all"><span class="dot" style="background:currentColor"></span>Везде</button>
@@ -2937,9 +2946,23 @@
     if (curQuery && !results.hidden) rerenderTracks(true);
     if (AP && AP.tab === 'search' && !$('searchPl').hidden && $('searchPl').querySelector('.arh')) renderArtistPage($('searchPl'));
   }
-  function openSmodeMenu(x, y){
-    showCtx(x, y, SMODES.map(function (m){ return { label: (m.id === searchMode ? '✓ ' : '  ') + m.n + ' — ' + m.d, act: function(){ setSearchMode(m.id); } }; }));
+  function openSmodeMenu(){
+    var pop = $('smodePop'); if (!pop) return;
+    if (pop.classList.contains('open')) { pop.classList.remove('open'); return; }
+    pop.innerHTML = '<div class="sg-label">Как упорядочивать найденное</div>' + SMODES.map(function (m){
+      return '<div class="smp-item' + (m.id === searchMode ? ' on' : '') + '" data-v="' + m.id + '"><span class="n">' + (m.id === searchMode ? '✓ ' : '') + esc(m.n) + '</span><span class="d">' + esc(m.d) + '</span></div>';
+    }).join('');
+    pop.classList.add('open');
+    Array.prototype.forEach.call(pop.querySelectorAll('.smp-item'), function (el){
+      el.onclick = function(){ setSearchMode(el.dataset.v); pop.classList.remove('open'); };
+    });
   }
+  // клик мимо — закрыть список выдачи
+  document.addEventListener('mousedown', function(e){
+    var pop = $('smodePop'); if (!pop || !pop.classList.contains('open')) return;
+    if (pop.contains(e.target) || (e.target.closest && e.target.closest('#smode'))) return;
+    pop.classList.remove('open');
+  });
   function renderSmodeSet(){
     var h = $('setSmode'); if (!h) return;
     h.innerHTML = SMODES.map(function (m){ return '<button data-v="' + m.id + '"' + (m.id === searchMode ? ' class="on"' : '') + '>' + esc(m.n) + '<small>' + esc(m.d) + '</small></button>'; }).join('');
@@ -3546,8 +3569,7 @@
     maybeLoadMore();
   }
   results.addEventListener('scroll', maybeLoadMore);
-  $('smode').onmousedown = function(e){ e.stopPropagation(); this._skip = !!ctxEl; if (ctxEl) closeCtx(); };
-  $('smode').onclick = function(){ if (this._skip) { this._skip = false; return; } var r = this.getBoundingClientRect(); openSmodeMenu(r.left, r.bottom + 4); if (ctxEl) ctxEl.style.left = Math.max(8, r.right - ctxEl.offsetWidth) + 'px'; };
+  $('smode').onclick = function(e){ e.stopPropagation(); if (ctxEl) closeCtx(); openSmodeMenu(); };
 
   function makeRow(v) {
     var row = document.createElement('div'); row.className = 'row' + (v.id === playingId ? ' playing' : '');
