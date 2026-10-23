@@ -36,6 +36,9 @@ const verRe = new RegExp('\\*\\*Версия:\\*\\*\\s*' + version.replace(/\./g
 add(verRe.test(cur), 'CURRENT.md: **Версия:** ' + version);
 const handRe = new RegExp('версия\\s+`?' + version.replace(/\./g, '\\.') + '\\b');
 add(handRe.test(hand), 'HANDOFF.md: версия ' + version);
+add(/\*\*Статус:\*\*/.test(cur), 'CURRENT.md: поле **Статус**');
+const relReadme = read('docs/releases/v' + version + '/README.md');
+add(/Статус:/.test(relReadme), 'README версии: поле «Статус»');
 
 // 3. история
 add(exists('history/COMPACT.md'), 'history/COMPACT.md');
