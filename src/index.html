@@ -57,6 +57,17 @@
   .upd-check:hover { background: var(--acbg); color: var(--ac2); }
   html.theme-mono .upd-check { color: var(--tx2); border-color: var(--ln3); }
   .upd-check:disabled { opacity: .45; cursor: default; }
+  /* Единое правило для группы в шапке: масштаб, версия, обновление */
+  .upd #zoomBtn, .upd #ver, .upd #updCheck, .upd .upd-go {
+    height: 20px !important; min-height: 20px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 8px; border-radius: 5px; border: 1px solid var(--ac); background: transparent; color: var(--ac);
+    font-family: inherit !important; font-size: 11px !important; line-height: 1 !important; font-weight: 500;
+    letter-spacing: 0; white-space: nowrap; cursor: pointer; -webkit-app-region: no-drag;
+  }
+  .upd #updCheck { padding: 0; width: 24px; }
+  .upd .upd-go { background: var(--ac) !important; color: var(--prit) !important; border-color: var(--ac); font-weight: 700; }
+  .upd .upd-go:hover { background: var(--ac2) !important; }
+  .upd #zoomBtn:hover, .upd #updCheck:hover { background: var(--acbg); color: var(--ac2); }
   .upd-go { height: 26px; padding: 0 10px; border-radius: 13px; border: 0; background: var(--ac); color: var(--bg0); font-size: 11px; font-weight: 700; cursor: pointer; }
   .upd-go:hover { background: var(--ac2); }
   .upd-bar { width: 100px; height: 5px; border-radius: 2.5px; background: var(--ln); overflow: hidden; }
@@ -640,7 +651,9 @@
   .myt-sp { flex: 1; }
   .myact { display: flex; gap: 6px; padding: 6px 0; }
   [data-tip] { position: relative; }
-  [data-tip]:hover::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; background: var(--bg4); color: var(--tx); border: 0; border-radius: 8px; padding: 5px 9px; font: 500 12px Onest, sans-serif; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.35); text-transform: none; letter-spacing: 0; }
+  [data-tip].tip-up:hover::after { top: auto; bottom: calc(100% + 6px); }
+  [data-tip].tip-left:hover::after { right: auto; left: 0; }
+  [data-tip]:hover::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; background: var(--bg4); color: var(--tx); border: 0; border-radius: 8px; padding: 5px 9px; font: 500 12px Onest, sans-serif; white-space: normal; max-width: 280px; line-height: 1.35; text-align: left; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.35); text-transform: none; letter-spacing: 0; }
   .myab.ic { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 16px; }
   .myab { height: 30px; padding: 0 12px; border-radius: 15px; border: 0; background: var(--bg4); color: var(--tx); font: 600 12px Onest, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
   .myab:hover { background: var(--hov3); }
@@ -1247,7 +1260,7 @@
       <button class="acct" id="acct" aria-label="Яндекс Музыка"></button>
       <button class="acct" id="acctYt" aria-label="YouTube"></button>
       <div class="upd">
-        <button class="badge zoomb" id="zoomBtn" title="Масштаб интерфейса" aria-label="Масштаб интерфейса" aria-haspopup="dialog" aria-expanded="false">Масштаб</button>
+        <button class="badge zoomb" id="zoomBtn" title="Масштаб интерфейса" aria-label="Масштаб интерфейса" aria-haspopup="dialog" aria-expanded="false">Масштаб <span id="zoomLbl">100%</span></button>
         <span class="badge" id="ver">версия…</span>
         <span class="upd-area" id="updArea" aria-live="polite"></span>
         <button class="upd-check" id="updCheck" data-tip="Проверить обновления" aria-label="Проверить обновления"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 11-2.3-5.7L20 8"></path><path d="M20 3v5h-5"></path></svg></button>
@@ -7378,6 +7391,7 @@ setInterval(function(){ pushWidget(false); }, 1500);
         }).catch(function(){});
       }
       if (save && A.setSetting) A.setSetting('uiZoom', pct / 100);
+      if (!pop.hidden) { requestAnimationFrame(openPop); setTimeout(openPop, 160); }
     }
     function openPop(){
       var rc = btn.getBoundingClientRect();
@@ -7400,6 +7414,44 @@ setInterval(function(){ pushWidget(false); }, 1500);
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !pop.hidden) closePop(); });
     window.addEventListener('resize', function(){ if (!pop.hidden) openPop(); });
     if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) put(z, false); });
+  })();
+
+  // Единые подсказки: любой title показываем как themed-подсказку (data-tip)
+  (function(){
+    function conv(root){
+      if (!root.querySelectorAll) return;
+      var list = root.querySelectorAll('[title]');
+      for (var i = 0; i < list.length; i++) {
+        var el = list[i], t = el.getAttribute('title');
+        if (t && !el.hasAttribute('data-tip')) el.setAttribute('data-tip', t);
+        el.removeAttribute('title');
+      }
+    }
+    conv(document);
+    // подстраховка: конвертируем при наведении и раз в секунду (динамический DOM)
+    document.addEventListener('pointerover', function(e){
+      var el = e.target && e.target.closest && e.target.closest('[data-tip],[title]');
+      if (!el) return;
+      var t = el.getAttribute('title');
+      if (t && !el.hasAttribute('data-tip')) el.setAttribute('data-tip', t);
+      el.removeAttribute('title');
+      var r = el.getBoundingClientRect();
+      el.classList.toggle('tip-up', r.bottom > window.innerHeight - 90);
+      el.classList.toggle('tip-left', r.left < 170);
+    }, true);
+    setInterval(function(){ conv(document); }, 1000);    try {
+      new MutationObserver(function(muts){
+        for (var i = 0; i < muts.length; i++) {
+          var m = muts[i];
+          if (m.type === 'attributes') {
+            var el = m.target, t = el.getAttribute && el.getAttribute('title');
+            if (t) { if (!el.hasAttribute('data-tip')) el.setAttribute('data-tip', t); el.removeAttribute('title'); }
+          } else if (m.type === 'childList') {
+            for (var j2 = 0; j2 < m.addedNodes.length; j2++) if (m.addedNodes[j2].nodeType === 1) conv(m.addedNodes[j2]);
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['title'] });
+    } catch (e) {}
   })();
 </script>
 <!-- Современное окно выбора цвета (вместо системного диалога) -->
