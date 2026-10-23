@@ -725,15 +725,17 @@ function showZoomWindow(anchor) {
   if (zoomWin && !zoomWin.isDestroyed() && !zoomHidden) { zoomHidden = true; zoomWin.destroy(); zoomWin = null; return; }
   // каждый показ — свежее окно: не может показать старый кадр или чужую тему
   zoomPending = true; zoomAnchor = anchor;
+  const gen = ++zoomGen;
   if (zoomWin && !zoomWin.isDestroyed()) { try { zoomWin.destroy(); } catch (e) {} zoomWin = null; }
-  createZoomWindow(zoomTheme);
+  createZoomWindow(zoomTheme, gen);
   const send = () => { try { zoomWin.webContents.send('zoom-theme', zoomTheme); } catch (e) {} };
   if (zoomWin.webContents.isLoading()) zoomWin.webContents.once('did-finish-load', send);
   else send();
   clearTimeout(zoomShowTimer);
   zoomShowTimer = setTimeout(() => { if (zoomPending && gen === zoomGen) revealZoomWindow(gen); }, 1500);
 }
-async function revealZoomWindow() {
+async function revealZoomWindow(gen) {
+  if (gen && gen !== zoomGen) return;
   if (!zoomWin || zoomWin.isDestroyed() || !zoomAnchor) { zoomPending = false; return; }
   zoomPending = false; clearTimeout(zoomShowTimer);
   const b = mainWindow.getContentBounds();
