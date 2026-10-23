@@ -693,7 +693,7 @@ function applyUiZoom(win, f) {
 // Отдельное окно масштаба: живёт независимо от zoom главного окна
 function createZoomWindow() {
   zoomWin = new BrowserWindow({
-    width: 272, height: 176, frame: false, resizable: false, show: false,
+    width: 300, height: 208, frame: false, resizable: false, show: false,
     skipTaskbar: true, alwaysOnTop: true, transparent: true, hasShadow: true,
     parent: mainWindow || undefined,
     webPreferences: { preload: path.join(__dirname, 'zoom-preload.js'), contextIsolation: true, nodeIntegration: false }
@@ -712,7 +712,7 @@ function showZoomWindow(anchor) {
   if (!zoomWin || zoomWin.isDestroyed()) createZoomWindow();
   const b = mainWindow.getContentBounds();
   const z = mainWindow.webContents.getZoomFactor();
-  const W = 272, H = 176;
+  const W = 300, H = 208;
   const ax = Number(anchor && anchor.right) || 0;
   const ay = Number(anchor && anchor.bottom) || 0;
   let x = b.x + Math.round(ax * z) - W;

@@ -24,13 +24,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 4px;
-    padding: 10px 12px 10px;
+    gap: 10px;
+    padding: 16px 16px 14px;
     background: var(--bg1, #15161C);
     border-radius: 0 0 var(--r-panel, 0px) var(--r-panel, 0px);
   }
-  .lbl { font-size: 11px; color: var(--tx3, #9EA2B0); }
-  .val { font-size: 24px; font-weight: 700; line-height: 1.05; color: var(--tx, #ECEDF2); }
+  .lbl { font-size: var(--base-font, 16px); color: var(--tx2, #C9CBD4); font-weight: 500; }
+  .val { font-size: 30px; font-weight: 700; line-height: 1.05; color: var(--tx, #ECEDF2); }
   input[type=range] {
     -webkit-appearance: none; appearance: none; width: 100%; height: 18px;
     margin: 2px 0 0; background: transparent; cursor: pointer;
@@ -47,30 +47,30 @@
   }
   input[type=range]:focus { outline: none; }
   /* Пиксельные шрифты шире: в маленьком окне уменьшаем кегль подписей и кнопок */
-  body.pixel .lbl { font-size: 10px; }
-  body.pixel .val { font-size: 20px; }
-  body.pixel .foot button { font-size: 8px; letter-spacing: 0; }
+  body.pixel .lbl { font-size: 14px; }
+  body.pixel .val { font-size: 24px; }
+  body.pixel .foot button { font-size: 9px; letter-spacing: 0; }
   input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(155,135,255,.25); }
   /* Подвал — нижний слой на всю ширину, кнопки с шагом 10% */
   .foot {
     flex: 0 0 auto;
-    height: 44px;
+    height: 52px;
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 6px 10px 8px;
+    gap: 4px;
+    padding: 8px 12px 10px;
     background: var(--bg0, #0E0F13);
   }
   .foot button {
     flex: 1 1 0;
     min-width: 0;
-    height: 26px;
+    height: 30px;
     padding: 0;
     border: 1px solid var(--ln, #2C2F3A);
     border-radius: var(--r-ctl, 0px);
     background: var(--bg3, #1E2029);
     color: var(--tx2, #C9CBD4);
-    font: 600 10px var(--ui-font, 'Segoe UI', Tahoma, Arial, sans-serif);
+    font: 600 11px var(--ui-font, 'Segoe UI', Tahoma, Arial, sans-serif);
     cursor: pointer;
     transition: background-color .12s ease, color .12s ease;
   }
@@ -133,6 +133,8 @@
     if (t.ac) root.setProperty('--ac', t.ac);
     if (t.prit) root.setProperty('--prit', t.prit);
     if (t.font) root.setProperty('--ui-font', t.font);
+    if (t.baseFont) root.setProperty('--base-font', t.baseFont);
+    if (t.baseFont) root.setProperty('--base-font', t.baseFont);
     document.body.classList.toggle('pixel', !!t.pixel);
     if (t.radiusPanel) root.setProperty('--r-panel', t.radiusPanel);
     if (t.radiusCtl) root.setProperty('--r-ctl', t.radiusCtl);
