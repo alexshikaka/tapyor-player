@@ -984,13 +984,18 @@
   /* Счётчик заказов: без кружка — просто цифра зелёным со свечением */
   #tabs .tbadge { display: inline-block; font: 700 12.5px Onest, sans-serif; color: #4ADE9A; text-shadow: 0 0 8px rgba(74,222,154,.8); line-height: 1; }
   #tabs .tbadge[hidden] { display: none; }
-  /* Вкладка с заказами не мигает, а плавно загорается и тухнет */
-  #tabs button.has-req { animation: tabReq 4.6s ease-in-out infinite; }
-  @keyframes tabReq {
-    0%, 100% { box-shadow: inset 0 0 0 0 rgba(74,222,154,0), 0 0 0 0 rgba(74,222,154,0); }
-    45% { box-shadow: inset 0 0 0 1px rgba(74,222,154,.30), 0 0 14px 1px rgba(74,222,154,.18); }
+  /* Вкладка с заказами: без свечения и без мигания — только цвет, когда есть заказы */
+  /* сама кнопка остаётся обычной: светится только цифра */
+  /* Свечение плавно живёт только у цифры счётчика */
+  #tabs .tbadge { animation: badgeGlow 3.2s ease-in-out infinite; }
+  @keyframes badgeGlow {
+    0%, 100% { text-shadow: 0 0 3px rgba(74,222,154,.30); }
+    50% { text-shadow: 0 0 12px rgba(74,222,154,.90); }
   }
-  @media (prefers-reduced-motion: reduce) { #tabs button.has-req { animation: none; color: #4ADE9A; } }
+  @media (prefers-reduced-motion: reduce) {
+  /* сама кнопка остаётся обычной: светится только цифра */
+    #tabs .tbadge { animation: none; text-shadow: 0 0 8px rgba(74,222,154,.55); }
+  }
   .reqv { flex: 1 1 auto; min-width: 0; padding: 0 0 0 var(--gutter); display: flex; flex-direction: column; gap: var(--sp-3); }
   .rq-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   /* Тумблер «Точные — сразу в очередь» прямо в шапке заказов */
