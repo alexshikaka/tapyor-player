@@ -420,6 +420,7 @@ let mainWindow = null;
 let zoomWin = null;   // отдельное окно масштаба — не связано с zoom главного окна
 let zoomTheme = null;   // цвета темы для окна масштаба
 let zoomAnchor = null, zoomPending = false, zoomShowTimer = null;
+let zoomThemeKeyCur = '';
 const ZOOM_W = 300, ZOOM_H = 208;
 let tray = null;
 const startHidden = process.argv.includes('--hidden'); // запуск вместе с Windows — сразу в трей
@@ -693,15 +694,22 @@ function applyUiZoom(win, f) {
 }
 
 // Отдельное окно масштаба: живёт независимо от zoom главного окна
-function createZoomWindow() {
+function zoomThemeKey(t) { try { return JSON.stringify(t || {}); } catch (e) { return ''; } }
+function loadZoomPage(theme) {
+  const q = Buffer.from(JSON.stringify(theme || {}), 'utf8').toString('base64');
+  zoomWin.loadFile(path.join(__dirname, 'zoom.html'), { query: { t: q } });
+}
+function createZoomWindow(theme) {
   zoomWin = new BrowserWindow({
-    width: 300, height: 208, frame: false, resizable: false, show: false,
-    skipTaskbar: true, alwaysOnTop: true, transparent: true, hasShadow: true,
+    width: ZOOM_W, height: ZOOM_H, frame: false, resizable: false, show: false,
+    skipTaskbar: true, alwaysOnTop: true, hasShadow: true,
+    backgroundColor: (theme && theme.bg0) || '#0E0F13',
     parent: mainWindow || undefined,
     webPreferences: { preload: path.join(__dirname, 'zoom-preload.js'), contextIsolation: true, nodeIntegration: false }
   });
   zoomWin.setMenuBarVisibility(false);
-  zoomWin.loadFile(path.join(__dirname, 'zoom.html'));
+  zoomThemeKeyCur = zoomThemeKey(theme);
+  loadZoomPage(theme);
   // окно масштаба всегда 100%: сбрасываем возможный унаследованный zoom для file://
   try { zoomWin.webContents.setZoomFactor(1); } catch (e) {}
   zoomWin.webContents.on('did-finish-load', () => { try { zoomWin.webContents.setZoomFactor(1); } catch (e) {} });
@@ -711,32 +719,21 @@ function createZoomWindow() {
 function showZoomWindow(anchor) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   if (anchor && anchor.theme) zoomTheme = anchor.theme;
-  if (!zoomWin || zoomWin.isDestroyed()) createZoomWindow();
+  const key = zoomThemeKey(zoomTheme);
+  if (!zoomWin || zoomWin.isDestroyed()) {
+    createZoomWindow(zoomTheme);
+  } else if (key !== zoomThemeKeyCur) {
+    // тема сменилась — перезагружаем окно скрытым, чтобы первый кадр был уже в теме
+    zoomThemeKeyCur = key;
+    loadZoomPage(zoomTheme);
+  }
   zoomAnchor = anchor; zoomPending = true;
+  try { zoomWin.setBackgroundColor((zoomTheme && zoomTheme.bg0) || '#0E0F13'); } catch (e) {}
   const send = () => { try { zoomWin.webContents.send('zoom-theme', zoomTheme); } catch (e) {} };
   if (zoomWin.webContents.isLoading()) zoomWin.webContents.once('did-finish-load', send);
   else send();
-  // страховка: если окно не пришлёт ready, показываем через 500 мс
   clearTimeout(zoomShowTimer);
-  zoomShowTimer = setTimeout(() => { if (zoomPending) revealZoomWindow(); }, 500);
-}
-function revealZoomWindow() {
-  if (!zoomWin || zoomWin.isDestroyed() || !zoomAnchor) return;
-  zoomPending = false; clearTimeout(zoomShowTimer);
-  const b = mainWindow.getContentBounds();
-  const z = mainWindow.webContents.getZoomFactor();
-  const ax = Number(zoomAnchor.right) || 0;
-  const ay = Number(zoomAnchor.bottom) || 0;
-  let x = b.x + Math.round(ax * z) - ZOOM_W;
-  let y = b.y + Math.round(ay * z) + 8;
-  try {
-    const wa = screen.getDisplayNearestPoint({ x, y }).workArea;
-    x = Math.min(Math.max(wa.x + 6, x), wa.x + wa.width - ZOOM_W - 6);
-    y = Math.min(Math.max(wa.y + 6, y), wa.y + wa.height - ZOOM_H - 6);
-  } catch (e) {}
-  zoomWin.setBounds({ x, y, width: ZOOM_W, height: ZOOM_H });
-  zoomWin.show(); zoomWin.focus();
-  try { zoomWin.webContents.send('ui-zoom-changed', mainWindow.webContents.getZoomFactor()); } catch (e) {}
+  zoomShowTimer = setTimeout(() => { if (zoomPending) revealZoomWindow(); }, 900);
 }
 
 function createWindow() {

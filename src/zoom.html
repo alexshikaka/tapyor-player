@@ -3,6 +3,31 @@
 <head>
 <meta charset="utf-8">
 <title>Масштаб</title>
+<script>
+  /* Тема применяется ещё до первой отрисовки: параметр t в адресе окна */
+  (function(){
+    try {
+      var raw = new URLSearchParams(location.search).get('t');
+      if (!raw) return;
+      var json = decodeURIComponent(escape(atob(raw)));
+      var t = JSON.parse(json);
+      var r = document.documentElement.style;
+      if (t.bg) r.setProperty('--bg1', t.bg);
+      if (t.bg0) r.setProperty('--bg0', t.bg0);
+      if (t.bg2) r.setProperty('--bg3', t.bg2);
+      if (t.bg4) r.setProperty('--bg4', t.bg4);
+      if (t.line) r.setProperty('--ln', t.line);
+      if (t.tx) { r.setProperty('--tx', t.tx); r.setProperty('--tx2', t.tx2 || t.tx); }
+      if (t.ac) r.setProperty('--ac', t.ac);
+      if (t.prit) r.setProperty('--prit', t.prit);
+      if (t.font) r.setProperty('--ui-font', t.font);
+      if (t.baseFont) r.setProperty('--base-font', t.baseFont);
+      if (t.radiusPanel) r.setProperty('--r-panel', t.radiusPanel);
+      if (t.radiusCtl) r.setProperty('--r-ctl', t.radiusCtl);
+      if (t.pixel) document.documentElement.classList.add('pixel');
+    } catch (e) {}
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
 <style>
@@ -47,9 +72,9 @@
   }
   input[type=range]:focus { outline: none; }
   /* Пиксельные шрифты шире: в маленьком окне уменьшаем кегль подписей и кнопок */
-  body.pixel .lbl { font-size: 14px; }
-  body.pixel .val { font-size: 24px; }
-  body.pixel .foot button { font-size: 9px; letter-spacing: 0; }
+  html.pixel .lbl { font-size: 14px; }
+  html.pixel .val { font-size: 24px; }
+  html.pixel .foot button { font-size: 9px; letter-spacing: 0; }
   input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(155,135,255,.25); }
   /* Подвал — нижний слой на всю ширину, кнопки с шагом 10% */
   .foot {
@@ -136,7 +161,7 @@
     if (t.baseFont) root.setProperty('--base-font', t.baseFont);
     if (t.radiusPanel) root.setProperty('--r-panel', t.radiusPanel);
     if (t.radiusCtl) root.setProperty('--r-ctl', t.radiusCtl);
-    document.body.classList.toggle('pixel', !!t.pixel);
+    document.documentElement.classList.toggle('pixel', !!t.pixel);
   }
   window.zoomApi.theme().then((t) => { applyTheme(t); window.zoomApi.ready(); });
   if (window.zoomApi.onTheme) window.zoomApi.onTheme((t) => { applyTheme(t); window.zoomApi.ready(); });
