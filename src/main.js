@@ -735,6 +735,25 @@ function showZoomWindow(anchor) {
   clearTimeout(zoomShowTimer);
   zoomShowTimer = setTimeout(() => { if (zoomPending) revealZoomWindow(); }, 900);
 }
+function revealZoomWindow() {
+  if (!zoomWin || zoomWin.isDestroyed() || !zoomAnchor) { zoomPending = false; return; }
+  zoomPending = false; clearTimeout(zoomShowTimer);
+  const b = mainWindow.getContentBounds();
+  const z = mainWindow.webContents.getZoomFactor();
+  const ax = Number(zoomAnchor.right) || 0;
+  const ay = Number(zoomAnchor.bottom) || 0;
+  let x = b.x + Math.round(ax * z) - ZOOM_W;
+  let y = b.y + Math.round(ay * z) + 8;
+  try {
+    const wa = screen.getDisplayNearestPoint({ x, y }).workArea;
+    x = Math.min(Math.max(wa.x + 6, x), wa.x + wa.width - ZOOM_W - 6);
+    y = Math.min(Math.max(wa.y + 6, y), wa.y + wa.height - ZOOM_H - 6);
+  } catch (e) {}
+  zoomWin.setBounds({ x, y, width: ZOOM_W, height: ZOOM_H });
+  zoomWin.show(); zoomWin.focus();
+  try { zoomWin.webContents.send('ui-zoom-changed', mainWindow.webContents.getZoomFactor()); } catch (e) {}
+}
+
 
 function createWindow() {
   mainWindow = new BrowserWindow({
