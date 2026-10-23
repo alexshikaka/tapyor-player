@@ -8,7 +8,8 @@
     "dist": "electron-builder --publish always",
     "audit:skins": "node tests/skins/audit.js",
     "audit:pack": "node tools/build-audit-pack.mjs",
-    "audit:pack:history": "node tools/build-audit-pack.mjs --with-history --with-todo"
+    "audit:pack:history": "node tools/build-audit-pack.mjs --with-history --with-todo",
+    "release:check": "node tools/release-preflight.mjs"
   },
   "author": "shikaka",
   "license": "UNLICENSED",
