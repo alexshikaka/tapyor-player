@@ -6,7 +6,9 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --publish always",
-    "audit:skins": "node tests/skins/audit.js"
+    "audit:skins": "node tests/skins/audit.js",
+    "audit:pack": "node tools/build-audit-pack.mjs",
+    "audit:pack:history": "node tools/build-audit-pack.mjs --with-history --with-todo"
   },
   "author": "shikaka",
   "license": "UNLICENSED",
