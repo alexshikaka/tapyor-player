@@ -121,7 +121,7 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.zoomApi.close(); });
   window.addEventListener('blur', () => window.zoomApi.close());
   window.zoomApi.get().then((val) => { if (val) paint(val); });
-  if (window.zoomApi.onTheme) window.zoomApi.onTheme((t) => {
+  function applyTheme(t) {
     if (!t) return;
     const root = document.documentElement.style;
     if (t.bg) root.setProperty('--bg1', t.bg);
@@ -134,11 +134,12 @@
     if (t.prit) root.setProperty('--prit', t.prit);
     if (t.font) root.setProperty('--ui-font', t.font);
     if (t.baseFont) root.setProperty('--base-font', t.baseFont);
-    if (t.baseFont) root.setProperty('--base-font', t.baseFont);
-    document.body.classList.toggle('pixel', !!t.pixel);
     if (t.radiusPanel) root.setProperty('--r-panel', t.radiusPanel);
     if (t.radiusCtl) root.setProperty('--r-ctl', t.radiusCtl);
-  });
+    document.body.classList.toggle('pixel', !!t.pixel);
+  }
+  window.zoomApi.theme().then((t) => { applyTheme(t); window.zoomApi.ready(); });
+  if (window.zoomApi.onTheme) window.zoomApi.onTheme((t) => { applyTheme(t); window.zoomApi.ready(); });
 </script>
 </body>
 </html>

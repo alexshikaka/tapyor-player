@@ -419,6 +419,8 @@ function allowMediaAnalysis() {
 let mainWindow = null;
 let zoomWin = null;   // отдельное окно масштаба — не связано с zoom главного окна
 let zoomTheme = null;   // цвета темы для окна масштаба
+let zoomAnchor = null, zoomPending = false, zoomShowTimer = null;
+const ZOOM_W = 300, ZOOM_H = 208;
 let tray = null;
 const startHidden = process.argv.includes('--hidden'); // запуск вместе с Windows — сразу в трей
 let appUrl = null;
@@ -707,25 +709,34 @@ function createZoomWindow() {
   zoomWin.on('closed', () => { zoomWin = null; });
 }
 function showZoomWindow(anchor) {
-  if (anchor && anchor.theme) zoomTheme = anchor.theme;
   if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (anchor && anchor.theme) zoomTheme = anchor.theme;
   if (!zoomWin || zoomWin.isDestroyed()) createZoomWindow();
+  zoomAnchor = anchor; zoomPending = true;
+  const send = () => { try { zoomWin.webContents.send('zoom-theme', zoomTheme); } catch (e) {} };
+  if (zoomWin.webContents.isLoading()) zoomWin.webContents.once('did-finish-load', send);
+  else send();
+  // страховка: если окно не пришлёт ready, показываем через 500 мс
+  clearTimeout(zoomShowTimer);
+  zoomShowTimer = setTimeout(() => { if (zoomPending) revealZoomWindow(); }, 500);
+}
+function revealZoomWindow() {
+  if (!zoomWin || zoomWin.isDestroyed() || !zoomAnchor) return;
+  zoomPending = false; clearTimeout(zoomShowTimer);
   const b = mainWindow.getContentBounds();
   const z = mainWindow.webContents.getZoomFactor();
-  const W = 300, H = 208;
-  const ax = Number(anchor && anchor.right) || 0;
-  const ay = Number(anchor && anchor.bottom) || 0;
-  let x = b.x + Math.round(ax * z) - W;
+  const ax = Number(zoomAnchor.right) || 0;
+  const ay = Number(zoomAnchor.bottom) || 0;
+  let x = b.x + Math.round(ax * z) - ZOOM_W;
   let y = b.y + Math.round(ay * z) + 8;
   try {
     const wa = screen.getDisplayNearestPoint({ x, y }).workArea;
-    x = Math.min(Math.max(wa.x + 6, x), wa.x + wa.width - W - 6);
-    y = Math.min(Math.max(wa.y + 6, y), wa.y + wa.height - H - 6);
+    x = Math.min(Math.max(wa.x + 6, x), wa.x + wa.width - ZOOM_W - 6);
+    y = Math.min(Math.max(wa.y + 6, y), wa.y + wa.height - ZOOM_H - 6);
   } catch (e) {}
-  zoomWin.setBounds({ x, y, width: W, height: H });
+  zoomWin.setBounds({ x, y, width: ZOOM_W, height: ZOOM_H });
   zoomWin.show(); zoomWin.focus();
-  try { zoomWin.webContents.send('zoom-theme', zoomTheme); } catch (e) {}
-  try { zoomWin.webContents.send('ui-zoom-changed', z); } catch (e) {}
+  try { zoomWin.webContents.send('ui-zoom-changed', mainWindow.webContents.getZoomFactor()); } catch (e) {}
 }
 
 function createWindow() {
@@ -980,6 +991,8 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle('zoom-popup', (e, anchor) => { showZoomWindow(anchor); return true; });
   ipcMain.on('zoom-popup-close', () => { try { if (zoomWin && !zoomWin.isDestroyed()) zoomWin.hide(); } catch (e) {} });
+  ipcMain.handle('zoom-theme-get', () => zoomTheme);
+  ipcMain.on('zoom-ready', () => { if (zoomPending) revealZoomWindow(); });
 
   const port = await startServer(Number(cfg('widgetPort')) || 0);
   log('панель для OBS: http://127.0.0.1:' + port + '/widget');
