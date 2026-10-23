@@ -417,6 +417,8 @@ function allowMediaAnalysis() {
 }
 
 let mainWindow = null;
+let zoomWin = null;   // отдельное окно масштаба — не связано с zoom главного окна
+let zoomTheme = null;   // цвета темы для окна масштаба
 let tray = null;
 const startHidden = process.argv.includes('--hidden'); // запуск вместе с Windows — сразу в трей
 let appUrl = null;
@@ -683,7 +685,47 @@ function applyUiZoom(win, f) {
   const z = Math.min(1.4, Math.max(0.6, Number(f) || 1));
   win.webContents.setZoomFactor(z);
   try { win.setMinimumSize(Math.max(420, Math.round(UI_MIN_W * z)), Math.max(300, Math.round(UI_MIN_H * z))); } catch (e) {}
+  try { if (win && win.webContents) win.webContents.send('ui-zoom-changed', z); } catch (e) {}
+  try { if (zoomWin && !zoomWin.isDestroyed()) zoomWin.webContents.send('ui-zoom-changed', z); } catch (e) {}
   return win.webContents.getZoomFactor();
+}
+
+// Отдельное окно масштаба: живёт независимо от zoom главного окна
+function createZoomWindow() {
+  zoomWin = new BrowserWindow({
+    width: 252, height: 164, frame: false, resizable: false, show: false,
+    skipTaskbar: true, alwaysOnTop: true, transparent: true, hasShadow: true,
+    parent: mainWindow || undefined,
+    webPreferences: { preload: path.join(__dirname, 'zoom-preload.js'), contextIsolation: true, nodeIntegration: false }
+  });
+  zoomWin.setMenuBarVisibility(false);
+  zoomWin.loadFile(path.join(__dirname, 'zoom.html'));
+  // окно масштаба всегда 100%: сбрасываем возможный унаследованный zoom для file://
+  try { zoomWin.webContents.setZoomFactor(1); } catch (e) {}
+  zoomWin.webContents.on('did-finish-load', () => { try { zoomWin.webContents.setZoomFactor(1); } catch (e) {} });
+  zoomWin.on('blur', () => { setTimeout(() => { try { if (zoomWin && !zoomWin.isDestroyed() && !zoomWin.isFocused()) zoomWin.hide(); } catch (e) {} }, 160); });
+  zoomWin.on('closed', () => { zoomWin = null; });
+}
+function showZoomWindow(anchor) {
+  if (anchor && anchor.theme) zoomTheme = anchor.theme;
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (!zoomWin || zoomWin.isDestroyed()) createZoomWindow();
+  const b = mainWindow.getContentBounds();
+  const z = mainWindow.webContents.getZoomFactor();
+  const W = 252, H = 164;
+  const ax = Number(anchor && anchor.right) || 0;
+  const ay = Number(anchor && anchor.bottom) || 0;
+  let x = b.x + Math.round(ax * z) - W;
+  let y = b.y + Math.round(ay * z) + 8;
+  try {
+    const wa = screen.getDisplayNearestPoint({ x, y }).workArea;
+    x = Math.min(Math.max(wa.x + 6, x), wa.x + wa.width - W - 6);
+    y = Math.min(Math.max(wa.y + 6, y), wa.y + wa.height - H - 6);
+  } catch (e) {}
+  zoomWin.setBounds({ x, y, width: W, height: H });
+  zoomWin.show(); zoomWin.focus();
+  try { zoomWin.webContents.send('zoom-theme', zoomTheme); } catch (e) {}
+  try { zoomWin.webContents.send('ui-zoom-changed', z); } catch (e) {}
 }
 
 function createWindow() {
@@ -925,13 +967,19 @@ app.whenReady().then(async () => {
 
   // Масштаб интерфейса: колесо/ползунок в шапке меняет zoomFactor окна
   ipcMain.handle('ui-zoom', (e, f) => {
-    const w = BrowserWindow.fromWebContents(e.sender); if (!w) return 1;
-    return applyUiZoom(w, f);
+    const w = BrowserWindow.fromWebContents(e.sender);
+    // из окна масштаба всегда управляем главным окном, а не самим окном масштаба
+    const target = (zoomWin && w === zoomWin) ? mainWindow : (w || mainWindow);
+    if (!target) return 1;
+    return applyUiZoom(target, f);
   });
   ipcMain.handle('ui-zoom-get', (e) => {
     const w = BrowserWindow.fromWebContents(e.sender);
-    return w ? w.webContents.getZoomFactor() : 1;
+    const target = (zoomWin && w === zoomWin) ? mainWindow : w;
+    return target ? target.webContents.getZoomFactor() : 1;
   });
+  ipcMain.handle('zoom-popup', (e, anchor) => { showZoomWindow(anchor); return true; });
+  ipcMain.on('zoom-popup-close', () => { try { if (zoomWin && !zoomWin.isDestroyed()) zoomWin.hide(); } catch (e) {} });
 
   const port = await startServer(Number(cfg('widgetPort')) || 0);
   log('панель для OBS: http://127.0.0.1:' + port + '/widget');

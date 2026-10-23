@@ -207,17 +207,6 @@
   .badge { font-size: 11px; color: var(--ac); border: 1px solid var(--ac); border-radius: 5px; padding: 2px 6px; flex: 0 0 auto; }
   .zoomb { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; background: transparent; -webkit-app-region: no-drag; font-family: inherit; font-size: 11px; line-height: 1; color: var(--ac); border: 1px solid var(--ac); border-radius: 5px; padding: 0 6px; height: 20px; box-sizing: border-box; }
   .zoomb:hover { background: var(--hov); }
-  .zoom-pop { position: fixed; -webkit-app-region: no-drag; z-index: 120; width: 238px; padding: 12px; border-radius: 14px; background: var(--bg2); border: 1px solid var(--ln); box-shadow: 0 20px 44px rgba(0,0,0,.4); }
-  .zoom-pop .zp-t { font-size: 12px; color: var(--tx3); margin-bottom: 8px; }
-  .zoom-pop input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 6px 0 2px; background: transparent; cursor: pointer; }
-  .zoom-pop input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: var(--bg4); box-shadow: inset 0 0 0 1px var(--ln2); }
-  .zoom-pop input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: var(--ac); border: 2px solid var(--bg1); box-shadow: 0 1px 4px rgba(0,0,0,.45); }
-  .zoom-pop input[type=range]:focus { outline: none; }
-  .zoom-pop input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(var(--acr),.25); }
-  .zoom-pop .zp-r { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--tx2); }
-  .zoom-pop .zp-reset { border: 0; background: var(--bg4); color: var(--tx2); border-radius: 8px; padding: 4px 8px; cursor: pointer; font: inherit; font-size: 11px; }
-  .zoom-pop .zp-reset:hover { background: var(--bg3); }
-  .zoom-pop .zp-note { font-size: 11px; color: var(--tx5); margin-top: 8px; }
 
   /* Основная часть */
   main { flex: 1; display: flex; min-height: 0; padding: 0 var(--gutter) 0 0; }
@@ -1269,12 +1258,6 @@
     </div>
   </header>
 
-<div class="zoom-pop" id="zoomPop" hidden role="dialog" aria-label="Масштаб интерфейса">
-  <div class="zp-t">Масштаб интерфейса</div>
-  <input type="range" id="zoomRange" min="60" max="140" step="5" value="100" aria-label="Масштаб интерфейса">
-  <div class="zp-r"><b id="zoomVal">100%</b><button class="zp-reset" id="zoomReset">Сбросить</button></div>
-  <div class="zp-note">Для маленьких и вертикальных мониторов</div>
-</div>
 
   <main id="main">
     <section class="results-col view" id="viewSearch" aria-label="Результаты поиска">
@@ -7376,52 +7359,29 @@ setInterval(function(){ pushWidget(false); }, 1500);
   function plural(n){ n=n%100; if(n>=11&&n<=14)return'треков'; n=n%10; if(n===1)return'трек'; if(n>=2&&n<=4)return'трека'; return'треков'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
-  // Масштаб интерфейса: кнопка рядом с версией + ползунок
+  // Масштаб интерфейса: кнопка открывает отдельное окно (не зависит от zoom и раскладки)
   (function(){
-    var btn = $('zoomBtn'), pop = $('zoomPop'), rng = $('zoomRange'), val = $('zoomVal'), lbl = $('zoomLbl');
-    if (!btn || !pop || !rng) return;
-    function put(z, save){
-      var pct = Math.min(140, Math.max(60, Math.round((Number(z) || 1) * 100)));
-      rng.value = pct; if (val) val.textContent = pct + '%'; if (lbl) lbl.textContent = pct + '%';
+    var btn = document.getElementById('zoomBtn'), lbl = document.getElementById('zoomLbl');
+    if (!btn) return;
+    function paint(v){
+      var pct = Math.round((Number(v) || 1) * 100);
+      if (lbl) lbl.textContent = pct + '%';
       btn.title = 'Масштаб интерфейса: ' + pct + '%';
-      document.documentElement.style.setProperty('--ui-zoom', String(pct / 100));
-      try { localStorage.setItem('tapUiZoom', String(pct / 100)); } catch (e) {}
-      if (A.uiZoom) {
-        Promise.resolve(A.uiZoom(pct / 100)).then(function(z){
-          if (z) document.documentElement.style.setProperty('--ui-zoom', String(z));
-        }).catch(function(){});
-      }
-      if (save && A.setSetting) A.setSetting('uiZoom', pct / 100);
-      if (!pop.hidden) { requestAnimationFrame(openPop); setTimeout(openPop, 160); }
+      document.documentElement.style.setProperty('--ui-zoom', String((Number(v) || 1)));
+      try { localStorage.setItem('tapUiZoom', String(Number(v) || 1)); } catch (e) {}
+      if (A.setSetting) A.setSetting('uiZoom', Number(v) || 1);
     }
-    // Поповер всегда в физическом масштабе 100%: компенсируем zoom окна обратным transform
-    function openPop(){
-      var z = window.outerWidth / window.innerWidth; if (!z || !isFinite(z)) z = 1;
-      pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
-      pop.style.transformOrigin = 'top left';
-      pop.style.transform = 'scale(' + (1 / z) + ')';
-      var w = pop.offsetWidth || 238;
-      var vw = window.innerWidth * z, vh = window.innerHeight * z;
-      var rc = btn.getBoundingClientRect();
-      var px = Math.min(vw - w - 8, Math.max(8, rc.right * z - w));
-      var py = rc.bottom * z + 8;
-      pop.style.left = Math.round(px / z) + 'px';
-      pop.style.top = Math.round(py / z) + 'px';
-    }
-    function closePop(){ pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
-    btn.onclick = function(e){ e.stopPropagation(); pop.hidden ? openPop() : closePop(); };
-    rng.oninput = function(){ put(this.value / 100, false); };
-    rng.onchange = function(){ put(this.value / 100, true); };
-    $('zoomReset').onclick = function(){ put(1, true); };
-    // закрытие по клику в любое другое место: capture, чтобы stopPropagation внутри UI не мешал
-    window.addEventListener('pointerdown', function(e){
-      if (pop.hidden) return;
-      if (e.target.closest && (e.target.closest('#zoomPop') || e.target.closest('#zoomBtn'))) return;
-      closePop();
-    }, true);
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !pop.hidden) closePop(); });
-    window.addEventListener('resize', function(){ if (!pop.hidden) openPop(); });
-    if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) put(z, false); });
+    if (A.onUiZoom) A.onUiZoom(function(v){ if (v) paint(v); });
+    if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) paint(z); });
+    btn.onclick = function(){
+      var r = btn.getBoundingClientRect();
+      var cs = getComputedStyle(document.documentElement);
+      var pick = function(n){ return (cs.getPropertyValue(n) || '').trim(); };
+      if (A.zoomPopup) A.zoomPopup({
+        right: r.right, bottom: r.bottom,
+        theme: { bg: pick('--bg1'), bg2: pick('--bg3'), line: pick('--ln'), tx: pick('--tx'), tx2: pick('--tx2'), ac: pick('--ac') }
+      });
+    };
   })();
 
 
