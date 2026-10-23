@@ -171,7 +171,14 @@
     if (document.fonts && document.fonts.ready) jobs.push(document.fonts.ready.catch(function () {}));
     Promise.all(jobs).then(function () { setTimeout(function () { window.zoomApi.ready(); }, 20); });
   }
-  window.zoomApi.theme().then(themeReady);
+  function markReady() {
+    var fam = (getComputedStyle(document.documentElement).getPropertyValue('--ui-font') || '').split(',')[0].replace(/["']/g, '').trim();
+    var jobs = [];
+    if (fam && document.fonts && document.fonts.load) jobs.push(document.fonts.load('12px "' + fam + '"').catch(function () {}));
+    if (document.fonts && document.fonts.ready) jobs.push(document.fonts.ready.catch(function () {}));
+    Promise.all(jobs).then(function () { setTimeout(function () { window.zoomApi.ready(); }, 20); });
+  }
+  markReady();
   if (window.zoomApi.onTheme) window.zoomApi.onTheme(themeReady);
 </script>
 </body>

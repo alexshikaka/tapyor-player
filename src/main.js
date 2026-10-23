@@ -422,6 +422,7 @@ let zoomTheme = null;   // цвета темы для окна масштаба
 let zoomAnchor = null, zoomPending = false, zoomShowTimer = null;
 let zoomThemeKeyCur = '';
 let zoomHidden = true;
+let zoomGen = 0;   // поколение окна: защита от старых таймеров
 const ZOOM_W = 300, ZOOM_H = 208;
 let tray = null;
 const startHidden = process.argv.includes('--hidden'); // запуск вместе с Windows — сразу в трей
@@ -700,7 +701,7 @@ function loadZoomPage(theme) {
   const q = Buffer.from(JSON.stringify(theme || {}), 'utf8').toString('base64');
   zoomWin.loadFile(path.join(__dirname, 'zoom.html'), { query: { t: q } });
 }
-function createZoomWindow(theme) {
+function createZoomWindow(theme, gen) {
   zoomWin = new BrowserWindow({
     width: ZOOM_W, height: ZOOM_H, frame: false, resizable: false, show: false,
     skipTaskbar: true, alwaysOnTop: true, hasShadow: true,
@@ -714,8 +715,8 @@ function createZoomWindow(theme) {
   // окно масштаба всегда 100%: сбрасываем возможный унаследованный zoom для file://
   try { zoomWin.webContents.setZoomFactor(1); } catch (e) {}
   zoomWin.webContents.on('did-finish-load', () => { try { zoomWin.webContents.setZoomFactor(1); } catch (e) {} });
-  zoomWin.on('blur', () => { setTimeout(() => { try { if (zoomWin && !zoomWin.isDestroyed() && !zoomWin.isFocused()) { zoomHidden = true; zoomWin.destroy(); zoomWin = null; } } catch (e) {} }, 140); });
-  zoomWin.once('ready-to-show', () => { if (zoomPending) revealZoomWindow(); });
+  zoomWin.on('blur', () => { const w = zoomWin; setTimeout(() => { try { if (w && w === zoomWin && !w.isDestroyed() && !w.isFocused()) { zoomHidden = true; w.destroy(); zoomWin = null; } } catch (e) {} }, 140); });
+  zoomWin.once('ready-to-show', () => { if (zoomPending && gen === zoomGen) revealZoomWindow(gen); });
   zoomWin.on('closed', () => { zoomWin = null; });
 }
 function showZoomWindow(anchor) {
@@ -730,7 +731,7 @@ function showZoomWindow(anchor) {
   if (zoomWin.webContents.isLoading()) zoomWin.webContents.once('did-finish-load', send);
   else send();
   clearTimeout(zoomShowTimer);
-  zoomShowTimer = setTimeout(() => { if (zoomPending) revealZoomWindow(); }, 1500);
+  zoomShowTimer = setTimeout(() => { if (zoomPending && gen === zoomGen) revealZoomWindow(gen); }, 1500);
 }
 async function revealZoomWindow() {
   if (!zoomWin || zoomWin.isDestroyed() || !zoomAnchor) { zoomPending = false; return; }
@@ -749,7 +750,7 @@ async function revealZoomWindow() {
   zoomWin.setBounds({ x, y, width: ZOOM_W, height: ZOOM_H });
   try { zoomWin.setOpacity(0); } catch (e) {}
   zoomWin.show(); zoomWin.focus();
-  setTimeout(() => { try { if (zoomWin && !zoomWin.isDestroyed()) zoomWin.setOpacity(1); } catch (e) {} }, 80);
+  setTimeout(() => { try { if (gen === zoomGen && zoomWin && !zoomWin.isDestroyed()) zoomWin.setOpacity(1); } catch (e) {} }, 80);
   zoomHidden = false;
   try { zoomWin.webContents.send('ui-zoom-changed', mainWindow.webContents.getZoomFactor()); } catch (e) {}
 }

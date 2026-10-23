@@ -641,7 +641,7 @@
   .myact { display: flex; gap: 6px; padding: 6px 0; }
   /* Единая подсказка: один fixed-элемент, без изменения раскладки компонентов */
   .tip { position: fixed; z-index: 400; pointer-events: none; max-width: none; white-space: nowrap;
-    background: var(--bg4); color: var(--tx); border-radius: 8px; padding: 5px 9px;
+    background: var(--bg4); color: var(--tx); border-radius: 8px; padding: 5px 9px; max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis;
     font: 500 12px Onest, sans-serif; letter-spacing: 0; text-transform: none;
     box-shadow: 0 6px 20px rgba(0,0,0,.35); opacity: 0; transition: opacity .12s ease; }
   .tip.on { opacity: 1; }
@@ -7398,8 +7398,7 @@ setInterval(function(){ pushWidget(false); }, 1500);
     }
     // скрытое окно масштаба — часть интерфейса: держим его тему в актуальном состоянии
     try {
-      new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
-      new MutationObserver(syncTheme).observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+      new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
     } catch (e) {}
     setTimeout(syncTheme, 200);
     if (A.onUiZoom) A.onUiZoom(function(v){ if (v) paint(v); });
@@ -7503,7 +7502,6 @@ setInterval(function(){ pushWidget(false); }, 1500);
     window.addEventListener('blur', hide);
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') hide(); });
     conv(document);
-    setInterval(function(){ conv(document); }, 1000);
     try {
       new MutationObserver(function(muts){
         for (var i = 0; i < muts.length; i++) {
