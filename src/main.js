@@ -719,14 +719,7 @@ function createZoomWindow(theme) {
 function showZoomWindow(anchor) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   if (anchor && anchor.theme) zoomTheme = anchor.theme;
-  const key = zoomThemeKey(zoomTheme);
-  if (!zoomWin || zoomWin.isDestroyed()) {
-    createZoomWindow(zoomTheme);
-  } else if (key !== zoomThemeKeyCur) {
-    // тема сменилась — перезагружаем окно скрытым, чтобы первый кадр был уже в теме
-    zoomThemeKeyCur = key;
-    loadZoomPage(zoomTheme);
-  }
+  if (!zoomWin || zoomWin.isDestroyed()) createZoomWindow(zoomTheme);
   zoomAnchor = anchor; zoomPending = true;
   try { zoomWin.setBackgroundColor((zoomTheme && zoomTheme.bg0) || '#0E0F13'); } catch (e) {}
   const send = () => { try { zoomWin.webContents.send('zoom-theme', zoomTheme); } catch (e) {} };
@@ -1007,7 +1000,11 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle('zoom-popup', (e, anchor) => { showZoomWindow(anchor); return true; });
   ipcMain.on('zoom-popup-close', () => { try { if (zoomWin && !zoomWin.isDestroyed()) zoomWin.hide(); } catch (e) {} });
-  ipcMain.handle('zoom-theme-get', () => zoomTheme);
+  ipcMain.on('zoom-theme-sync', (e, theme) => {
+    if (!theme) return;
+    zoomTheme = theme;
+    try { if (zoomWin && !zoomWin.isDestroyed()) { zoomWin.setBackgroundColor(theme.bg0 || '#0E0F13'); zoomWin.webContents.send('zoom-theme', theme); } } catch (e2) {}
+  });  ipcMain.handle('zoom-theme-get', () => zoomTheme);
   ipcMain.on('zoom-ready', () => { if (zoomPending) revealZoomWindow(); });
 
   const port = await startServer(Number(cfg('widgetPort')) || 0);

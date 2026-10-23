@@ -126,6 +126,7 @@ contextBridge.exposeInMainWorld('app', {
   uiZoom: (f) => ipcRenderer.invoke('ui-zoom', f),   // масштаб интерфейса (1 = 100%)
   uiZoomGet: () => ipcRenderer.invoke('ui-zoom-get'),
   zoomPopup: (anchor) => ipcRenderer.invoke('zoom-popup', anchor),   // отдельное окно масштаба
+  zoomTheme: (theme) => ipcRenderer.send('zoom-theme-sync', theme),  // тема для скрытого окна масштаба
   onUiZoom: (cb) => ipcRenderer.on('ui-zoom-changed', (_e, v) => cb(v)),
   // Заказы со стрима и сервисы донатов
   reqList: () => ipcRenderer.invoke('req-list'),

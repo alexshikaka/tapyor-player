@@ -7376,26 +7376,37 @@ setInterval(function(){ pushWidget(false); }, 1500);
       try { localStorage.setItem('tapUiZoom', String(Number(v) || 1)); } catch (e) {}
       if (A.setSetting) A.setSetting('uiZoom', Number(v) || 1);
     }
-    if (A.onUiZoom) A.onUiZoom(function(v){ if (v) paint(v); });
-    if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) paint(z); });
-    btn.onclick = function(){
-      var r = btn.getBoundingClientRect();
+    function themePayload(){
       var cs = getComputedStyle(document.documentElement);
       var pick = function(n){ return (cs.getPropertyValue(n) || '').trim(); };
       var shell = document.querySelector('.app-shell');
       var navBtn = document.querySelector('nav button');
-      if (A.zoomPopup) A.zoomPopup({
-        right: r.right, bottom: r.bottom,
-        theme: {
-          bg: pick('--bg1'), bg0: pick('--bg00') || pick('--bg0'), bg2: pick('--bg3'), bg4: pick('--bg4'),
-          line: pick('--ln'), tx: pick('--tx'), tx2: pick('--tx2'), ac: pick('--ac'), prit: pick('--prit'),
-          font: getComputedStyle(document.body).fontFamily,
-          baseFont: getComputedStyle(document.body).fontSize,
-          pixel: /Press Start|Pixelify/i.test(getComputedStyle(document.body).fontFamily),
-          radiusPanel: shell ? getComputedStyle(shell).borderBottomLeftRadius : '0px',
-          radiusCtl: navBtn ? getComputedStyle(navBtn).borderTopLeftRadius : '0px'
-        }
-      });
+      return {
+        bg: pick('--bg1'), bg0: pick('--bg00') || pick('--bg0'), bg2: pick('--bg3'), bg4: pick('--bg4'),
+        line: pick('--ln'), tx: pick('--tx'), tx2: pick('--tx2'), ac: pick('--ac'), prit: pick('--prit'),
+        font: getComputedStyle(document.body).fontFamily,
+        baseFont: getComputedStyle(document.body).fontSize,
+        pixel: /Press Start|Pixelify/i.test(getComputedStyle(document.body).fontFamily),
+        radiusPanel: shell ? getComputedStyle(shell).borderBottomLeftRadius : '0px',
+        radiusCtl: navBtn ? getComputedStyle(navBtn).borderTopLeftRadius : '0px'
+      };
+    }
+    var syncT = null;
+    function syncTheme(){
+      clearTimeout(syncT);
+      syncT = setTimeout(function(){ if (A.zoomTheme) A.zoomTheme(themePayload()); }, 80);
+    }
+    // скрытое окно масштаба — часть интерфейса: держим его тему в актуальном состоянии
+    try {
+      new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+      new MutationObserver(syncTheme).observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+    } catch (e) {}
+    setTimeout(syncTheme, 200);
+    if (A.onUiZoom) A.onUiZoom(function(v){ if (v) paint(v); });
+    if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) paint(z); });
+    btn.onclick = function(){
+      var r = btn.getBoundingClientRect();
+      if (A.zoomPopup) A.zoomPopup({ right: r.right, bottom: r.bottom, theme: themePayload() });
     };
   })();
 
