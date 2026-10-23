@@ -29,6 +29,7 @@ function loadPlaywright() {
     'playwright-core',
     process.env.PLAYWRIGHT_PATH,
     path.join(ROOT, 'node_modules', 'playwright-core'),
+    'E:/tapyor-verify/node_modules/playwright-core',
     'C:/tapyor-verify/node_modules/playwright-core'
   ].filter(Boolean);
   for (const t of tries) {
