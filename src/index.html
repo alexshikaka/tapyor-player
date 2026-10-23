@@ -7385,6 +7385,7 @@ setInterval(function(){ pushWidget(false); }, 1500);
           bg: pick('--bg1'), bg0: pick('--bg00') || pick('--bg0'), bg2: pick('--bg3'), bg4: pick('--bg4'),
           line: pick('--ln'), tx: pick('--tx'), tx2: pick('--tx2'), ac: pick('--ac'), prit: pick('--prit'),
           font: getComputedStyle(document.body).fontFamily,
+          pixel: /Press Start|Pixelify/i.test(getComputedStyle(document.body).fontFamily),
           radiusPanel: shell ? getComputedStyle(shell).borderBottomLeftRadius : '0px',
           radiusCtl: navBtn ? getComputedStyle(navBtn).borderTopLeftRadius : '0px'
         }
