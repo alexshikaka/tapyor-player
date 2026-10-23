@@ -163,8 +163,16 @@
     if (t.radiusCtl) root.setProperty('--r-ctl', t.radiusCtl);
     document.documentElement.classList.toggle('pixel', !!t.pixel);
   }
-  window.zoomApi.theme().then((t) => { applyTheme(t); window.zoomApi.ready(); });
-  if (window.zoomApi.onTheme) window.zoomApi.onTheme((t) => { applyTheme(t); window.zoomApi.ready(); });
+  function themeReady(t) {
+    applyTheme(t);
+    var fam = ((t && t.font) || '').split(',')[0].replace(/["']/g, '').trim();
+    var jobs = [];
+    if (fam && document.fonts && document.fonts.load) jobs.push(document.fonts.load('12px "' + fam + '"').catch(function () {}));
+    if (document.fonts && document.fonts.ready) jobs.push(document.fonts.ready.catch(function () {}));
+    Promise.all(jobs).then(function () { setTimeout(function () { window.zoomApi.ready(); }, 20); });
+  }
+  window.zoomApi.theme().then(themeReady);
+  if (window.zoomApi.onTheme) window.zoomApi.onTheme(themeReady);
 </script>
 </body>
 </html>
