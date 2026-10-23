@@ -1,7 +1,7 @@
 # Тапёр — инструкция для ИИ-помощника
 
 **Порядок входа:** `docs/START-HERE.md` → `docs/CURRENT.md` → `docs/HANDOFF.md` → `docs/DEV.md` → `docs/DECISIONS.md` → `docs/ERRORS.md`. Для аудита — `docs/AUDIT.md`, для релиза — `docs/RELEASE-CHECKLIST.md`.
-Ветка работы — `experiment`; `main` — релизная и документы. Коммиты — в `experiment`, если владелец не сказал иначе.
+На GitHub есть только main (релиз и документы). Рабочая ветка experiment — локально у владельца; если её нет, работай в main.
 
 ## Кто владелец и как с ним работать
 
