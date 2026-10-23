@@ -10,7 +10,8 @@
     "audit:pack": "node tools/build-audit-pack.mjs",
     "audit:pack:history": "node tools/build-audit-pack.mjs --with-history --with-todo",
     "release:check": "node tools/release-preflight.mjs",
-    "history:export": "node tools/export-history.mjs"
+    "history:export": "node tools/export-history.mjs",
+    "drill:make": "node tools/make-release-drill.mjs"
   },
   "author": "shikaka",
   "license": "UNLICENSED",
