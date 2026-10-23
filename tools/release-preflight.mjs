@@ -15,7 +15,7 @@ const read = (p) => { try { return fs.readFileSync(path.join(root, p), 'utf8'); 
 
 // 1. файлы снимка
 const dir = `docs/releases/v${version}`;
-for (const f of ['README.md', 'CHANGES.md', 'DECISIONS.md', 'ERRORS.md', 'VERIFICATION.md', 'SESSION.md', 'MANIFEST.json']) {
+for (const f of ['README.md', 'CHANGES.md', 'DECISIONS.md', 'ERRORS.md', 'VERIFICATION.md', 'AUDIT.md', 'SESSION.md', 'MANIFEST.json']) {
   add(exists(`${dir}/${f}`), `снимок: ${dir}/${f}`);
 }
 for (const f of ['HANDOFF.md', 'DEV.md', 'CHECKS.md']) {
@@ -33,7 +33,17 @@ try {
 add(exists('history/COMPACT.md'), 'history/COMPACT.md');
 const hist = read('history/COMPACT.md');
 add(hist.length > 1000, 'history/COMPACT.md не пустой');
-const today = new Date().toISOString().slice(0, 10);
+// аудит перед релизом
+let auditFresh = false;
+try {
+  const auditDir = path.join(root, 'docs/audits');
+  for (const f of fs.readdirSync(auditDir)) {
+    if (f === 'README.md' || !f.endsWith('.md')) continue;
+    const st = fs.statSync(path.join(auditDir, f));
+    if (Date.now() - st.mtimeMs < 30 * 24 * 3600 * 1000) auditFresh = true;
+  }
+} catch {}
+add(auditFresh, 'есть свежий отчёт аудита в docs/audits/', 'проведи аудит по docs/AUDIT.md');const today = new Date().toISOString().slice(0, 10);
 add(fs.readdirSync(path.join(root, 'docs/sessions')).some(f => f.startsWith(today)), `карточка сессии за ${today}`);
 
 // 4. TODO
