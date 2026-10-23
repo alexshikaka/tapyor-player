@@ -7394,12 +7394,19 @@ setInterval(function(){ pushWidget(false); }, 1500);
       if (save && A.setSetting) A.setSetting('uiZoom', pct / 100);
       if (!pop.hidden) { requestAnimationFrame(openPop); setTimeout(openPop, 160); }
     }
+    // Поповер всегда в физическом масштабе 100%: компенсируем zoom окна обратным transform
     function openPop(){
-      var rc = btn.getBoundingClientRect();
+      var z = window.outerWidth / window.innerWidth; if (!z || !isFinite(z)) z = 1;
       pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+      pop.style.transformOrigin = 'top left';
+      pop.style.transform = 'scale(' + (1 / z) + ')';
       var w = pop.offsetWidth || 238;
-      pop.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, rc.right - w)) + 'px';
-      pop.style.top = (rc.bottom + 8) + 'px';
+      var vw = window.innerWidth * z, vh = window.innerHeight * z;
+      var rc = btn.getBoundingClientRect();
+      var px = Math.min(vw - w - 8, Math.max(8, rc.right * z - w));
+      var py = rc.bottom * z + 8;
+      pop.style.left = Math.round(px / z) + 'px';
+      pop.style.top = Math.round(py / z) + 'px';
     }
     function closePop(){ pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
     btn.onclick = function(e){ e.stopPropagation(); pop.hidden ? openPop() : closePop(); };
