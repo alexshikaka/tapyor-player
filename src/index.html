@@ -7379,7 +7379,7 @@ setInterval(function(){ pushWidget(false); }, 1500);
       var pick = function(n){ return (cs.getPropertyValue(n) || '').trim(); };
       if (A.zoomPopup) A.zoomPopup({
         right: r.right, bottom: r.bottom,
-        theme: { bg: pick('--bg1'), bg2: pick('--bg3'), line: pick('--ln'), tx: pick('--tx'), tx2: pick('--tx2'), ac: pick('--ac') }
+        theme: { bg: pick('--bg1'), bg0: pick('--bg00') || pick('--bg0'), bg2: pick('--bg3'), bg4: pick('--bg4'), line: pick('--ln'), tx: pick('--tx'), tx2: pick('--tx2'), ac: pick('--ac'), prit: pick('--prit') }
       });
     };
   })();

@@ -6,67 +6,92 @@
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg0, #0E0F13); }
   body {
     font: 500 12px "Segoe UI", Tahoma, Arial, sans-serif;
     color: var(--tx2, #C9CBD4);
-    background: var(--bg1, #15161C);
-    border: 1px solid var(--ln, #2C2F3A);
-    border-radius: 14px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    box-shadow: 0 18px 44px rgba(0,0,0,.45);
     overflow: hidden;
     user-select: none;
+    display: flex;
+    flex-direction: column;
   }
-  .t { font-size: 12px; color: var(--tx2, #9EA2B0); }
-  .row { display: flex; align-items: center; gap: 10px; }
-  input[type=range] {
-    -webkit-appearance: none; appearance: none; width: 100%; height: 20px; margin: 2px 0;
-    background: transparent; cursor: pointer;
+  /* «Основное поле» — как app-shell: скруглены только нижние края */
+  .main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 10px 12px 12px;
+    background: var(--bg1, #15161C);
+    border-radius: 0 0 16px 16px;
   }
-  input[type=range]::-webkit-slider-runnable-track {
-    height: 6px; border-radius: 3px; background: var(--bg3, #2A2D38); box-shadow: inset 0 0 0 1px var(--ln, #23252F);
+  .lbl { font-size: 11px; color: var(--tx3, #9EA2B0); }
+  .val { font-size: 26px; font-weight: 700; line-height: 1.05; color: var(--tx, #ECEDF2); }
+  /* «Подвал» — нижний слой на всю ширину, кнопки масштаба с шагом 10% */
+  .foot {
+    flex: 0 0 auto;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px 8px;
+    background: var(--bg0, #0E0F13);
   }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%;
-    background: var(--ac, #9B87FF); border: 2px solid var(--bg1, #15161C); box-shadow: 0 1px 4px rgba(0,0,0,.45);
+  .foot button {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--ln, #2C2F3A);
+    border-radius: 7px;
+    background: var(--bg3, #1E2029);
+    color: var(--tx2, #C9CBD4);
+    font: 600 10px "Segoe UI", Tahoma, Arial, sans-serif;
+    cursor: pointer;
+    transition: background-color .12s ease, color .12s ease;
   }
-  input[type=range]:focus { outline: none; }
-  input[type=range]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(155,135,255,.25); }
-  .foot { display: flex; align-items: center; justify-content: space-between; }
-  .pct { font-weight: 700; color: var(--tx, #ECEDF2); font-size: 13px; }
-  button {
-    height: 24px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--ln, #2C2F3A);
-    background: #1E2029; color: var(--tx2, #C9CBD4); font: inherit; cursor: pointer;
+  .foot button:hover { background: var(--bg4, #2A2D38); color: var(--tx, #ECEDF2); }
+  .foot button.on {
+    background: var(--ac, #9B87FF);
+    border-color: var(--ac, #9B87FF);
+    color: var(--prit, #0E0F13);
   }
-  button:hover { background: var(--bg2, #2A2D38); color: var(--tx, #ECEDF2); }
 </style>
 </head>
 <body>
-  <div class="t">Масштаб интерфейса</div>
-  <input id="r" type="range" min="60" max="140" step="5" value="100" aria-label="Масштаб интерфейса">
-  <div class="foot">
-    <span class="pct" id="v">100%</span>
-    <button id="reset">Сбросить</button>
+  <div class="main">
+    <div class="lbl">Масштаб интерфейса</div>
+    <div class="val" id="v">100%</div>
   </div>
+  <div class="foot" id="foot"></div>
 <script>
-  const r = document.getElementById('r'), v = document.getElementById('v');
+  const v = document.getElementById('v'), foot = document.getElementById('foot');
   let z = 1;
+  const steps = [];
+  for (let s = 60; s <= 140; s += 10) steps.push(s);
+
   function paint(value) {
     z = Math.min(1.4, Math.max(0.6, Number(value) || 1));
     const pct = Math.round(z * 100);
-    r.value = pct; v.textContent = pct + '%';
+    v.textContent = pct + '%';
+    Array.prototype.forEach.call(foot.children, (b) => b.classList.toggle('on', +b.dataset.pct === pct));
   }
   async function apply(value) {
     paint(value);
     const actual = await window.zoomApi.set(z);
     if (actual) paint(actual);
   }
-  r.addEventListener('input', () => apply(r.value / 100));
-  document.getElementById('reset').addEventListener('click', () => apply(1));
+  steps.forEach((pct) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.pct = String(pct);
+    b.textContent = pct;
+    b.title = pct + '%';
+    b.addEventListener('click', () => apply(pct / 100));
+    foot.appendChild(b);
+  });
   window.zoomApi.onChange((val) => paint(val));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.zoomApi.close(); });
   window.addEventListener('blur', () => window.zoomApi.close());
@@ -74,11 +99,14 @@
   if (window.zoomApi.onTheme) window.zoomApi.onTheme((t) => {
     if (!t) return;
     const root = document.documentElement.style;
-    if (t.bg) root.setProperty('--bg1', t.bg);
+    if (t.bg) root.setProperty('--bg1', t.bg);            // основное поле
+    if (t.bg0) root.setProperty('--bg0', t.bg0);          // подвал (самый нижний слой)
     if (t.bg2) root.setProperty('--bg3', t.bg2);
+    if (t.bg4) root.setProperty('--bg4', t.bg4);
     if (t.line) root.setProperty('--ln', t.line);
     if (t.tx) { root.setProperty('--tx', t.tx); root.setProperty('--tx2', t.tx2 || t.tx); }
     if (t.ac) root.setProperty('--ac', t.ac);
+    if (t.prit) root.setProperty('--prit', t.prit);
   });
 </script>
 </body>
