@@ -1,0 +1,58 @@
+{
+  "version": "0.19.2",
+  "date": "2026-10-23",
+  "sourceCommit": "e05bbf4",
+  "status": "local",
+  "files": [
+    {
+      "path": "v0.19.2/AUDIT.md",
+      "bytes": 585,
+      "sha256": "6ee1382fa979782f"
+    },
+    {
+      "path": "v0.19.2/CHANGES.md",
+      "bytes": 204,
+      "sha256": "8bbdc575c9a51266"
+    },
+    {
+      "path": "v0.19.2/DECISIONS.md",
+      "bytes": 4497,
+      "sha256": "cedeaad211baa0ef"
+    },
+    {
+      "path": "v0.19.2/docs/CHECKS.md",
+      "bytes": 6058,
+      "sha256": "4b47683fd3641955"
+    },
+    {
+      "path": "v0.19.2/docs/DEV.md",
+      "bytes": 5952,
+      "sha256": "80493c1a51d9fb0f"
+    },
+    {
+      "path": "v0.19.2/docs/HANDOFF.md",
+      "bytes": 26405,
+      "sha256": "248adcddb3ef8462"
+    },
+    {
+      "path": "v0.19.2/ERRORS.md",
+      "bytes": 5354,
+      "sha256": "03e19a3ca812404c"
+    },
+    {
+      "path": "v0.19.2/README.md",
+      "bytes": 349,
+      "sha256": "e81f4fb92cddb60f"
+    },
+    {
+      "path": "v0.19.2/SESSION.md",
+      "bytes": 111,
+      "sha256": "d53a9a3d34788141"
+    },
+    {
+      "path": "v0.19.2/VERIFICATION.md",
+      "bytes": 485,
+      "sha256": "6f3dbaca4604926e"
+    }
+  ]
+}
