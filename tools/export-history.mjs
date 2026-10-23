@@ -33,8 +33,22 @@ function findSession() {
   return files[0].p;
 }
 
-const sessionPath = findSession();
-const raw = zlib.zstdDecompressSync(fs.readFileSync(sessionPath));
+let sessionPath;
+try {
+  sessionPath = findSession();
+} catch (e) {
+  console.log('Журнал сессии DSH не найден: ' + e.message);
+  console.log('history/ не изменена — используется существующая копия.');
+  process.exit(0);
+}
+let raw;
+try {
+  raw = zlib.zstdDecompressSync(fs.readFileSync(sessionPath));
+} catch (e) {
+  console.log('Не удалось распаковать журнал: ' + e.message);
+  console.log('history/ не изменена.');
+  process.exit(0);
+}
 const lines = raw.toString('utf8').split('\n');
 
 const events = [];
