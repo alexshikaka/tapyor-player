@@ -11,8 +11,8 @@
 
 | Что | Где |
 | --- | --- |
-| Проект | `C:\tapyor-player` |
-| Запуск | ярлык на рабочем столе «Тапёр (из исходников)» → `C:\tapyor-player\Запустить Тапёр.cmd` |
+| Проект | `E:\Tapyor-player` |
+| Запуск | ярлык на рабочем столе «Тапёр (из исходников)» → `E:\Tapyor-player\Запустить Тапёр.cmd` |
 | Журнал работы | `C:\Users\user\AppData\Roaming\stream-player\log.txt` (папка закреплена `pinUserData`) |
 
 Ярлык запускает `node_modules\electron\dist\electron.exe .`. Файл `.cmd` намеренно **без кириллицы**: cmd.exe читает bat-файлы в кодировке OEM (CP866), и русский текст в UTF-8 превращается в мусор, а строки — в попытки выполнить команды.
@@ -51,8 +51,8 @@ TypeError: Cannot set properties of undefined (setting 'themeSource')
 Проверка прав и лечение:
 
 ```powershell
-(Get-Acl 'C:\tapyor-player').Access | Format-Table IdentityReference, FileSystemRights, AccessControlType
-icacls 'C:\tapyor-player' /reset /T /C /Q
+(Get-Acl 'E:\Tapyor-player').Access | Format-Table IdentityReference, FileSystemRights, AccessControlType
+icacls 'E:\Tapyor-player' /reset /T /C /Q
 ```
 
 Если сброс не помог — пересоздать папку начисто (`robocopy` в новую), потому что следы переноса остаются.
