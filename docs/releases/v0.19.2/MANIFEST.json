@@ -1,18 +1,18 @@
 {
   "version": "0.19.2",
   "date": "2026-10-23",
-  "sourceCommit": "e05bbf4",
-  "status": "local",
+  "sourceCommit": "e4733b9",
+  "status": "published",
   "files": [
     {
       "path": "v0.19.2/AUDIT.md",
-      "bytes": 585,
-      "sha256": "6ee1382fa979782f"
+      "bytes": 591,
+      "sha256": "579b75486b23bc62"
     },
     {
       "path": "v0.19.2/CHANGES.md",
-      "bytes": 204,
-      "sha256": "8bbdc575c9a51266"
+      "bytes": 208,
+      "sha256": "a249dae3f7c5e5dc"
     },
     {
       "path": "v0.19.2/DECISIONS.md",
@@ -41,18 +41,18 @@
     },
     {
       "path": "v0.19.2/README.md",
-      "bytes": 349,
-      "sha256": "e81f4fb92cddb60f"
+      "bytes": 335,
+      "sha256": "5da63be8c20f4456"
     },
     {
       "path": "v0.19.2/SESSION.md",
-      "bytes": 111,
-      "sha256": "d53a9a3d34788141"
+      "bytes": 114,
+      "sha256": "216af9516546652b"
     },
     {
       "path": "v0.19.2/VERIFICATION.md",
-      "bytes": 485,
-      "sha256": "6f3dbaca4604926e"
+      "bytes": 494,
+      "sha256": "70fb86b8bc66c310"
     }
   ]
 }
