@@ -650,11 +650,12 @@
   .myt.on { color: var(--tx); border-bottom-color: var(--ac); }
   .myt-sp { flex: 1; }
   .myact { display: flex; gap: 6px; padding: 6px 0; }
-  [data-tip] { position: relative; }
-  [data-tip].tip-up:hover::after { top: auto; bottom: calc(100% + 6px); }
-  [data-tip].tip-left:hover::after { right: auto; left: 0; }
-  [data-tip]:hover::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; background: var(--bg4); color: var(--tx); border: 0; border-radius: 8px; padding: 5px 9px; font: 500 12px Onest, sans-serif; white-space: normal; max-width: 280px; line-height: 1.35; text-align: left; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.35); text-transform: none; letter-spacing: 0; }
-  .myab.ic { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 16px; }
+  /* Единая подсказка: один fixed-элемент, без изменения раскладки компонентов */
+  .tip { position: fixed; z-index: 400; pointer-events: none; max-width: none; white-space: nowrap;
+    background: var(--bg4); color: var(--tx); border-radius: 8px; padding: 5px 9px;
+    font: 500 12px Onest, sans-serif; letter-spacing: 0; text-transform: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,.35); opacity: 0; transition: opacity .12s ease; }
+  .tip.on { opacity: 1; }
   .myab { height: 30px; padding: 0 12px; border-radius: 15px; border: 0; background: var(--bg4); color: var(--tx); font: 600 12px Onest, sans-serif; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
   .myab:hover { background: var(--hov3); }
   .myab.on { border-color: var(--ac); }
@@ -7416,8 +7417,10 @@ setInterval(function(){ pushWidget(false); }, 1500);
     if (A.getSetting) A.getSetting('uiZoom').then(function(z){ if (z) put(z, false); });
   })();
 
-  // Единые подсказки: любой title показываем как themed-подсказку (data-tip)
+  // Единые подсказки: title → data-tip, показ одним fixed-элементом с задержкой
   (function(){
+    var tipEl = document.createElement('div'); tipEl.className = 'tip'; document.body.appendChild(tipEl);
+    var timer = null, cur = null;
     function conv(root){
       if (!root.querySelectorAll) return;
       var list = root.querySelectorAll('[title]');
@@ -7427,19 +7430,50 @@ setInterval(function(){ pushWidget(false); }, 1500);
         el.removeAttribute('title');
       }
     }
-    conv(document);
-    // подстраховка: конвертируем при наведении и раз в секунду (динамический DOM)
+    function place(el){
+      var r = el.getBoundingClientRect();
+      var tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+      var x = Math.min(window.innerWidth - tw - 8, Math.max(8, r.left + r.width / 2 - tw / 2));
+      var y = r.bottom + 8;
+      if (y + th > window.innerHeight - 8) y = r.top - th - 8;
+      tipEl.style.left = Math.round(x) + 'px';
+      tipEl.style.top = Math.round(Math.max(8, y)) + 'px';
+    }
+    function show(el){
+      var t = el.getAttribute('data-tip'); if (!t) return;
+      tipEl.textContent = t;
+      tipEl.classList.add('on');
+      place(el);
+    }
+    function hide(){
+      if (timer) { clearTimeout(timer); timer = null; }
+      cur = null;
+      tipEl.classList.remove('on');
+    }
     document.addEventListener('pointerover', function(e){
       var el = e.target && e.target.closest && e.target.closest('[data-tip],[title]');
-      if (!el) return;
+      if (!el) { hide(); return; }
       var t = el.getAttribute('title');
       if (t && !el.hasAttribute('data-tip')) el.setAttribute('data-tip', t);
-      el.removeAttribute('title');
-      var r = el.getBoundingClientRect();
-      el.classList.toggle('tip-up', r.bottom > window.innerHeight - 90);
-      el.classList.toggle('tip-left', r.left < 170);
+      if (el.hasAttribute('title')) el.removeAttribute('title');
+      if (el === cur) return;
+      hide();
+      cur = el;
+      timer = setTimeout(function(){ if (cur === el) show(el); }, 600);
     }, true);
-    setInterval(function(){ conv(document); }, 1000);    try {
+    document.addEventListener('pointerout', function(e){
+      var el = e.target && e.target.closest && e.target.closest('[data-tip]');
+      if (!el) return;
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      if (el === cur) hide();
+    }, true);
+    document.addEventListener('pointerdown', hide, true);
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('blur', hide);
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') hide(); });
+    conv(document);
+    setInterval(function(){ conv(document); }, 1000);
+    try {
       new MutationObserver(function(muts){
         for (var i = 0; i < muts.length; i++) {
           var m = muts[i];
