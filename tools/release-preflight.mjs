@@ -29,6 +29,14 @@ try {
   add(pkg.version === version, `package.json version = ${version}`, `сейчас ${pkg.version}`);
 } catch { add(false, 'package.json читается'); }
 
+// 2.5. согласованность версии в CURRENT и HANDOFF
+const cur = read('docs/CURRENT.md');
+const hand = read('docs/HANDOFF.md');
+const verRe = new RegExp('\\*\\*Версия:\\*\\*\\s*' + version.replace(/\./g, '\\.'));
+add(verRe.test(cur), 'CURRENT.md: **Версия:** ' + version);
+const handRe = new RegExp('версия\\s+`?' + version.replace(/\./g, '\\.') + '\\b');
+add(handRe.test(hand), 'HANDOFF.md: версия ' + version);
+
 // 3. история
 add(exists('history/COMPACT.md'), 'history/COMPACT.md');
 const hist = read('history/COMPACT.md');
